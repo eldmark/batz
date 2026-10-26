@@ -1,0 +1,53 @@
+1| Todos los estudiantes leen un libro.
+1| Todo estudiante que estudia aprueba.
+1| Ningún estudiante lee.
+1| Juan no lee ningún libro.
+0| Ningún estudiante no lee.
+0| Juan lee ningún libro.
+1| Juan es un estudiante.
+1| Juan es Pedro.
+0| María es alto.
+0| Todos los estudiantes lee.
+2| Si Juan lee, entonces María estudia y Pedro estudia.
+2| Juan lee y María estudia o Pedro estudia.
+1| Juan y María leen.
+1| Juan, Pedro y Ana leen.
+0| Juan y María lee.
+1| Hay un estudiante que lee.
+1| No hay ningún estudiante que lea.
+1| Solo los estudiantes leen.
+1| Solo Juan lee.
+1| Juan se ama.
+1| Juan ama a María.
+1| Juan ve a todos los estudiantes.
+1| Juan lee si y solo si María lee.
+1| O bien Juan lee o bien María lee.
+2| Juan es joven.
+1| Todos los estudiantes no leen.
+1| Juan lee.
+0| El estudiante lee.
+0| Los estudiantes leen.
+1| Juan leyó un libro.
+1| Todo estudiante inteligente aprueba.
+1| Juan es alto y inteligente.
+1| María no ve a nadie.
+1| Si algún estudiante lee, Juan aprueba.
+0| Juan lea.
+1| Juan lee y escribe.
+0| Juan ama al estudiante.
+14| Juan lee y Ana lee y Pedro lee y María lee y Juan estudia.
+1| Todo estudiante que conoce a algún profesor que ama a toda persona inteligente que lee un libro aprueba.
+# --- v1: sujeto disyuntivo ---
+1| Juan o María lee.
+1| Juan o María leen.
+1| Juan, Pedro o Ana estudian.
+0| Juan o María es alta.
+# --- v1: numerales (la ambigüedad de "dos" a secas es semántica: 1 árbol, 2 lecturas) ---
+1| Dos estudiantes leen.
+1| Al menos dos estudiantes leen un libro.
+1| Exactamente una persona lee.
+1| A lo sumo tres profesores aprueban.
+1| Hay al menos dos libros.
+1| Juan conoce a exactamente dos profesoras.
+0| Exactamente dos estudiante lee.
+0| Al menos un estudiantes leen.

@@ -1,0 +1,142 @@
+"""Corpus de secuentes: (premisas, conclusión, constantes). Válidos y no válidos."""
+
+VALID = [
+    # --- proposicional ---
+    ([ "A → B", "A"], "B", ()),
+    (["A → B", "¬B"], "¬A", ()),
+    (["A → B", "B → C"], "A → C", ()),
+    (["A ∨ B", "¬A"], "B", ()),
+    (["A ∧ B"], "B ∧ A", ()),
+    (["A ∨ B"], "B ∨ A", ()),
+    ([], "A → A", ()),
+    ([], "A → (B → A)", ()),
+    ([], "(A → (B → C)) → ((A → B) → (A → C))", ()),
+    ([], "A ∨ ¬A", ()),
+    ([], "¬(A ∧ ¬A)", ()),
+    ([], "((A → B) → A) → A", ()),
+    (["¬¬A"], "A", ()),
+    (["A"], "¬¬A", ()),
+    (["A", "¬A"], "B", ()),
+    ([], "¬(A ∨ B) ↔ (¬A ∧ ¬B)", ()),
+    ([], "¬(A ∧ B) ↔ (¬A ∨ ¬B)", ()),
+    ([], "(A → B) ↔ (¬B → ¬A)", ()),
+    ([], "(A → B) ↔ (¬A ∨ B)", ()),
+    ([], "A ∧ (B ∨ C) ↔ (A ∧ B) ∨ (A ∧ C)", ()),
+    ([], "A ∨ (B ∧ C) ↔ (A ∨ B) ∧ (A ∨ C)", ()),
+    ([], "(A ∧ B → C) ↔ (A → (B → C))", ()),
+    (["A ↔ B"], "B ↔ A", ()),
+    (["A ↔ B", "B ↔ C"], "A ↔ C", ()),
+    (["A → B", "A → ¬B"], "¬A", ()),
+    ([], "⊥ → A", ()),
+    (["⊥"], "A", ()),
+    ([], "¬⊥", ()),
+    # --- cuantificadores ---
+    (["∀x (P(x) → Q(x))", "P(a)"], "Q(a)", ("a",)),
+    (["∀x (P(x) → Q(x))", "∀x (Q(x) → R(x))"], "∀x (P(x) → R(x))", ()),
+    (["∀x (P(x) → Q(x))", "∃x P(x)"], "∃x Q(x)", ()),
+    (["∀x (P(x) → Q(x))", "∀x P(x)"], "∀x Q(x)", ()),
+    (["∀x P(x)"], "P(a)", ("a",)),
+    (["∀x P(x)"], "P(y)", ()),
+    (["P(a)"], "∃x P(x)", ("a",)),
+    (["∀x P(x)"], "∃x P(x)", ()),
+    ([], "∀x P(x) → ∃x P(x)", ()),
+    (["∀x P(x)"], "∀y P(y)", ()),
+    (["∃x P(x)"], "∃y P(y)", ()),
+    (["∀x ∀y R(x, y)"], "∀y ∀x R(x, y)", ()),
+    (["∀x ∀y R(x, y)"], "∀z R(z, z)", ()),
+    (["∃x ∃y R(x, y)"], "∃y ∃x R(x, y)", ()),
+    (["∀x ∃y R(x, y)"], "∃y R(a, y)", ("a",)),
+    (["∀x ∃y R(x, y)"], "∀x ∃z R(x, z)", ()),
+    (["∃y ∀x R(x, y)"], "∀x ∃y R(x, y)", ()),
+    (["∃x ∀y R(x, y)"], "∃x R(x, x)", ()),
+    (["∃x ∀y R(x, y)"], "∀y ∃x R(x, y)", ()),
+    (["∀x ¬P(x)"], "¬∃x P(x)", ()),
+    (["¬∃x P(x)"], "∀x ¬P(x)", ()),
+    (["∃x ¬P(x)"], "¬∀x P(x)", ()),
+    (["¬∀x P(x)"], "∃x ¬P(x)", ()),
+    ([], "¬∀x P(x) ↔ ∃x ¬P(x)", ()),
+    ([], "¬∃x P(x) ↔ ∀x ¬P(x)", ()),
+    ([], "∀x (P(x) ∧ Q(x)) ↔ (∀x P(x) ∧ ∀x Q(x))", ()),
+    ([], "∃x (P(x) ∨ Q(x)) ↔ (∃x P(x) ∨ ∃x Q(x))", ()),
+    ([], "∃x (P(x) ∧ Q(x)) → (∃x P(x) ∧ ∃x Q(x))", ()),
+    ([], "(∀x P(x) ∨ ∀x Q(x)) → ∀x (P(x) ∨ Q(x))", ()),
+    ([], "∀x (P(x) → Q(x)) → (∀x P(x) → ∀x Q(x))", ()),
+    ([], "∀x (P(x) → Q(x)) → (∃x P(x) → ∃x Q(x))", ()),
+    ([], "∀x (P(x) → A) ↔ (∃x P(x) → A)", ()),
+    ([], "∃x (P(x) → A) ↔ (∀x P(x) → A)", ()),
+    ([], "(A → ∀x P(x)) ↔ ∀x (A → P(x))", ()),
+    ([], "(∃x P(x) ∧ A) ↔ ∃x (P(x) ∧ A)", ()),
+    ([], "∃x (D(x) → ∀y D(y))", ()),
+    ([], "∀x (A ∨ P(x)) ↔ (A ∨ ∀x P(x))", ()),
+    # --- bordes de cuantificadores ---
+    (["A"], "∀x A", ()),
+    (["∀x A"], "A", ()),
+    (["∃x A"], "A", ()),
+    (["A"], "∃x A", ()),
+    (["∀x (P(x) ∧ ∃x Q(x))"], "∃x Q(x)", ()),
+    (["∀x (P(x) ∧ ∃x Q(x))"], "∀x P(x)", ()),
+    (["∀x ∃x R(x, x)"], "∃y R(y, y)", ()),
+    (["∃x ∀x P(x)"], "∀y P(y)", ()),
+    (["∀x P(x)"], "P(f(a))", ("a",)),
+    (["∀x ∀y R(x, y)"], "R(f(a), g(a, a))", ("a",)),
+    (["P(f(a))"], "∃x P(x)", ("a",)),
+    (["∀x (P(x) → P(f(x)))", "P(a)"], "P(f(f(a)))", ("a",)),
+    (["∀x P(x)", "∃x ¬P(x)"], "⊥", ()),
+    (["P(a)", "∀x (P(x) → Q(x))", "∀x (Q(x) → R(x))"], "R(a)", ("a",)),
+    # --- igualdad ---
+    ([], "∀x x = x", ()),
+    (["a = b"], "b = a", ("a", "b")),
+    (["a = b", "b = c"], "a = c", ("a", "b", "c")),
+    (["a = b", "P(a)"], "P(b)", ("a", "b")),
+    (["x = y"], "f(x) = f(y)", ()),
+    ([], "∀x ∀y (x = y → y = x)", ()),
+    ([], "∃x x = a", ("a",)),
+    (["P(a)", "∀x ∀y (P(x) ∧ P(y) → x = y)"], "∀x (P(x) → x = a)", ("a",)),
+    (["∀x ∀y x = y"], "P(a) → P(b)", ("a", "b")),
+]
+
+# Secuentes NO válidos: el buscador debe devolver `unknown` y hay contramodelo pequeño.
+INVALID = [
+    (["∀x (P(x) → Q(x))"], "∀x (Q(x) → P(x))", ()),
+    (["∃x P(x)"], "∀x P(x)", ()),
+    (["∀x ∃y R(x, y)"], "∃y ∀x R(x, y)", ()),
+    (["∀x ∃y R(x, y)"], "∃y R(y, y)", ()),                 # trampa de captura
+    (["∃x P(x)", "∃x Q(x)"], "∃x (P(x) ∧ Q(x))", ()),
+    (["∀x (P(x) ∨ Q(x))"], "∀x P(x) ∨ ∀x Q(x)", ()),
+    (["∀x P(x) → ∀x Q(x)"], "∀x (P(x) → Q(x))", ()),
+    (["P(a)"], "∀x P(x)", ("a",)),
+    (["P(y)"], "∀x P(x)", ()),                              # variable libre en la hipótesis
+    (["∃x P(x)"], "P(a)", ("a",)),
+    (["∃x P(x)"], "P(y)", ()),                              # ∃E con variable libre en la conclusión
+    (["∃x P(x)", "Q(y)"], "∃x (P(x) ∧ Q(x))", ()),
+    (["A → B"], "B → A", ()),
+    (["A ∨ B"], "A", ()),
+    ([], "A", ()),
+    ([], "∃x P(x)", ()),
+    ([], "∀x P(x)", ()),
+    ([], "∃x ∃y x ≠ y", ()),
+    ([], "∀x ∀y x = y", ()),
+    (["P(a)"], "P(b)", ("a", "b")),
+    (["P(a)", "Q(b)"], "a = b", ("a", "b")),
+    ([], "∀x (P(x) ∨ ¬P(x)) → ∀x P(x) ∨ ∀x ¬P(x)", ()),
+]
+
+
+# --- Fixtures de clase (lógica proposicional, letras en minúscula) -------------------
+# Fuente: conversaciones de repaso de deducción natural (jul–ago 2026). Formato:
+# (id, premisas, conclusión). Se leen con propositional=True.
+CLASS_SEQUENTS = [
+    ("clase-contrapositiva", ["p → q"], "¬q → ¬p"),
+    ("clase-silogismo-disyuntivo-casos", ["p ∨ q", "p → r", "q → r"], "r"),
+    ("clase-conjuncion-doble-elim", ["p ∧ q"], "q ∧ p"),
+]
+
+# Ejercicios del lema de Kalmár: (id, fórmula, valuación, premisas esperadas, meta esperada).
+# La meta es φ si φ vale bajo la valuación y ¬φ si no; las premisas son los literales.
+CLASS_KALMAR = [
+    ("kalmar-1", "p → q", {"p": True, "q": True}, ["p", "q"], "p → q"),
+    ("kalmar-2", "p ∨ q", {"p": False, "q": False}, ["¬p", "¬q"], "¬(p ∨ q)"),
+    ("kalmar-3", "(p ∧ q) → r", {"p": True, "q": True, "r": False}, ["p", "q", "¬r"], "¬((p ∧ q) → r)"),
+    ("kalmar-4", "p → (q ∨ r)", {"p": True, "q": False, "r": False}, ["p", "¬q", "¬r"], "¬(p → (q ∨ r))"),
+    ("kalmar-5", "(p → q) ∨ ¬r", {"p": True, "q": False, "r": True}, ["p", "¬q", "r"], "¬((p → q) ∨ ¬r)"),
+]
