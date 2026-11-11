@@ -21,6 +21,10 @@ Reglas de validez, verificadas al construir el modelo (un modelo inválido no ex
 
 Un **modelo es una estructura finita**. Un modelo debe interpretar **todo** símbolo de la fórmula: no hay valor por omisión. Un símbolo sin interpretación, o con otra aridad, es un error y no "falso".
 
+### Perfil estricto MM3032
+
+`build_interpretation(firma, datos)` valida la entrada del proyecto antes de crear un `FiniteModel`: exige exactamente los símbolos declarados, tablas funcionales totales y relaciones no vacías. Las constantes de `Signature` se presentan como funciones de aridad cero en la interfaz. En este perfil los predicados tienen aridad **≥ 1**: para aridad cero, la regla «relación no vacía» forzaría el valor verdadero y eliminaría el caso falso. `FiniteModel` conserva relaciones vacías y predicados de aridad cero para el núcleo lógico general y las pruebas existentes.
+
 ## 2. Asignaciones
 
 Una asignación `s` va de variables a `D`. Notación: `s[x↦d]` es `s` con `x` reasignada a `d`.

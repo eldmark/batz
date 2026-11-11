@@ -1,0 +1,87 @@
+{
+  "seed": 20261102,
+  "status": "passed",
+  "transport": "HTTP local 127.0.0.1",
+  "python": "3.14.8",
+  "source_sha256": "f4701dde4cec1abf1285d81c315eba083b6b0063b8b0ad1ed1561ff907a06f29",
+  "external_assets": false,
+  "generated_formulas": [
+    {
+      "formula": "(P(b)) ∨ (Q(b))",
+      "value": true
+    },
+    {
+      "formula": "(P(b)) ∧ (Q(b))",
+      "value": true
+    },
+    {
+      "formula": "(Q(b)) ↔ (∀x (P(x) → Q(x)))",
+      "value": false
+    },
+    {
+      "formula": "(∃x (P(x) ∧ Q(x))) ∨ (P(b))",
+      "value": true
+    },
+    {
+      "formula": "(∀x (P(x) → Q(x))) ↔ (∀x P(x))",
+      "value": true
+    },
+    {
+      "formula": "(∃x Q(x)) ∨ (∀x (P(x) → Q(x)))",
+      "value": true
+    },
+    {
+      "formula": "(P(a)) ∧ (∃x Q(x))",
+      "value": true
+    },
+    {
+      "formula": "(P(b)) ∧ (∃x Q(x))",
+      "value": true
+    },
+    {
+      "formula": "(P(a)) ↔ (∃x (P(x) ∧ Q(x)))",
+      "value": true
+    },
+    {
+      "formula": "(∃x Q(x)) ∧ (∀x P(x))",
+      "value": false
+    },
+    {
+      "formula": "(∀x (P(x) → Q(x))) ∧ (∃x (P(x) ∧ Q(x)))",
+      "value": false
+    },
+    {
+      "formula": "(Q(b)) ∧ (∃x Q(x))",
+      "value": true
+    }
+  ],
+  "negative_cases": [
+    "arity_mismatch",
+    "unassigned_variable",
+    "invalid_model"
+  ],
+  "countermodel": {
+    "status": "found",
+    "size": 2,
+    "unknown_at_size_1": "unknown"
+  },
+  "spanish_scope": {
+    "status": "ambiguous",
+    "values": [
+      true,
+      false
+    ]
+  },
+  "narration": {
+    "evaluation_events_verified": true,
+    "proof_events": 3,
+    "unproved_has_no_story": true,
+    "three_local_assets": true
+  },
+  "benchmark": {
+    "requests": 100,
+    "median_ms": 1.5,
+    "p95_ms": 1.64,
+    "max_ms": 1.93
+  }
+}

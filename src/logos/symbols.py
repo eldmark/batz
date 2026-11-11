@@ -48,7 +48,7 @@ def check(f, signature=None, strict=False, source=None):
             if table[name] != n:
                 raise _err("arity_mismatch", f"{what} '{name}' tiene aridad {table[name]} pero se usa con {n} argumento(s)", node, source)
         elif strict:
-            raise _err("undeclared_symbol", f"{what} '{name}' no está declarado", node, source)
+            raise _err("undeclared_symbol", f"{what} '{name}' no está {'declarada' if what.startswith('la') else 'declarado'}", node, source)
         else:
             table[name] = n
 

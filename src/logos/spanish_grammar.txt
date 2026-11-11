@@ -1,0 +1,130 @@
+NProp_M -> juan | pedro
+NProp_F -> maría | ana
+N_MS -> estudiante | libro | profesor | gato | joven
+N_MP -> estudiantes | libros | profesores | gatos | jóvenes
+N_FS -> estudiante | profesora | persona | joven
+N_FP -> estudiantes | profesoras | personas | jóvenes
+Adj_MS -> inteligente | alto | rojo | joven
+Adj_MP -> inteligentes | altos | rojos | jóvenes
+Adj_FS -> inteligente | alta | roja | joven
+Adj_FP -> inteligentes | altas | rojas | jóvenes
+VI_S -> lee | estudia | aprueba | escribe | leyó
+VI_P -> leen | estudian | aprueban | escriben | leyeron
+VIsub_S -> lea | estudie | apruebe | escriba
+VIsub_P -> lean | estudien | aprueben | escriban
+VT_S -> lee | ama | conoce | ve | leyó
+VT_P -> leen | aman | conocen | ven | leyeron
+VTsub_S -> lea | ame | conozca | vea
+VTsub_P -> lean | amen | conozcan | vean
+Cop_S -> es
+Cop_P -> son
+DetU_MS -> todo | cada
+DetU_FS -> toda | cada
+DetU_MP -> todos los
+DetU_FP -> todas las
+DetE_MS -> algún | un
+DetE_FS -> alguna | una
+DetE_MP -> algunos
+DetE_FP -> algunas
+DetNo_MS -> ningún
+DetNo_FS -> ninguna
+Def_MP -> los
+Def_FP -> las
+Indef_MS -> un
+Indef_FS -> una
+Num -> dos | tres | cuatro | cinco | 2 | 3 | 4 | 5
+Si -> si
+Ent -> entonces
+Coma -> ,
+Y -> y
+Ox -> o
+No -> no
+Que -> que
+A -> a
+Se -> se
+Hay -> hay | existe
+Solo -> solo
+Alguien -> alguien
+Nadie -> nadie
+SoloSi -> solo si
+Ssi -> si y solo si
+NoEsCierto -> no es cierto que
+Obien -> o bien
+AlMenos -> al menos
+Exactamente -> exactamente
+ALoSumo -> a lo sumo
+S -> O
+O -> Si O Ent O | Si O Coma Ent O | Si O Coma O | O Si O | O SoloSi O | O Ssi O | O Y O | O Ox O | NoEsCierto O | Obien O Obien O | Hay SNex | No Hay SNnegAny | Hay Alguien Rel_MS | No Hay Nom_MP | No Hay Nom_FP
+O -> SN_MS SV_MS | Solo NProp_M SV_MS
+Nom_MS -> N_MS | N_MS Adj_MS | N_MS Rel_MS | N_MS Adj_MS Rel_MS
+Rel_MS -> Que SV_MS | Que SVsub_MS
+SN_MS -> DetU_MS Nom_MS | DetE_MS Nom_MS | DetNum_MS Nom_MS
+SNex -> DetNum_MS Nom_MS
+Pred_MS -> Adj_MS | N_MS | Pred_MS Y Pred_MS
+SVpos_MS -> VI_S | VT_S Obj | Se VT_S | Cop_S Pred_MS | Cop_S Indef_MS N_MS | Cop_S NProp_M | Cop_S NProp_F
+SV_MS -> SVpos_MS | No SVpos_MS | No VT_S ObjNeg | SV_MS Y SV_MS | SV_MS Ox SV_MS
+SVsub_MS -> VIsub_S | VTsub_S Obj | No VIsub_S | No VTsub_S ObjNeg
+SNex -> DetE_MS Nom_MS | Nom_MP
+SNany -> SN_MS
+O -> SN_MP SV_MP | Solo Def_MP Nom_MP SV_MP
+Nom_MP -> N_MP | N_MP Adj_MP | N_MP Rel_MP | N_MP Adj_MP Rel_MP
+Rel_MP -> Que SV_MP | Que SVsub_MP
+SN_MP -> DetU_MP Nom_MP | DetE_MP Nom_MP | DetNum_MP Nom_MP
+SNex -> DetNum_MP Nom_MP
+Pred_MP -> Adj_MP | N_MP | Pred_MP Y Pred_MP
+SVpos_MP -> VI_P | VT_P Obj | Se VT_P | Cop_P Pred_MP
+SV_MP -> SVpos_MP | No SVpos_MP | No VT_P ObjNeg | SV_MP Y SV_MP | SV_MP Ox SV_MP
+SVsub_MP -> VIsub_P | VTsub_P Obj | No VIsub_P | No VTsub_P ObjNeg
+SNex -> DetE_MP Nom_MP | Nom_MP
+SNany -> SN_MP
+SN_MS -> NProp_M
+SNneg_MS -> DetNo_MS Nom_MS
+O -> SNneg_MS SVpos_MS
+SNnegAny -> SNneg_MS
+O -> SN_FS SV_FS | Solo NProp_F SV_FS
+Nom_FS -> N_FS | N_FS Adj_FS | N_FS Rel_FS | N_FS Adj_FS Rel_FS
+Rel_FS -> Que SV_FS | Que SVsub_FS
+SN_FS -> DetU_FS Nom_FS | DetE_FS Nom_FS | DetNum_FS Nom_FS
+SNex -> DetNum_FS Nom_FS
+Pred_FS -> Adj_FS | N_FS | Pred_FS Y Pred_FS
+SVpos_FS -> VI_S | VT_S Obj | Se VT_S | Cop_S Pred_FS | Cop_S Indef_FS N_FS | Cop_S NProp_M | Cop_S NProp_F
+SV_FS -> SVpos_FS | No SVpos_FS | No VT_S ObjNeg | SV_FS Y SV_FS | SV_FS Ox SV_FS
+SVsub_FS -> VIsub_S | VTsub_S Obj | No VIsub_S | No VTsub_S ObjNeg
+SNex -> DetE_FS Nom_FS | Nom_FP
+SNany -> SN_FS
+O -> SN_FP SV_FP | Solo Def_FP Nom_FP SV_FP
+Nom_FP -> N_FP | N_FP Adj_FP | N_FP Rel_FP | N_FP Adj_FP Rel_FP
+Rel_FP -> Que SV_FP | Que SVsub_FP
+SN_FP -> DetU_FP Nom_FP | DetE_FP Nom_FP | DetNum_FP Nom_FP
+SNex -> DetNum_FP Nom_FP
+Pred_FP -> Adj_FP | N_FP | Pred_FP Y Pred_FP
+SVpos_FP -> VI_P | VT_P Obj | Se VT_P | Cop_P Pred_FP
+SV_FP -> SVpos_FP | No SVpos_FP | No VT_P ObjNeg | SV_FP Y SV_FP | SV_FP Ox SV_FP
+SVsub_FP -> VIsub_P | VTsub_P Obj | No VIsub_P | No VTsub_P ObjNeg
+SNex -> DetE_FP Nom_FP | Nom_FP
+SNany -> SN_FP
+SN_FS -> NProp_F
+SNneg_FS -> DetNo_FS Nom_FS
+O -> SNneg_FS SVpos_FS
+SNnegAny -> SNneg_FS
+DetNum_MS -> AlMenos Indef_MS | Exactamente Indef_MS | ALoSumo Indef_MS
+DetNum_MP -> Num | AlMenos Num | Exactamente Num | ALoSumo Num
+DetNum_FS -> AlMenos Indef_FS | Exactamente Indef_FS | ALoSumo Indef_FS
+DetNum_FP -> Num | AlMenos Num | Exactamente Num | ALoSumo Num
+SN_MS -> Alguien | Alguien Rel_MS
+SNneg_MS -> Nadie | Nadie Rel_MS
+Obj -> SNany | A SNany
+ObjNeg -> SNnegAny | A SNnegAny
+NPAny -> NProp_M | NProp_F
+ListF -> NProp_F Y NProp_F | NProp_F Coma ListF
+ListM -> NProp_M Y NPAny | NProp_F Y NProp_M | NProp_M Coma ListAny | NProp_F Coma ListM
+ListAny -> ListM | ListF
+SN_MP -> ListM
+SN_FP -> ListF
+OListF -> NProp_F Ox NProp_F | NProp_F Coma OListF
+OListM -> NProp_M Ox NPAny | NProp_F Ox NProp_M | NProp_M Coma OListAny | NProp_F Coma OListM
+OListAny -> OListM | OListF
+SN_MS -> OListM
+SN_FS -> OListF
+SN_MP -> OListM
+SN_FP -> OListF

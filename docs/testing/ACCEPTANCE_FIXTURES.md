@@ -1,6 +1,6 @@
 # Fixtures y criterios de aceptación
 
-> Estado: borrador de Fase 0. Los fixtures viven en `tests/proof_corpus.py` (secuentes) y `docs/specs/espanol/casos_borde.txt` (español). Comando: `PYTHONPATH=src:tests python3 -m unittest discover -s tests` (137 pruebas).
+> Estado: borrador de Fase 0, ampliado para MM3032 el 2026-11-02. Los fixtures viven en `tests/proof_corpus.py` (secuentes), `docs/specs/espanol/casos_borde.txt` (español), `tests/test_project_integration.py` (fachada y API) y `tests/test_explain.py` (explicaciones). Comando: `PYTHONPATH=src:tests python3 -m unittest discover -s tests`.
 
 ## 1. Qué cuenta como «aceptado»
 
@@ -77,4 +77,4 @@ Salen de las conversaciones de repaso de deducción natural. Se leen con `propos
 
 - La validez universal de las leyes: la fuerza bruta cubre dominios de 1 a 3 elementos, no prueba nada en general. La garantía viene del cálculo y del checker.
 - Fórmulas de primer orden más difíciles que las del corpus: el buscador es incompleto, y el corpus lo escribió un solo autor.
-- La interfaz, la voz y el 3D (Fases 6–7).
+- La revisión visual y de accesibilidad en el navegador de entrega; el test HTTP solo verifica que se sirven los archivos y que los endpoints responden. Voz y 3D están fuera del plan MM3032.

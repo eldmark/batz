@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LOGOS · Evaluador semántico</title>
+  <link rel="stylesheet" href="/style.css">
+  <script defer src="/app.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="brand"><span class="brand-mark">∀</span><span>LOGOS<small>Laboratorio de lógica</small></span></div>
+    <span class="header-tag">Evaluador semántico · MM3032</span>
+  </header>
+  <main>
+    <div class="intro">
+      <div><p class="eyebrow">Lógica de primer orden</p><h1>Construye un modelo.<br><em>Comprueba una fórmula.</em></h1>
+      <p>Define el lenguaje y su interpretación. LOGOS evalúa cada caso y muestra por qué el resultado se cumple en este modelo.</p></div>
+      <button id="sample" class="button secondary" type="button">Cargar ejemplo</button>
+    </div>
+
+    <section class="card" aria-labelledby="language-heading">
+      <div class="section-head"><span class="step">01</span><div><h2 id="language-heading">Lenguaje</h2><p>Declara cada símbolo antes de usarlo en la fórmula.</p></div></div>
+      <div class="table-wrap"><table><thead><tr><th>Nombre</th><th>Tipo</th><th>Aridad</th><th></th></tr></thead><tbody id="symbols"></tbody></table></div>
+      <div class="actions"><button id="add-symbol" class="button secondary" type="button">+ Añadir símbolo</button><span class="hint">Las constantes son funciones de aridad 0. Predicados: aridad ≥ 1.</span></div>
+    </section>
+
+    <section class="card" aria-labelledby="interpretation-heading">
+      <div class="section-head"><span class="step">02</span><div><h2 id="interpretation-heading">Interpretación</h2><p>Elige un dominio y completa las tablas. Cada relación debe tener al menos una tupla.</p></div></div>
+      <label for="domain">Dominio D <span class="hint">Lista JSON de enteros o cadenas; por ejemplo <code>[0,1]</code> o <code>["Ana","Luis"]</code>.</span></label>
+      <div class="inline"><input id="domain" value="[0,1]" spellcheck="false"><button id="prepare" class="button secondary" type="button">Preparar tablas</button></div>
+      <p id="model-error" class="error" role="alert" hidden></p>
+      <div id="interpretation"></div>
+      <div class="actions"><button id="export-json" class="button secondary" type="button" disabled>Exportar JSON</button><button id="import-json" class="button secondary" type="button">Importar JSON</button><input id="import-file" type="file" accept=".json,application/json" hidden><span id="transfer-note" class="hint" role="status"></span></div>
+    </section>
+
+    <section class="card" aria-labelledby="formula-heading">
+      <div class="section-head"><span class="step">03</span><div><h2 id="formula-heading">Fórmula</h2><p>Escribe con el teclado o inserta símbolos en el cursor.</p></div></div>
+      <label for="formula">Expresión formal</label>
+      <textarea id="formula" rows="3" spellcheck="false" placeholder="∀x (P(x) → Q(x))"></textarea>
+      <div id="symbols-keyboard" class="keyboard" aria-label="Símbolos lógicos"></div>
+      <div id="formula-markup" class="formula-markup" aria-live="polite"></div>
+      <p id="formula-error" class="error" role="alert" hidden></p>
+      <details class="spanish-panel"><summary>Escribir en español controlado</summary>
+        <p class="hint">La grabación se transcribe en este equipo con Whisper si está configurado. Revisa y corrige el texto antes de mostrar las lecturas.</p>
+        <label for="spanish-input">Frase</label><input id="spanish-input" placeholder="Todos los estudiantes leyeron un libro" spellcheck="true">
+        <div class="actions"><button id="record-spanish" class="button secondary" type="button">Grabar frase</button><button id="stop-spanish" class="button secondary" type="button" disabled>Detener grabación</button><button id="translate-spanish" class="button secondary" type="button">Mostrar lecturas</button><span id="record-status" class="hint" role="status"></span></div>
+        <div id="spanish-readings" aria-live="polite"></div>
+      </details>
+    </section>
+
+    <section class="card" aria-labelledby="result-heading">
+      <div class="section-head"><span class="step">04</span><div><h2 id="result-heading">Entorno y resultado</h2><p>Asigna las variables libres y evalúa la fórmula en este modelo.</p></div></div>
+      <div id="assignment" class="assignment"></div>
+      <div class="actions"><button id="evaluate" class="button primary" type="button" disabled>Evaluar fórmula <span aria-hidden="true">→</span></button><span id="ready-note" class="hint">Completa la interpretación.</span></div>
+      <div id="result" class="result" aria-live="polite"></div>
+    </section>
+
+    <section id="story-section" class="card" aria-labelledby="story-heading" hidden>
+      <div class="section-head"><span class="step">05</span><div><h2 id="story-heading">Narración y dominio</h2><p>Cada frase y cambio visual viene de un nodo verificado de la evaluación.</p></div></div>
+      <div class="story-controls">
+        <button id="story-prev" class="button secondary" type="button">← Anterior</button>
+        <button id="story-play" class="button primary" type="button">Reproducir</button>
+        <button id="story-pause" class="button secondary" type="button">Pausar</button>
+        <button id="story-next" class="button secondary" type="button">Siguiente →</button>
+        <button id="story-replay" class="button secondary" type="button">Desde el inicio</button>
+      </div>
+      <div class="story-options"><label><input id="story-voice" type="checkbox"> Leer los pasos en voz alta</label><label><input id="story-3d" type="checkbox" checked> Vista 3D</label><span id="story-status" class="hint" role="status"></span></div>
+      <div id="story-visual" class="story-visual"></div>
+      <div id="story-2d" class="story-2d"></div>
+      <div id="story-current" class="story-current" aria-live="polite"></div>
+      <details><summary>Ver todos los pasos</summary><ol id="story-list" class="story-list"></ol></details>
+    </section>
+
+    <section class="card" aria-labelledby="countermodel-heading">
+      <div class="section-head"><span class="step">06</span><div><h2 id="countermodel-heading">Explorar contramodelos</h2><p>Busca una interpretación donde la sentencia sea falsa. La búsqueda tiene límites y solo muestra hallazgos verificados.</p></div></div>
+      <div class="actions"><label for="max-size">Tamaño máximo de D <select id="max-size"><option value="1">1</option><option value="2">2</option><option value="3" selected>3</option></select></label><button id="find-countermodel" class="button secondary" type="button">Buscar contramodelo</button><span class="hint">Hasta 5000 modelos o 2 segundos. Solo sentencias cerradas.</span></div>
+      <div id="countermodel-result" class="result" aria-live="polite"></div>
+    </section>
+
+    <section class="card" aria-labelledby="proof-heading">
+      <div class="section-head"><span class="step">07</span><div><h2 id="proof-heading">Prueba verificada</h2><p>Busca una derivación y narra solo los pasos que acepta el checker independiente.</p></div></div>
+      <label for="proof-premises">Premisas, una por línea</label>
+      <textarea id="proof-premises" rows="3" spellcheck="false" placeholder="P → Q&#10;P"></textarea>
+      <label for="proof-conclusion">Conclusión</label>
+      <input id="proof-conclusion" spellcheck="false" placeholder="Q">
+      <label for="proof-constants">Constantes declaradas (opcional, separadas por coma)</label>
+      <input id="proof-constants" spellcheck="false" placeholder="a, b">
+      <div class="actions"><button id="prove" class="button secondary" type="button">Buscar prueba</button><span class="hint">Búsqueda acotada a 3 segundos. «No encontrada» no significa falsa.</span></div>
+      <div id="proof-result" class="result" aria-live="polite"></div>
+    </section>
+  </main>
+  <footer>LOGOS evalúa la verdad en la interpretación indicada. Una fórmula verdadera aquí no es necesariamente válida en todos los modelos.</footer>
+</body>
+</html>
