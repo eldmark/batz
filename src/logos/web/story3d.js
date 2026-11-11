@@ -45,8 +45,8 @@ export function createStoryScene(container, model) {
       .3 * radius * Math.sin(angle));
   });
   model.domain.forEach((element, i) => {
-    const material = new THREE.MeshStandardMaterial({color: 0x36866f, metalness: .1, roughness: .42,
-      emissive: 0x123c36, emissiveIntensity: .16});
+    const material = new THREE.MeshStandardMaterial({color: 0x5279c4, metalness: .1, roughness: .42,
+      emissive: 0x16284f, emissiveIntensity: .16});
     const mesh = new THREE.Mesh(sphere, material);
     mesh.position.copy(positions[i]); group.add(mesh);
     const label = labelSprite(typeof element === 'string' ? element : String(element));
@@ -63,7 +63,7 @@ export function createStoryScene(container, model) {
       const start = positions[a].clone(), end = positions[b].clone();
       if (a === b) end.add(new THREE.Vector3(.45, .65, .2));
       const geometry = new THREE.BufferGeometry().setFromPoints([start, end]);
-      const material = new THREE.LineBasicMaterial({color: 0xf0a44d, linewidth: 2});
+      const material = new THREE.LineBasicMaterial({color: 0xd3a23e, linewidth: 2});
       const line = new THREE.Line(geometry, material);
       line.visible = false; group.add(line); edges.push({name, line});
     }
@@ -93,11 +93,11 @@ export function createStoryScene(container, model) {
       nodes.forEach(({mesh}, i) => {
         const element = model.domain[i];
         const active = focused.some(value => same(value, element));
-        let color = 0x36866f;
+        let color = 0x5279c4;
         if (relation?.arity === 1) {
-          color = relation.tuples.some(tuple => same(tuple[0], element)) ? 0x3aa36b : 0x748b86;
+          color = relation.tuples.some(tuple => same(tuple[0], element)) ? 0x7fa2e6 : 0x6b7280;
         }
-        if (active) color = event.value ? 0x26bf80 : 0xe2784d;
+        if (active) color = event.value ? 0x3fae6a : 0xd9664a;
         mesh.material.color.setHex(color);
         mesh.scale.setScalar(active ? 1.22 : 1);
       });

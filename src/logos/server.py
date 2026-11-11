@@ -106,6 +106,7 @@ class Handler(BaseHTTPRequestHandler):
                  "/app.js": ("app.js", "text/javascript; charset=utf-8"),
                  "/story3d.js": ("story3d.js", "text/javascript; charset=utf-8"),
                  "/style.css": ("style.css", "text/css; charset=utf-8"),
+                 "/tokens.css": ("tokens.css", "text/css; charset=utf-8"),
                  "/vendor/three.module.js": ("vendor/three.module.js", "text/javascript; charset=utf-8"),
                  "/vendor/three.core.js": ("vendor/three.core.js", "text/javascript; charset=utf-8"),
                  "/vendor/LICENSE-three.txt": ("vendor/LICENSE-three.txt", "text/plain; charset=utf-8")}

@@ -186,7 +186,8 @@ function addSymbol(name = '', kind = 'predicate', arity = 1) {
   arityInput.disabled = kind === 'constant';
   arityCell.append(arityInput);
   const removeCell = node('td');
-  const remove = node('button', '×', 'remove'); remove.type = 'button'; remove.setAttribute('aria-label', 'Eliminar símbolo');
+  const remove = node('button', undefined, 'remove');
+  remove.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M2 2l10 10M12 2L2 12"/></svg>'; remove.type = 'button'; remove.setAttribute('aria-label', 'Eliminar símbolo');
   remove.addEventListener('click', () => { row.remove(); invalidateTables(); });
   removeCell.append(remove);
   kindSelect.addEventListener('change', () => { arityInput.disabled = kindSelect.value === 'constant'; invalidateTables(); });
@@ -265,9 +266,12 @@ function valueSelect(label, options) {
   return select;
 }
 
-function group(name, description) {
+const KIND_LABEL = {constant: 'constante', function: 'función', predicate: 'predicado'};
+function group(name, kind, arity, description) {
   const box = node('div', undefined, 'interpret-group');
-  box.append(node('h3', name), node('p', description));
+  const title = node('h3', name);
+  title.append(node('span', arity ? `${KIND_LABEL[kind]} · aridad ${arity}` : KIND_LABEL[kind], `kind ${kind}`));
+  box.append(title, node('p', description));
   interpretationBox.append(box);
   return box;
 }
@@ -293,11 +297,11 @@ function prepare() {
     if (entries.some(([, n]) => values.length ** n > 1024)) throw Error('La tabla supera 1024 filas. Reduce el dominio o la aridad.');
     domain = values; preparedSignature = sig; interpretationBox.replaceChildren();
     for (const name of sig.constants) {
-      const box = group(`${name} · constante`, 'Selecciona su valor en D.');
+      const box = group(name, 'constant', 0, 'Selecciona su valor en D.');
       const select = valueSelect(`Valor de ${name}`, domain); select.dataset.constant = name; box.append(select);
     }
     for (const [name, arity] of Object.entries(sig.functions)) {
-      const body = table(group(`${name} · función de aridad ${arity}`, 'Completa un valor para cada entrada.'), 'Entrada', 'Valor');
+      const body = table(group(name, 'function', arity, 'Completa un valor para cada entrada.'), 'Entrada', 'Valor');
       for (const args of tuples(domain, arity)) {
         const row = node('tr'); row.dataset.args = JSON.stringify(args); row.dataset.function = name;
         const val = valueSelect(`Valor de ${name}${tupleLabel(args)}`, domain);
@@ -305,7 +309,7 @@ function prepare() {
       }
     }
     for (const [name, arity] of Object.entries(sig.predicates)) {
-      const body = table(group(`${name} · predicado de aridad ${arity}`, 'Marca las tuplas que pertenecen a la relación.'), 'Tupla', 'Pertenece');
+      const body = table(group(name, 'predicate', arity, 'Marca las tuplas que pertenecen a la relación.'), 'Tupla', 'Pertenece');
       for (const args of tuples(domain, arity)) {
         const row = node('tr'); row.dataset.args = JSON.stringify(args); row.dataset.predicate = name;
         const checkbox = node('input'); checkbox.type = 'checkbox'; checkbox.setAttribute('aria-label', `${name}${tupleLabel(args)} pertenece`);
@@ -437,8 +441,10 @@ async function evaluateFormula() {
       return;
     }
     showFormulaError(null);
-    resultBox.append(node('span', result.value ? 'Verdadero' : 'Falso', `badge ${result.value ? 'true' : 'false'}`));
-    resultBox.append(node('h3', '¿Por qué?'));
+    const verdict = node('p', result.value ? 'Verdadero' : 'Falso', `verdict ${result.value ? 'true' : 'false'}`);
+    verdict.append(node('small', result.explanation.summary));
+    resultBox.append(verdict);
+    resultBox.append(node('h3', 'Por qué'));
     const tree = explanationElement(result.explanation, true);
     const toggle = node('button', 'Desplegar todo', 'button secondary'); toggle.type = 'button';
     toggle.addEventListener('click', () => {
