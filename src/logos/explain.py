@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import json
 
 from .ast import And, Bottom, Const, Eq, Exists, Forall, Func, Iff, Implies, Not, Or, Pred, Var
 from .printer import to_string
@@ -34,12 +35,17 @@ def _term_steps(model, term, assignment):
     if isinstance(term, (Var, Const)):
         return ()
     steps = tuple(s for arg in term.args for s in _term_steps(model, arg, assignment))
-    return steps + (f"{to_string(term)} = {eval_term(model, term, assignment)!r}",)
+    return steps + (f"{to_string(term)} = {_val(eval_term(model, term, assignment))}",)
+
+
+def _val(value):
+    """Elemento de D como lo muestra la interfaz: 0 o "Ana"."""
+    return json.dumps(value, ensure_ascii=False)
 
 
 def _tuple(values):
     """Notación matemática de una tupla: (0) y (0, 1), no la de Python."""
-    return "(" + ", ".join(repr(v) for v in values) + ")"
+    return "(" + ", ".join(_val(v) for v in values) + ")"
 
 
 def _make(trace, summary, details=(), children=()):
@@ -61,21 +67,21 @@ def _explain(model, trace):
             summary = (f"La tupla {_tuple(trace.term_values)} pertenece a {relation}." if value else
                        f"La tupla {_tuple(trace.term_values)} no pertenece a {relation}.")
         else:
-            summary = (f"{trace.term_values[0]!r} y {trace.term_values[1]!r} son el mismo elemento." if value else
-                       f"{trace.term_values[0]!r} y {trace.term_values[1]!r} son elementos distintos.")
+            summary = (f"{_val(trace.term_values[0])} y {_val(trace.term_values[1])} son el mismo elemento." if value else
+                       f"{_val(trace.term_values[0])} y {_val(trace.term_values[1])} son elementos distintos.")
         return _make(trace, summary, details)
     if isinstance(f, Not):
         return _make(trace, "La negación invierte el valor de su subfórmula.",
                      children=(_explain(model, kids[0]),))
     if isinstance(f, (Forall, Exists)):
         if isinstance(f, Forall) and value or isinstance(f, Exists) and not value:
-            table = tuple(f"{f.var} = {child.element!r}: {'V' if child.value else 'F'}" for child in kids)
+            table = tuple(f"{f.var} = {_val(child.element)}: {'V' if child.value else 'F'}" for child in kids)
             summary = (f"Se revisaron los {len(kids)} elementos de D; todos satisfacen la fórmula." if value else
                        f"Se revisaron los {len(kids)} elementos de D; ninguno satisface la fórmula.")
             return _make(trace, summary, table, tuple(_explain(model, child) for child in kids))
         selected = next(child for child in kids if child.value == value)
-        summary = (f"Testigo: {f.var} = {selected.element!r} satisface la fórmula." if value else
-                   f"Contraejemplo: {f.var} = {selected.element!r} no satisface la fórmula.")
+        summary = (f"Testigo: {f.var} = {_val(selected.element)} satisface la fórmula." if value else
+                   f"Contraejemplo: {f.var} = {_val(selected.element)} no satisface la fórmula.")
         return _make(trace, summary, children=(_explain(model, selected),))
     if isinstance(f, And):
         selected = kids if value else (next(child for child in kids if not child.value),)

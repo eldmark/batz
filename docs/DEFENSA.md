@@ -5,7 +5,7 @@
 Desde la raíz del proyecto:
 
 ```bash
-PYTHONPATH=src python3 -m logos.server --port 8765
+python3 evaluador.py
 ```
 
 Abrir `http://127.0.0.1:8765/` en el navegador. Pulsar «Cargar ejemplo»: el dominio es `{0,1}`, `a` vale `0`, `Pᴵ={(0)}` y `Qᴵ={(1)}`. La fórmula `∀x (P(x) → Q(x))` es falsa; `x=0` es el primer contraejemplo. Cambiarla a `∃x P(x)` muestra el testigo `0`. Las tablas y el editor aceptan teclado; los botones insertan símbolos en la posición del cursor.

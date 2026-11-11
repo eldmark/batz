@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
+import webbrowser
 from pathlib import Path
 from urllib.parse import urlsplit
 
@@ -87,6 +88,9 @@ def handle_api(route, data):
 
 
 class Handler(BaseHTTPRequestHandler):
+    def log_message(self, format, *args):
+        pass  # la demo no necesita bitácora de accesos en la terminal
+
     def _json(self, status, data):
         body = json.dumps(data, ensure_ascii=False).encode("utf-8")
         self.send_response(status)
@@ -151,9 +155,16 @@ class Handler(BaseHTTPRequestHandler):
 def main(argv=None):
     parser = argparse.ArgumentParser(description="Interfaz local de LOGOS MM3032")
     parser.add_argument("--port", type=int, default=8765)
+    parser.add_argument("--no-browser", action="store_true", help="no abrir el navegador")
     args = parser.parse_args(argv)
-    server = ThreadingHTTPServer(("127.0.0.1", args.port), Handler)
-    print(f"LOGOS disponible en http://127.0.0.1:{server.server_port}/", flush=True)
+    try:
+        server = ThreadingHTTPServer(("127.0.0.1", args.port), Handler)
+    except OSError:  # puerto ocupado: usar uno libre en vez de fallar en la demo
+        server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+    url = f"http://127.0.0.1:{server.server_port}/"
+    print(f"LOGOS disponible en {url}  (Ctrl+C para salir)", flush=True)
+    if not args.no_browser:
+        webbrowser.open(url)
     try:
         server.serve_forever()
     except KeyboardInterrupt:

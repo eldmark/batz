@@ -20,7 +20,7 @@ resultado.status, resultado.value   # ('ok', True)
 ## Interfaz local (M2–M4)
 
 ```bash
-PYTHONPATH=src python3 -m logos.server --port 8765
+python3 evaluador.py
 ```
 
 Abre `http://127.0.0.1:8765/` y pulsa «Cargar ejemplo». La explicación se construye desde una traza verificada; cada nodo tiene un resumen, detalles desplegables y posición en la fórmula. Guía de defensa: `docs/DEFENSA.md`.

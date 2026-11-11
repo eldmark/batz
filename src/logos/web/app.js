@@ -225,9 +225,21 @@ function invalidateTables() {
 }
 
 function readDomain() {
+  // Acepta JSON ([0,1], ["Ana","Luis"]) y también la escritura usual: 0, 1 · {a, b} · Ana, Luis.
+  const text = $('domain').value.trim();
   let parsed;
-  try { parsed = JSON.parse($('domain').value); }
-  catch { throw Error('El dominio debe ser una lista JSON, por ejemplo [0,1].'); }
+  try { parsed = JSON.parse(text); }
+  catch {
+    const inner = text.replace(/^[\[{(]\s*/, '').replace(/\s*[\]})]$/, '');
+    if (!inner.trim()) throw Error('El dominio no puede ser vacío.');
+    parsed = inner.split(',').map(piece => {
+      const item = piece.trim();
+      const quoted = item.match(/^(["'])(.*)\1$/);  // entre comillas siempre es cadena
+      if (quoted) return quoted[2];
+      return /^-?\d+$/.test(item) && Number.isSafeInteger(Number(item)) ? Number(item) : item;
+    });
+    if (parsed.some(item => item === '')) throw Error('El dominio tiene un elemento vacío: revisa las comas.');
+  }
   if (!Array.isArray(parsed) || !parsed.length || parsed.some(x => typeof x !== 'string' && !(Number.isInteger(x) && !Object.is(x, -0)))) {
     throw Error('El dominio debe ser una lista no vacía de enteros o cadenas.');
   }
@@ -339,7 +351,7 @@ function refreshReady() {
   let note = 'Completa la interpretación.';
   let ready = false;
   if (preparedSignature) {
-    try { interpretation(); ready = true; note = 'Modelo completo. Escribe una fórmula para evaluar.'; }
+    try { interpretation(); ready = true; note = formulaBox.value.trim() ? 'Modelo completo. Listo para evaluar.' : 'Modelo completo. Escribe una fórmula para evaluar.'; }
     catch (exc) { note = exc.message; }
   }
   $('ready-note').textContent = note;
@@ -427,7 +439,15 @@ async function evaluateFormula() {
     showFormulaError(null);
     resultBox.append(node('span', result.value ? 'Verdadero' : 'Falso', `badge ${result.value ? 'true' : 'false'}`));
     resultBox.append(node('h3', '¿Por qué?'));
-    resultBox.append(explanationElement(result.explanation, true));
+    const tree = explanationElement(result.explanation, true);
+    const toggle = node('button', 'Desplegar todo', 'button secondary'); toggle.type = 'button';
+    toggle.addEventListener('click', () => {
+      const open = toggle.textContent === 'Desplegar todo';
+      tree.querySelectorAll('details').forEach((item, i) => { item.open = open || i === 0; });
+      toggle.textContent = open ? 'Contraer' : 'Desplegar todo';
+    });
+    if (result.explanation.children?.length) resultBox.append(toggle);
+    resultBox.append(tree);
     showStory(result.story, result.model);
   } catch (exc) { resultBox.append(node('p', exc.message || 'No se pudo evaluar.', 'error')); }
 }

@@ -27,8 +27,8 @@
 
     <section class="card" aria-labelledby="interpretation-heading">
       <div class="section-head"><span class="step">02</span><div><h2 id="interpretation-heading">Interpretación</h2><p>Elige un dominio y completa las tablas. Cada relación debe tener al menos una tupla.</p></div></div>
-      <label for="domain">Dominio D <span class="hint">Lista JSON de enteros o cadenas; por ejemplo <code>[0,1]</code> o <code>["Ana","Luis"]</code>.</span></label>
-      <div class="inline"><input id="domain" value="[0,1]" spellcheck="false"><button id="prepare" class="button secondary" type="button">Preparar tablas</button></div>
+      <label for="domain">Dominio D <span class="hint">Elementos separados por comas: <code>0, 1, 2</code> o <code>Ana, Luis</code>. También se acepta una lista JSON.</span></label>
+      <div class="inline"><input id="domain" value="0, 1" spellcheck="false"><button id="prepare" class="button secondary" type="button">Preparar tablas</button></div>
       <p id="model-error" class="error" role="alert" hidden></p>
       <div id="interpretation"></div>
       <div class="actions"><button id="export-json" class="button secondary" type="button" disabled>Exportar JSON</button><button id="import-json" class="button secondary" type="button">Importar JSON</button><input id="import-file" type="file" accept=".json,application/json" hidden><span id="transfer-note" class="hint" role="status"></span></div>
