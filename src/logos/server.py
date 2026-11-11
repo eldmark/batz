@@ -156,11 +156,13 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description="Interfaz local de LOGOS MM3032")
     parser.add_argument("--port", type=int, default=8765)
     parser.add_argument("--no-browser", action="store_true", help="no abrir el navegador")
+    parser.add_argument("--host", default="127.0.0.1",
+                        help="interfaz de escucha; solo Docker necesita 0.0.0.0")
     args = parser.parse_args(argv)
     try:
-        server = ThreadingHTTPServer(("127.0.0.1", args.port), Handler)
+        server = ThreadingHTTPServer((args.host, args.port), Handler)
     except OSError:  # puerto ocupado: usar uno libre en vez de fallar en la demo
-        server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        server = ThreadingHTTPServer((args.host, 0), Handler)
     url = f"http://127.0.0.1:{server.server_port}/"
     print(f"LOGOS disponible en {url}  (Ctrl+C para salir)", flush=True)
     if not args.no_browser:

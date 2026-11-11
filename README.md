@@ -23,6 +23,14 @@ resultado.status, resultado.value   # ('ok', True)
 python3 evaluador.py
 ```
 
+Con Docker (no hace falta tener Python instalado):
+
+```bash
+docker compose up --build      # detener: docker compose down
+```
+
+La interfaz queda en `http://127.0.0.1:8765/`, publicada solo en este equipo. Otro puerto: `LOGOS_PORT=9000 docker compose up --build`.
+
 Abre `http://127.0.0.1:8765/` y pulsa «Cargar ejemplo». La explicación se construye desde una traza verificada; cada nodo tiene un resumen, detalles desplegables y posición en la fórmula. Guía de defensa: `docs/DEFENSA.md`.
 
 La sección «Explorar contramodelos» busca una interpretación estricta que falsifique una **sentencia**. Usa tamaños de dominio 1–3, hasta 5000 candidatos o 2 segundos; si no encuentra uno, devuelve `unknown` y no afirma validez universal. Un hallazgo se puede cargar en las tablas. «Exportar JSON» guarda firma, interpretación y fórmula; «Importar JSON» valida el modelo antes de cargarlo.
