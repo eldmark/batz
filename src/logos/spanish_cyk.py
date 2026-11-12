@@ -128,7 +128,8 @@ def _lexical_hits(tokens):
             yield end - len(phrase), len(phrase), phrase
 
 
-def parse(text: str) -> tuple[tuple[Token, ...], tuple[Tree, ...]]:
+def parse(text: str, extra=()) -> tuple[tuple[Token, ...], tuple[Tree, ...]]:
+    """`extra`: pares (posición, categoría) para palabras fuera del léxico que alguien propuso."""
     tokens = tokenize(text)
     lex, unary, binary = grammar()
     n = len(tokens)
@@ -151,6 +152,10 @@ def parse(text: str) -> tuple[tuple[Token, ...], tuple[Tree, ...]]:
     for start, length, words in _lexical_hits(tokens):
         cell = table[start][length]
         for head in sorted(lex[words]): add(cell, head, ("w", " ".join(words)))
+        close(cell)
+    for position, head in extra:
+        cell = table[position][1]
+        add(cell, head, ("w", tokens[position].text))
         close(cell)
     for length in range(1, n + 1):
         for start in range(n - length + 1):
