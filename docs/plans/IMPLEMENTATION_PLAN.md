@@ -95,3 +95,16 @@ Son estimaciones gruesas para decidir qué recortar si falta tiempo. **Recorte r
 - Cada regla del cálculo y cada condición lateral tiene prueba negativa.
 - Los umbrales (profundidad, nodos, tiempo, tamaño de dominio) son **configuración**, no afirmaciones de verdad.
 - Registro reproducible: versión, configuración, fixtures y resultados de cada ensayo de demo.
+
+## 6. Estado del motor B (2026-11-12)
+
+Implementado en `src/logos/resolution/` con el diseño de §3: clausificación (forma normal negativa, Skolem, distribución con cota), unificación con comprobación de ocurrencia, resolución binaria con factorización, selección por peso con turnos por antigüedad, y axiomas de igualdad cuando la fórmula usa `=`. Las variables libres del secuente se tratan como constantes arbitrarias, igual que en el motor A.
+
+Evidencia (`tests/test_resolution.py`):
+
+- Refuta los 88 secuentes válidos de `tests/proof_corpus.py` y ninguno de los 22 inválidos (20 saturan; 2 de igualdad agotan el límite de cláusulas, que es `unknown`).
+- En lógica proposicional coincide con la tabla de verdad en 250 secuentes al azar: refuta si y solo si es válido.
+- En primer orden, cada refutación de 160 secuentes al azar se contrastó con modelos pequeños: ninguno la falsifica.
+- La matriz de contraste sobre el corpus completo no da ninguna alarma de corrección. Dio **un hueco de completitud del motor A**: `⊢ ∀x (A ∨ P(x)) ↔ (A ∨ ∀x P(x))`, que B refuta y A no prueba con sus límites por defecto.
+
+Sigue sin ser un decisor: en primer orden puede no terminar, y por eso `unknown` existe. Nunca produce `proved`.

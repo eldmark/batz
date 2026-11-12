@@ -31,7 +31,7 @@ docker compose up --build      # detener: docker compose down
 
 La interfaz queda en `http://127.0.0.1:8765/`, publicada solo en este equipo. Otro puerto: `LOGOS_PORT=9000 docker compose up --build`.
 
-Abre `http://127.0.0.1:8765/` y pulsa «Cargar ejemplo». La explicación se construye desde una traza verificada; cada nodo tiene un resumen, detalles desplegables y posición en la fórmula. Guía de defensa: `docs/DEFENSA.md`.
+Abre `http://127.0.0.1:8765/` y pulsa «Ejemplo», o «Cargar archivo» con uno de `ejemplos/*.logos`. La barra superior cambia entre dos modos: evaluar una fórmula en un modelo, o demostrar una consecuencia (deducción natural verificada más resolución como segunda opinión). La explicación se construye desde una traza verificada; cada nodo tiene un resumen, detalles desplegables y posición en la fórmula. Guía de defensa: `docs/DEFENSA.md`.
 
 La sección «Explorar contramodelos» busca una interpretación estricta que falsifique una **sentencia**. Usa tamaños de dominio 1–3, hasta 5000 candidatos o 2 segundos; si no encuentra uno, devuelve `unknown` y no afirma validez universal. Un hallazgo se puede cargar en las tablas. «Exportar JSON» guarda firma, interpretación y fórmula; «Importar JSON» valida el modelo antes de cargarlo.
 
@@ -43,7 +43,11 @@ PYTHONPATH=src python3 scripts/validate_demo.py --seed 20261102
 
 El reporte y el recorrido para la entrega están en `docs/validation/ENSAYO-MM3032.md`. El ensayo usa solo HTTP local y deja claro cuáles comprobaciones necesitan una persona frente al navegador.
 
-## Español controlado inicial
+## Archivos preparados
+
+Un archivo `.logos` describe un modelo y sus fórmulas en texto plano; el formato está documentado en `src/logos/modelfile.py` y hay dos ejemplos en `ejemplos/`. La interfaz evalúa todas las fórmulas del archivo y compara cada una con su valor esperado, si lo trae.
+
+## Español controlado
 
 El panel «Escribir en español controlado» reconoce un fragmento pequeño y muestra todas sus lecturas. Por ejemplo, «Todos los estudiantes leyeron un libro» produce dos alcances de cuantificadores; hay que elegir uno antes de preparar el modelo. Las frases fuera del fragmento se rechazan. La especificación amplia y los casos todavía no cubiertos están en `docs/specs/SPANISH_CONTROLLED.md`.
 

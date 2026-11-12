@@ -71,8 +71,8 @@ Criterios: ninguna entrada inválida muestra Verdadero/Falso; mensajes en españ
 | Antes | Ahora |
 |---|---|
 | Fase 7 (voz, Three.js, Whisper) | Fuera de la rúbrica MM3032; reabierta como extra por pedido del usuario. Three.js y controles probados en Brave; síntesis local implementada, pendiente ensayo audible en un equipo con voz española; Whisper opcional pendiente |
-| Motor B (resolución) | **Fuera** salvo que sobre tiempo después de M4 |
-| Español controlado integrado (Fase 5) | Candidato a creativo, ver §5 |
+| Motor B (resolución) | **Hecho (2026-11-12)** como segunda opinión en el modo Demostrar; ver `IMPLEMENTATION_PLAN.md` §6 |
+| Español controlado integrado (Fase 5) | **Hecho**: gramática completa con CYK; los 51 casos cumplen (`docs/validation/ESPANOL-51-CASOS.md`). Pendiente: léxico abierto con etiquetador entrenado y revisión humana |
 | Q1, Q2, Q3, Q5, Q6, Q7 | Q1 resuelta arriba; Q2 = fecha de entrega del PDF (**falta que la fijes**); Q6/Q7 no aplican |
 | Q4 (letras proposicionales en minúscula) | Pendiente; solo importa si el proyecto acepta fórmulas proposicionales de clase |
 
@@ -106,3 +106,19 @@ Deben estar implementados, probados y justificados; elegir **dos o tres**, no to
 2. **¿Cuántos integrantes y quién defiende qué?** La defensa es individual (30 pts) y «se podrá preguntar sobre cualquier parte».
 3. **¿Ventana nativa obligatoria?** Si no, se sigue con la UI web local.
 4. **¿Las constantes se declaran como funciones 0-arias** (como dice el PDF: «símbolo funcional n-ario») o aparte? Hoy hay `constants` separado; la UI puede presentar ambos como «función de aridad 0».
+
+## 8. Estado al 2026-11-12
+
+**Interfaz.** Dos modos en la barra superior. *Evaluar en un modelo*: lenguaje e interpretación a la izquierda, fórmula, entorno y veredicto a la derecha; contramodelos y español quedan plegados. *Demostrar*: premisas y conclusión con revisión de sintaxis mientras se escribe, prueba verificada y contraste con el motor B. El paso a paso ya no se abre solo: se pide desde el resultado. Paleta en cuadrado desde el verde `#3f7660`, tipografías Literata, IBM Plex Sans y JetBrains Mono servidas en local.
+
+**Archivos preparados.** «Cargar archivo» (o soltar el archivo sobre la página) acepta el JSON exportado y el formato de texto `.logos`: dominio, constantes, funciones, predicados y una lista de fórmulas con entorno y valor esperado opcionales. Cada fórmula se evalúa y se compara con lo esperado; ejemplos en `ejemplos/`.
+
+**Ejecución.** `python3 evaluador.py` o `docker compose up --build`.
+
+**Pruebas.** 195 automáticas. Reportes regenerables: `scripts/report_spanish.py` (51 casos) y `scripts/validate_demo.py` (recorrido de la demo).
+
+**Pendiente.**
+- Etiquetador entrenado para palabras fuera del léxico del español. Las conversaciones de clase del cerebro casi no contienen frases en lenguaje natural para formalizar (son sobre sintaxis formal), así que no alcanzan como corpus etiquetado: sirven de conjunto de prueba, no de entrenamiento.
+- Avatar que narre las comprobaciones y los contraejemplos (modelo desde Meshy, animación en Blender).
+- Vista Fitch de las pruebas.
+- Revisión cruzada firmada y ensayo de defensa.

@@ -9,7 +9,7 @@ texto formal ──► lexer ──► parser ──► FormulaAST ──┬─�
                                                    ├─► decisor proposicional (tabla de verdad) ──► contramodelo verificado
 español controlado ──► (adaptador, Fase 5) ────────┤
 voz (Whisper, opcional) ─► español controlado      ├─► motor A: deducción natural ──► ProofCertificate ─┐
-                                                   └─► motor B (planeado): resolución, solo oráculo     │
+                                                   └─► motor B: resolución, solo oráculo de contraste   │
                                                                                                          ▼
 UI / TTS / Three.js ◄── ExplanationBuilder (Fase 7) ◄── resultado verificado ◄──────────────── checker independiente
 ```
@@ -35,7 +35,8 @@ El español y la voz **no son motores**: son adaptadores de entrada que producen
 | `proof/kalmar.py` | hecho | Prueba proposicional completa y determinista | propositional, search (solo constructores) |
 | `proof/__init__.py` | hecho | `prove`, `prove_text`, `find_inconsistency`; compone buscador + checker | todo lo anterior |
 | `countermodel.py` | **Fase 4** | Buscador de contramodelos finitos con cotas explícitas | model, semantics |
-| `resolution/` | **planeado** | Motor B, solo como oráculo de contraste | ast, transform |
+| `resolution/` | hecho | Motor B: forma clausal, unificación y resolución con factorización; solo oráculo de contraste (`contrast`) | ast, transform |
+| `modelfile.py` | hecho | Lee archivos `.logos` y JSON con un modelo y sus fórmulas | errors |
 | `spanish/` | **Fase 5** | Aho-Corasick, léxico, CYK, adaptador a `FormulaAST` | ast, parser |
 | `explain/` | **Fase 7** | `ExplanationBuilder` determinista | certificado verificado |
 
@@ -53,7 +54,7 @@ El español y la voz **no son motores**: son adaptadores de entrada que producen
 | Lógica | Camino 1 | Camino 2 | Qué se garantiza |
 |---|---|---|---|
 | **Proposicional** | Búsqueda en deducción natural (`search.py`) | Algoritmo de Kalmár (`kalmar.py`) + tabla de verdad como oráculo | **Siempre** hay veredicto: `proved` (certificado) o `counterexample` (modelo). `decide` intenta el buscador y cae a Kalmár. |
-| **Primer orden** | Búsqueda en deducción natural | Motor B de resolución (planeado), solo contraste | **No** hay veredicto garantizado: la validez es indecidible. `unknown` es respuesta legítima. |
+| **Primer orden** | Búsqueda en deducción natural | Motor B de resolución, solo contraste | **No** hay veredicto garantizado: la validez es indecidible. `unknown` es respuesta legítima. |
 
 Los dos caminos se comparan en las pruebas: si uno prueba algo que el otro refuta, hay un bug de corrección. Si el buscador no prueba algo que Kalmár sí, queda registrado como hueco de completitud (ya pasó una vez: `docs/decisions/OPEN_QUESTIONS.md`, ADR-005).
 

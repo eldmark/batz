@@ -32,7 +32,7 @@ Hallazgos al leer `00-README-ROADMAP.md` … `10-PROMPT-PARA-CLAUDE.md`. Severid
 | ADR-002 | **Deducción natural** como cálculo único del motor A. Presentación con hipótesis abiertas explícitas (Prawitz), no Fitch lineal; la vista Fitch se genera al narrar | **Aprobada** (usuario) | 2026-10-21 |
 | ADR-003 | `⊥` es átomo primitivo. `¬I`, `¬E`, `⊥E`, `RAA` lo usan; `inconsistent` = `⊢ ⊥` | Aplicada, comunicada al usuario | 2026-10-21 |
 | ADR-004 | Las fórmulas se comparan **salvo alfa-equivalencia** (checker y buscador); la sustitución evita captura renombrando | Aplicada | 2026-10-21 |
-| ADR-005 | **Dos caminos de prueba.** Proposicional: búsqueda + Kalmár + tabla de verdad como oráculo (siempre hay veredicto). Primer orden: búsqueda + motor B de resolución como oráculo (sin garantía) | Parcial: proposicional hecho; motor B pendiente | 2026-10-21 |
+| ADR-005 | **Dos caminos de prueba.** Proposicional: búsqueda + Kalmár + tabla de verdad como oráculo (siempre hay veredicto). Primer orden: búsqueda + motor B de resolución como oráculo (sin garantía) | Hecho: proposicional y motor B (2026-11-12) | 2026-10-21 |
 | ADR-006 | Modo opcional `propositional=True`: `p` se lee como `P`; mezclar `p` y `P` es `letter_collision` | **Propuesta, pendiente de aprobación** (Q4). Apagado por defecto | 2026-10-21 |
 | ADR-007 | Convención de nombres: mayúscula = predicado; minúscula = variable/constante/función | Aprobada (D-2, con D-1) | 2026-10-21 |
 | ADR-008 | Sin nombres únicos ni dominio cerrado: dos constantes distintas pueden denotar el mismo elemento | Aplicada | 2026-10-21 |

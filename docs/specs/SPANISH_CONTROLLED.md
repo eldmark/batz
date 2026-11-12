@@ -1,6 +1,6 @@
 # Español controlado → FOL: tokenizador, gramática y casos borde
 
-> Estado: **especificación amplia en revisión**. Desde 2026-11-02 existe un adaptador inicial independiente en `src/logos/spanish.py`, conectado a la API y a la interfaz. Reconoce solo nombres propios con verbos del léxico acotado, cuantificadores simples, identidad, «joven» y la ambigüedad de alcance de «Todos los estudiantes leyeron un libro». El prototipo de gramática de esta carpeta aún no está integrado; sus 51 casos siguen siendo la meta de la fase completa, no una cobertura del adaptador inicial.
+> Estado (2026-11-12): **gramática completa integrada** con CYK y Aho-Corasick (`spanish_cyk.py`, `spanish_semantics.py`); los 51 casos cumplen, ver `docs/validation/ESPANOL-51-CASOS.md`. El léxico sigue cerrado y sin revisión humana. Lo que sigue en este párrafo describe el estado anterior. Estado previo: especificación amplia en revisión. Desde 2026-11-02 existe un adaptador inicial independiente en `src/logos/spanish.py`, conectado a la API y a la interfaz. Reconoce solo nombres propios con verbos del léxico acotado, cuantificadores simples, identidad, «joven» y la ambigüedad de alcance de «Todos los estudiantes leyeron un libro». El prototipo de gramática de esta carpeta aún no está integrado; sus 51 casos siguen siendo la meta de la fase completa, no una cobertura del adaptador inicial.
 
 ## 1. Principio: no tirar información
 

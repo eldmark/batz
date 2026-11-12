@@ -8,7 +8,7 @@ Desde la raíz del proyecto:
 python3 evaluador.py
 ```
 
-Abrir `http://127.0.0.1:8765/` en el navegador. Pulsar «Cargar ejemplo»: el dominio es `{0,1}`, `a` vale `0`, `Pᴵ={(0)}` y `Qᴵ={(1)}`. La fórmula `∀x (P(x) → Q(x))` es falsa; `x=0` es el primer contraejemplo. Cambiarla a `∃x P(x)` muestra el testigo `0`. Las tablas y el editor aceptan teclado; los botones insertan símbolos en la posición del cursor.
+Abrir `http://127.0.0.1:8765/` en el navegador (también `docker compose up --build`). Pulsar «Ejemplo»: el dominio es `{0,1}`, `a` vale `0`, `Pᴵ={(0)}` y `Qᴵ={(1)}`. La fórmula `∀x (P(x) → Q(x))` es falsa; `x=0` es el primer contraejemplo. Cambiarla a `∃x P(x)` muestra el testigo `0`. Las tablas y el editor aceptan teclado; los botones insertan símbolos en la posición del cursor.
 
 ## Mapa de módulos y argumento matemático
 
@@ -23,6 +23,8 @@ Abrir `http://127.0.0.1:8765/` en el navegador. Pulsar «Cargar ejemplo»: el do
 | `explain.py` | Deriva texto y árbol de explicación de una traza ya verificada | Un `∃` verdadero muestra el primer testigo; un `∀` falso, el primer contraejemplo; los otros dos casos muestran toda la tabla de `D`. |
 | `server.py`, `web/` | Interfaz local, sin dependencias externas | El navegador recoge datos y muestra la explicación; Python decide el valor. El servidor escucha solo en `127.0.0.1`. |
 | `proof/`, `propositional.py` | Aportes creativos existentes: prueba, verificador y decisión proposicional | Un certificado aceptado respalda `proved`; agotar búsqueda en FOL significa `unknown`. No forma parte del cálculo del valor en un modelo. |
+| `resolution/` | Aporte creativo: segundo demostrador, por resolución, independiente del primero | Refuta premisas ∪ {¬conclusión}. Si deriva la cláusula vacía, la consecuencia vale; si satura sin ella, no vale; si agota límites, no dice nada. Solo contrasta: `proved` exige certificado de deducción natural. |
+| `modelfile.py` | Lee archivos `.logos` con modelo y fórmulas | Solo lee la forma; la validación matemática la hace `build_interpretation`. |
 | `countermodels.py` | Aporte creativo: busca modelos estrictos que falsifican una sentencia | Enumera por tamaño de dominio, respeta límites de tiempo/candidatos/tablas y revalida el hallazgo. Sin hallazgo: `unknown`, nunca «válida». |
 
 ## Diez preguntas probables
@@ -47,3 +49,9 @@ Para el aporte creativo, buscar un contramodelo de `∀x P(x)` con `P` unario: c
 ## Revisión humana pendiente
 
 La revisión cruzada del equipo de `FORMAL_LANGUAGE.md`, `SEMANTICS.md` y `ACCEPTANCE_FIXTURES.md` no se puede firmar automáticamente. Cada integrante debe revisar ejemplos, condiciones laterales y límites, y registrar nombre, fecha y observaciones en `docs/decisions/OPEN_QUESTIONS.md`.
+
+## Demostración de los dos motores
+
+En el modo «Demostrar», escribir `∀x (P(x) → Q(x))` y `P(a)` como premisas, `Q(a)` como conclusión y `a` como constante. Debe salir «Demostrada» con cuatro pasos y, debajo, «Los dos motores coinciden» con la refutación por resolución de cinco cláusulas. Cambiar a premisa `P → Q` y conclusión `Q → P`: sale «No se sigue», porque la resolución satura sin contradicción; el motor de deducción natural por sí solo solo habría dicho «sin prueba». Borrar un paréntesis de una premisa: la revisión de sintaxis marca el punto exacto y el botón se desactiva.
+
+Para el evaluador, cargar `ejemplos/grafo.logos`: ocho fórmulas se evalúan de una vez, siete coinciden con el valor que el archivo esperaba y una (`Q(a)`) se rechaza por símbolo no declarado, sin valor de verdad.
