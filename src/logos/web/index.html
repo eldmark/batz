@@ -14,6 +14,7 @@
     <div class="modes" role="tablist" aria-label="Modo de trabajo">
       <button id="tab-evaluate" class="mode" role="tab" type="button" aria-selected="true" aria-controls="mode-evaluate">Evaluar en un modelo</button>
       <button id="tab-prove" class="mode" role="tab" type="button" aria-selected="false" aria-controls="mode-prove" tabindex="-1">Demostrar</button>
+      <button id="tab-dictionary" class="mode" role="tab" type="button" aria-selected="false" aria-controls="mode-dictionary" tabindex="-1">Diccionario</button>
     </div>
     <div class="topbar-actions">
       <button id="import-json" class="button on-brand" type="button">Cargar archivo</button>
@@ -106,6 +107,44 @@
           <div class="run-action"><button id="prove" class="button primary" type="button">Buscar prueba</button><span id="prove-note" class="hint"></span></div>
         </div>
         <div id="proof-result" class="result" aria-live="polite"></div>
+      </div>
+    </section>
+  </main>
+
+  <main id="mode-dictionary" class="workspace dictionary" role="tabpanel" aria-labelledby="tab-dictionary" hidden>
+    <section class="pane model" aria-labelledby="dict-heading">
+      <h2 id="dict-heading" class="pane-title">Diccionario del español</h2>
+      <p id="dict-counts" class="pane-lede"></p>
+      <div class="block">
+        <label for="dict-query">Busca una palabra o una forma conjugada</label>
+        <input id="dict-query" spellcheck="false" placeholder="duermen, mujeres, alta…" autocomplete="off">
+        <div id="dict-filters" class="filters" role="group" aria-label="Categoría"></div>
+        <div class="table-wrap"><table class="dict-table"><thead><tr><th>Palabra</th><th>Categoría</th><th>Formas</th><th>Símbolo</th><th><span class="sr-only">Quitar</span></th></tr></thead><tbody id="dict-results"></tbody></table></div>
+        <div class="actions"><button id="dict-more" class="button secondary" type="button" hidden>Mostrar más</button><span id="dict-note" class="hint" role="status"></span></div>
+      </div>
+    </section>
+    <section class="pane question" aria-labelledby="dict-add-heading">
+      <div class="question-inner">
+        <h2 id="dict-add-heading" class="pane-title">Añade una palabra</h2>
+        <p class="pane-lede">Escríbela como la usarías. Si no está, el modelo propone qué es y tú lo corriges antes de guardar.</p>
+        <label for="dict-word">Palabra</label>
+        <div class="inline"><input id="dict-word" class="formal" spellcheck="false" placeholder="galopan" autocomplete="off"><button id="dict-check" class="button secondary" type="button">Consultar</button></div>
+        <p id="dict-proposal" class="hint" role="status"></p>
+        <div id="dict-form" hidden>
+          <div class="dict-fields">
+            <div><label for="dict-lemma">Lema <span class="hint">singular, o infinitivo si es verbo</span></label><input id="dict-lemma" class="formal" spellcheck="false"></div>
+            <div><label for="dict-category">Categoría</label><select id="dict-category"><option value="N">Sustantivo</option><option value="ADJ">Adjetivo</option><option value="V">Verbo</option><option value="NP">Nombre propio</option></select></div>
+            <div><label for="dict-feature" id="dict-feature-label">Género</label><select id="dict-feature"></select></div>
+          </div>
+          <details class="more"><summary>Es irregular</summary>
+            <div id="dict-irregular"></div>
+          </details>
+          <h3>Formas que se van a reconocer</h3>
+          <p id="dict-preview" class="dict-preview" aria-live="polite"></p>
+          <p id="dict-error" class="error" role="alert" hidden></p>
+          <div class="run"><p class="hint run-env">Se guarda en este equipo, aparte del léxico base, y queda disponible de inmediato para escribir frases.</p>
+            <div class="run-action"><button id="dict-save" class="button primary" type="button">Guardar</button></div></div>
+        </div>
       </div>
     </section>
   </main>

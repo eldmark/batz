@@ -17,6 +17,7 @@ from .parser import parse
 from .printer import to_string
 from .transform import free_vars
 from .modelfile import parse_model_file
+from . import lexicon, spanish_tagger as tagger
 from .resolution import ResolutionConfig, resolve_text, _MATRIX as MATRIX
 from .spanish import translate_spanish
 from .proof import SearchConfig, prove_text
@@ -40,12 +41,46 @@ def _signature(data):
     return Signature(constants=frozenset(constants), functions=functions, predicates=predicates)
 
 
+def _lexicon_api(action, data):
+    """Diccionario del español: buscar, proponer con el modelo, previsualizar, añadir y quitar."""
+    text = lambda key, limit=60: (data.get(key) if isinstance(data.get(key), str) else "")[:limit]
+    if action == "search":
+        offset = data.get("offset") if type(data.get("offset")) is int and data.get("offset") >= 0 else 0
+        total, hits = lexicon.search(text("query"), text("category", 4), text("source", 8), 60, offset)
+        return {"total": total, "offset": offset, "counts": lexicon.counts(), "entries": [e.to_dict() for e in hits]}
+    if action == "suggest":
+        word = text("word").strip()
+        if not word or not all(ch.isalpha() for ch in word):
+            raise LogosError("semantic", "invalid_lexicon", "escribe una sola palabra, solo letras")
+        found = [e.to_dict() for e in lexicon.find(word)]
+        proposal = None
+        if not found and tagger.available():
+            tag, probability = tagger.probabilities([word], 0, frozenset())[0]
+            kind, _, form = tag.partition("_")
+            category = {"N": "N", "Adj": "ADJ", "NProp": "NP"}.get(kind, "V")
+            feature = form[0] if category == "N" else form if category == "NP" else ("T" if "VT" in kind else "I") if category == "V" else "-"
+            lemma = tagger.guess_predicate(word, tag)
+            proposal = {"lemma": word if category == "NP" else lemma.lower(), "category": category, "feature": feature,
+                        "probability": round(probability, 3), "label": tagger.TAG_NAMES[tag]}
+        return {"word": word, "found": found, "proposal": proposal}
+    fields = (text("lemma"), text("category", 4), text("feature", 4), text("extra", 200))
+    if action == "preview":
+        return {"entry": lexicon._validate(*fields).to_dict()}
+    if action == "add":
+        return {"entry": lexicon.add(*fields).to_dict(), "counts": lexicon.counts()}
+    if action == "remove":
+        return {"removed": lexicon.remove(fields[0], fields[1]), "counts": lexicon.counts()}
+    raise LogosError("syntactic", "unexpected_token", "acción de diccionario desconocida")
+
+
 def handle_api(route, data):
     """Procesa una solicitud JSON sin depender del transporte HTTP."""
     if not isinstance(data, dict):
         raise LogosError("syntactic", "expected_formula", "la solicitud debe ser un objeto")
     if route == "/api/spanish":
         return {"schema_version": SCHEMA_VERSION, **translate_spanish(data.get("text")).to_dict()}
+    if route.startswith("/api/lexicon/"):
+        return {"schema_version": SCHEMA_VERSION, "status": "ok", **_lexicon_api(route.rsplit("/", 1)[1], data)}
     if route == "/api/voice/status":
         return {"schema_version": SCHEMA_VERSION, "status": "ok", **availability()}
     if route == "/api/proof":
@@ -172,7 +207,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         route = urlsplit(self.path).path
-        if route not in ("/api/free", "/api/validate", "/api/evaluate", "/api/countermodel", "/api/spanish", "/api/proof", "/api/parse", "/api/load", "/api/voice/status", "/api/voice/transcribe"):
+        if route not in ("/api/free", "/api/validate", "/api/evaluate", "/api/countermodel", "/api/spanish", "/api/proof", "/api/parse", "/api/load", "/api/lexicon/search", "/api/lexicon/suggest", "/api/lexicon/preview", "/api/lexicon/add", "/api/lexicon/remove", "/api/voice/status", "/api/voice/transcribe"):
             self.send_error(404)
             return
         try:

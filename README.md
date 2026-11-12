@@ -47,6 +47,10 @@ El reporte y el recorrido para la entrega están en `docs/validation/ENSAYO-MM30
 
 Un archivo `.logos` describe un modelo y sus fórmulas en texto plano; el formato está documentado en `src/logos/modelfile.py` y hay dos ejemplos en `ejemplos/`. La interfaz evalúa todas las fórmulas del archivo y compara cada una con su valor esperado, si lo trae.
 
+## Diccionario
+
+El tercer modo de la interfaz muestra el diccionario del español (`src/logos/lexicon.tsv`, unos 1500 lemas con sus formas) y permite añadir palabras; las tuyas se guardan en `datos/lexico_usuario.tsv`. Con Docker esa carpeta es un volumen, así que no se pierden al reconstruir.
+
 ## Español controlado
 
 El panel «Escribir en español controlado» reconoce un fragmento pequeño y muestra todas sus lecturas. Por ejemplo, «Todos los estudiantes leyeron un libro» produce dos alcances de cuantificadores; hay que elegir uno antes de preparar el modelo. Las frases fuera del fragmento se rechazan. La especificación amplia y los casos todavía no cubiertos están en `docs/specs/SPANISH_CONTROLLED.md`.

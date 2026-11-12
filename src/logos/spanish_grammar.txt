@@ -128,3 +128,9 @@ SN_MS -> OListM
 SN_FS -> OListF
 SN_MP -> OListM
 SN_FP -> OListF
+SNc_MS -> DetE_MS Nom_MS | NProp_M
+SNc_FS -> DetE_FS Nom_FS | NProp_F
+O -> Si SNc_MS SV_MS Ent SV_MS | Si SNc_MS SV_MS Coma Ent SV_MS | Si SNc_MS SV_MS Coma SV_MS
+O -> Si SNc_FS SV_FS Ent SV_FS | Si SNc_FS SV_FS Coma Ent SV_FS | Si SNc_FS SV_FS Coma SV_FS
+SVpos_MS -> Cop_S Indef_FS N_FS
+SVpos_FS -> Cop_S Indef_MS N_MS

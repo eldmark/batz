@@ -97,6 +97,12 @@ def guess_predicate(word, tag):
     if form == "P" and w.endswith("n"):
         w = w[:-1]
     subjunctive = "sub" in kind
+    stem = w[:-1]
+    for diphthong, vowel in (("ue", "o"), ("ie", "e")):   # vuela → volar, piensa → pensar
+        at = stem.rfind(diphthong)
+        if at > 0 and at >= len(stem) - 4:
+            w = stem[:at] + vowel + stem[at + 2:] + w[-1]
+            break
     if w.endswith("a"):
         w = w[:-1] + ("er" if subjunctive else "ar")
     elif w.endswith("e"):

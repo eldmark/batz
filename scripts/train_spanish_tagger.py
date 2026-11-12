@@ -4,8 +4,8 @@
     PYTHONPATH=src python3 scripts/train_spanish_tagger.py            # entrena, ajusta y escribe pesos + informe
     PYTHONPATH=src python3 scripts/train_spanish_tagger.py --quick    # rejilla reducida
 
-Datos: frases generadas con las plantillas de abajo a partir de listas de sustantivos, adjetivos,
-verbos y nombres comunes. Las etiquetas son correctas por construcción. La partición es **por lema**:
+Datos: frases generadas con las plantillas de abajo a partir de los lemas del diccionario base
+(`src/logos/lexicon.tsv`). Las etiquetas son correctas por construcción. La partición es **por lema**:
 validación y prueba usan palabras que el modelo nunca vio, que es justo el caso de uso.
 Las frases de clase (`docs/specs/espanol/frases_clase.tsv`) solo se usan como prueba final.
 Necesita numpy para entrenar; la inferencia (`logos.spanish_tagger`) no.
@@ -21,85 +21,31 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 from logos.spanish_cyk import grammar  # noqa: E402
-from logos.spanish_tagger import TAGS, features, plain  # noqa: E402
+from logos.spanish_tagger import TAGS, features  # noqa: E402
 
 OUT = ROOT / "src/logos/spanish_tagger.json"
 REPORT = ROOT / "docs/validation/ETIQUETADOR-ESPANOL.md"
 CLASS = ROOT / "docs/specs/espanol/frases_clase.tsv"
 
-NOUNS_M = """hombre perro niño alumno maestro médico filósofo griego animal pájaro pez caballo árbol número
-conjunto triángulo cuadrado círculo país rey político doctor ingeniero abogado músico poeta planeta río
-carro mamífero reptil insecto león tigre ratón elefante mono lobo zorro oso pato cerdo toro amigo vecino
-hermano padre hijo abuelo primo tío jefe cliente artista lógico matemático soldado campesino pintor
-escritor actor cantor pescador cazador jugador conductor programa teorema axioma problema lápiz reloj
-tren avión barco edificio puente camino bosque jardín mar lago volcán continente idioma sistema""".split()
-NOUNS_F = """mujer niña alumna maestra casa mesa silla flor ciudad universidad clase vaca gallina oveja cabra
-ballena serpiente rana mariposa abeja hormiga manzana naranja fruta planta piedra montaña estrella luna
-madre hija hermana amiga vecina reina doctora ingeniera abogada enfermera puerta ventana canción película
-novela idea pregunta respuesta fórmula variable función relación proposición escuela iglesia tienda calle
-plaza playa isla nube tormenta semana tarea lección máquina computadora bicicleta guitarra pintura carta
-revista moneda llave botella camisa actriz emperatriz nariz luz voz cruz raíz""".split()
-ADJ_O = """bueno malo blanco negro pequeño largo corto nuevo viejo bonito feo rico sabio listo honesto rápido
-lento sano enfermo contento cansado famoso curioso peligroso hermoso generoso estudioso humano tranquilo
-simpático antiguo moderno limpio sucio caro barato gordo flaco oscuro claro amarillo morado lógico
-válido falso cierto exacto finito infinito vacío completo perfecto serio tímido atento""".split()
-ADJ_INV = """mortal feliz triste grande fuerte débil valiente amable libre verde azul impar racional
-ateniense inteligente capaz veloz audaz feroz leal fiel cruel joven fácil difícil útil hábil ágil
-frágil natural real ideal normal especial genial igual principal responsable sociable elegante
-brillante importante interesante paciente prudente independiente""".split()
-# (3ª singular, 3ª plural, subjuntivo singular, subjuntivo plural)
-def regular(inf):
-    stem, cls = inf[:-2], inf[-2:]
-    return (stem + "a", stem + "an", stem + "e", stem + "en") if cls == "ar" else (stem + "e", stem + "en", stem + "a", stem + "an")
-VI = [regular(v) for v in """cantar bailar ladrar nadar caminar trabajar llorar saltar hablar respirar
-viajar descansar brillar gritar trotar correr vivir toser sufrir temblar caer crecer nacer aparecer
-desaparecer triunfar fracasar madrugar despertar regresar funcionar terminar empezar avanzar
-retroceder resbalar tropezar bostezar suspirar estornudar existir insistir subir partir""".split()]
-VI += [("duerme", "duermen", "duerma", "duerman"), ("vuela", "vuelan", "vuele", "vuelen"),
-       ("muere", "mueren", "muera", "mueran"), ("ríe", "ríen", "ría", "rían"), ("piensa", "piensan", "piense", "piensen"),
-       ("miente", "mienten", "mienta", "mientan"), ("juega", "juegan", "juegue", "jueguen"),
-       ("llega", "llegan", "llegue", "lleguen"), ("sale", "salen", "salga", "salgan"),
-       ("sonríe", "sonríen", "sonría", "sonrían"), ("maúlla", "maúllan", "maúlle", "maúllen"),
-       ("ruge", "rugen", "ruja", "rujan"), ("vuelve", "vuelven", "vuelva", "vuelvan")]
-VT = [regular(v) for v in """respetar admirar odiar ayudar enseñar visitar saludar llamar mirar escuchar
-comprar cuidar curar golpear abrazar besar superar envidiar invitar contratar dibujar cocinar pintar usar
-necesitar temer comer beber vender romper abrir cubrir recibir describir discutir aplaudir examinar
-observar acompañar felicitar premiar castigar perdonar olvidar recordar encontrar alimentar transportar
-derrotar imitar copiar corregir consultar entrevistar""".split()]
-VT += [("quiere", "quieren", "quiera", "quieran"), ("busca", "buscan", "busque", "busquen"),
-       ("tiene", "tienen", "tenga", "tengan"), ("persigue", "persiguen", "persiga", "persigan"),
-       ("muerde", "muerden", "muerda", "muerdan"), ("caza", "cazan", "cace", "cacen"),
-       ("sigue", "siguen", "siga", "sigan"), ("vence", "vencen", "venza", "venzan"),
-       ("critica", "critican", "critique", "critiquen"), ("defiende", "defienden", "defienda", "defiendan"),
-       ("ataca", "atacan", "ataque", "ataquen"), ("protege", "protegen", "proteja", "protejan"),
-       ("prefiere", "prefieren", "prefiera", "prefieran"), ("cierra", "cierran", "cierre", "cierren"),
-       ("entiende", "entienden", "entienda", "entiendan"), ("obedece", "obedecen", "obedezca", "obedezcan")]
-NAMES_M = """Carlos Luis Miguel José Antonio Marco Diego Andrés Sócrates Platón Aristóteles Pablo Jorge Mario
-Daniel David Javier Fernando Roberto Alberto Sergio Tomás Hugo Óscar Raúl Iván Ricardo Eduardo Manuel
-Francisco Rafael Gabriel Mateo Lucas Samuel Emilio Rodrigo Esteban Felipe Ignacio""".split()
-NAMES_F = """Lucía Sofía Elena Laura Carmen Isabel Marta Paula Sara Julia Clara Rosa Luisa Andrea Daniela
-Valeria Camila Gabriela Patricia Teresa Beatriz Inés Eva Irene Diana Mónica Silvia Alicia Cecilia
-Adriana Natalia Verónica Lorena Fernanda Mariana Victoria Rebeca Susana Olga Pilar""".split()
-
-
-def plural(word):
-    if word.endswith("z"):
-        return word[:-1] + "ces"
-    for tail in ("ón", "án", "én", "ín", "és", "ún"):
-        if word.endswith(tail):
-            return word[:-2] + plain(tail) + "es"
-    return word + ("s" if word[-1] in "aeiouáéíóú" else "es")
-
-
 def lexemes():
-    """Cada lema con todas sus formas etiquetadas: {clase: [ {etiqueta: forma} ]}."""
-    lex = {"NM": [{"N_MS": n, "N_MP": plural(n)} for n in NOUNS_M],
-           "NF": [{"N_FS": n, "N_FP": plural(n)} for n in NOUNS_F],
-           "ADJ": [{"Adj_MS": a, "Adj_MP": plural(a), "Adj_FS": a[:-1] + "a", "Adj_FP": a[:-1] + "as"} for a in ADJ_O] +
-                  [{"Adj_MS": a, "Adj_MP": plural(a), "Adj_FS": a, "Adj_FP": plural(a)} for a in ADJ_INV],
-           "VI": [dict(zip(("VI_S", "VI_P", "VIsub_S", "VIsub_P"), v)) for v in VI],
-           "VT": [dict(zip(("VT_S", "VT_P", "VTsub_S", "VTsub_P"), v)) for v in VT],
-           "PM": [{"NProp_M": n} for n in NAMES_M], "PF": [{"NProp_F": n} for n in NAMES_F]}
+    """Lemas del diccionario base con sus formas etiquetadas: {clase: [ {etiqueta: [formas]} ]}."""
+    from logos import lexicon
+    lex = {"NM": [], "NF": [], "ADJ": [], "VI": [], "VT": [], "PM": [], "PF": []}
+    for e in lexicon._read(lexicon.BASE, "base"):
+        forms = e.forms()
+        if e.category == "N":
+            for g in ("MF" if e.feature == "C" else e.feature):
+                lex["N" + g].append({t: f for t, f in forms.items() if t.startswith(f"N_{g}")})
+        elif e.category == "ADJ":
+            lex["ADJ"].append(forms)
+        elif e.category == "V":
+            for kind in ("VI", "VT"):
+                own = {t: f for t, f in forms.items() if t.startswith(kind)}
+                if own:
+                    lex[kind].append(own)
+        else:
+            for g in e.feature:
+                lex["P" + g].append({f"NProp_{g}": [e.lemma]})
     return lex
 
 
@@ -147,7 +93,7 @@ def generate(lex, rng, count):
                 words.extend(slot.split())
                 continue
             cls, tag = slot
-            form = rng.choice(lex[cls])[tag]
+            form = rng.choice(rng.choice(lex[cls])[tag])
             gold.append((len(words), tag)); words.append(form)
         if words[0][0].islower():
             words[0] = words[0].capitalize()
@@ -232,7 +178,7 @@ def main():
         split["train"][cls], split["val"][cls], split["test"][cls] = items[:a], items[a:b], items[b:]
     closed = closed_class()
     index = {}
-    Xtr, ytr = encode(generate(split["train"], rng, 2000 if args.quick else 6000), closed, index, True)
+    Xtr, ytr = encode(generate(split["train"], rng, 2000 if args.quick else 9000), closed, index, True)
     Xva, yva = encode(generate(split["val"], rng, 1500), closed, index, False)
     Xte, yte = encode(generate(split["test"], rng, 1500), closed, index, False)
 
@@ -324,7 +270,8 @@ def main():
     lines += ["## Límites", "",
               "- Distingue verbo con objeto de verbo sin objeto sobre todo por lo que sigue; al final de frase la forma no basta.",
               "- El nombre del predicado es un lema aproximado sin tildes (`perros` → `Perro`, `ladran` → `Ladrar`); con verbos irregulares puede no coincidir entre formas.",
-              "- Las listas de lemas las escribió el asistente y no tienen revisión humana.", "",
+              "- El diccionario base lo generó un modelo de lenguaje y no tiene revisión humana.",
+              "- Estas cifras miden palabras que **no** están en el diccionario; las que sí están no pasan por el etiquetador.", "",
               "## Cómo repetir", "", "```bash", "PYTHONPATH=src python3 scripts/train_spanish_tagger.py", "```", ""]
     REPORT.write_text("\n".join(lines), encoding="utf-8")
     print(f"{REPORT.relative_to(ROOT)} escrito")

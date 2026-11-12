@@ -20,7 +20,7 @@ Cómo se lee cada fila:
 | 6 | Juan lee ningún libro. | 0 | 0 | rechazada: Frase fuera de la gramática controlada; revisa concordancia o usa el editor formal | sí |
 | 7 | Juan es un estudiante. | 1 | 1 | `Estudiante(juan)` | sí |
 | 8 | Juan es Pedro. | 1 | 1 | `juan = pedro` | sí |
-| 9 | María es alto. | 0 | 0 | rechazada: Frase fuera de la gramática controlada; revisa concordancia o usa el editor formal | sí |
+| 9 | María es alto. | 0 | 0 | rechazada: «alto» no concuerda en género con su sujeto. ¿Quisiste decir «alta»? | sí |
 | 10 | Todos los estudiantes lee. | 0 | 0 | rechazada: Frase fuera de la gramática controlada; revisa concordancia o usa el editor formal | sí |
 | 11 | Si Juan lee, entonces María estudia y Pedro estudia. | 2 | 2 | `Leer(juan) → Estudiar(maria) ∧ Estudiar(pedro)`<br>`(Leer(juan) → Estudiar(maria)) ∧ Estudiar(pedro)` | sí |
 | 12 | Juan lee y María estudia o Pedro estudia. | 2 | 2 | `Leer(juan) ∧ (Estudiar(maria) ∨ Estudiar(pedro))`<br>`Leer(juan) ∧ Estudiar(maria) ∨ Estudiar(pedro)` | sí |
@@ -39,8 +39,8 @@ Cómo se lee cada fila:
 | 25 | Juan es joven. | 2 | 2 | `Joven_sust(juan)`<br>`Joven_adj(juan)` | sí |
 | 26 | Todos los estudiantes no leen. | 1 | 1 | `∀x (Estudiante(x) → ¬Leer(x))`<br>`¬∀x (Estudiante(x) → Leer(x))` | sí |
 | 27 | Juan lee. | 1 | 1 | `Leer(juan)` | sí |
-| 28 | El estudiante lee. | 0 | 0 | rechazada: Frase fuera de la gramática controlada; revisa concordancia o usa el editor formal | sí |
-| 29 | Los estudiantes leen. | 0 | 0 | rechazada: Frase fuera de la gramática controlada; revisa concordancia o usa el editor formal | sí |
+| 28 | El estudiante lee. | 0 | 0 | rechazada: «El» solo no dice cuántos: empieza con «todos los», «algunos», «ningún» o «un». | sí |
+| 29 | Los estudiantes leen. | 0 | 0 | rechazada: «Los» solo no dice cuántos: empieza con «todos los», «algunos», «ningún» o «un». | sí |
 | 30 | Juan leyó un libro. | 1 | 1 | `∃x (Libro(x) ∧ Leer2(juan, x))` | sí |
 | 31 | Todo estudiante inteligente aprueba. | 1 | 1 | `∀x (Estudiante(x) ∧ Inteligente(x) → Aprobar(x))` | sí |
 | 32 | Juan es alto y inteligente. | 1 | 1 | `Alto(juan) ∧ Inteligente(juan)` | sí |
@@ -54,7 +54,7 @@ Cómo se lee cada fila:
 | 40 | Juan o María lee. | 1 | 1 | `Leer(juan) ∨ Leer(maria)` | sí |
 | 41 | Juan o María leen. | 1 | 1 | `Leer(juan) ∨ Leer(maria)` | sí |
 | 42 | Juan, Pedro o Ana estudian. | 1 | 1 | `Estudiar(juan) ∨ Estudiar(pedro) ∨ Estudiar(ana)` | sí |
-| 43 | Juan o María es alta. | 0 | 0 | rechazada: Frase fuera de la gramática controlada; revisa concordancia o usa el editor formal | sí |
+| 43 | Juan o María es alta. | 0 | 0 | rechazada: «alta» no concuerda en género con su sujeto. ¿Quisiste decir «alto»? | sí |
 | 44 | Dos estudiantes leen. | 1 | 2 | `∃x ∃y (x ≠ y ∧ Estudiante(x) ∧ Leer(x) ∧ Estudiante(y) ∧ Leer(y))`<br>`∃x ∃y (x ≠ y ∧ Estudiante(x) ∧ Leer(x) ∧ Estudiante(y) ∧ Leer(y)) ∧ ¬∃z ∃u ∃v (z ≠ u ∧ z ≠ v ∧ u ≠ v ∧ Estudiante(z) ∧ Leer(z) ∧ Estudiante(u) ∧ Leer(u) ∧ Estudiante(v) ∧ Leer(v))` | sí |
 | 45 | Al menos dos estudiantes leen un libro. | 1 | 2 | `∃x ∃y (x ≠ y ∧ Estudiante(x) ∧ ∃z (Libro(z) ∧ Leer2(x, z)) ∧ Estudiante(y) ∧ ∃u (Libro(u) ∧ Leer2(y, u)))` | sí |
 | 46 | Exactamente una persona lee. | 1 | 1 | `∃x (Persona(x) ∧ Leer(x)) ∧ ¬∃y ∃z (y ≠ z ∧ Persona(y) ∧ Leer(y) ∧ Persona(z) ∧ Leer(z))` | sí |

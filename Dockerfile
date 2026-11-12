@@ -6,6 +6,8 @@ RUN useradd --create-home logos
 WORKDIR /app
 COPY evaluador.py ./
 COPY src ./src
+# aquí se guardan las palabras que la persona añade al diccionario (se monta como volumen)
+RUN mkdir -p /app/datos && chown logos /app/datos
 USER logos
 
 EXPOSE 8765

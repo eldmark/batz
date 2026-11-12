@@ -59,6 +59,31 @@ def _propose(text, tokens, vocabulary):
     return extra, by_word
 
 
+def _agreement_hint(text, tokens):
+    """Si cambiar el género de un adjetivo hace que la frase se pueda analizar, lo sugiere."""
+    from . import lexicon
+    for token in tokens:
+        word = token.text
+        other = None
+        for entry in lexicon.find(word):
+            if entry.category != "ADJ":
+                continue
+            forms = entry.forms()
+            for a, b in (("Adj_MS", "Adj_FS"), ("Adj_FS", "Adj_MS"), ("Adj_MP", "Adj_FP"), ("Adj_FP", "Adj_MP")):
+                if word in forms[a] and forms[b][0] != word:
+                    other = forms[b][0]
+        if other is None:
+            continue
+        candidate = text[:token.span.start] + other + text[token.span.end:]
+        try:
+            if parse(candidate)[1]:
+                return (f"«{text[token.span.start:token.span.end]}» no concuerda en género con su sujeto. "
+                        f"¿Quisiste decir «{other}»?", token.span)
+        except LogosError:
+            continue
+    return None
+
+
 def _used_tags(tree, found):
     if tree.text and not tree.children:
         found.add((tree.start, tree.symbol))
@@ -79,6 +104,13 @@ def translate_spanish(text: str) -> SpanishResult:
         if extra:
             tokens, trees = parse(text, extra)
     if not trees:
+        hint = _agreement_hint(text, tokens)
+        if not hint and tokens[0].text in ("los", "las", "el", "la"):
+            # La especificación rechaza el artículo solo: no dice si se habla de todos o de algunos.
+            hint = (f"«{text[tokens[0].span.start:tokens[0].span.end]}» solo no dice cuántos: empieza con «todos los», "
+                    "«algunos», «ningún» o «un».", tokens[0].span)
+        if hint:
+            raise LogosError("syntactic", "unsupported_spanish", hint[0], hint[1], text)
         for token in tokens:
             if token.text not in vocabulary:
                 raise LogosError("syntactic", "unsupported_spanish",

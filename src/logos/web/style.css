@@ -314,3 +314,32 @@ input.formal, #proof-constants { width: 100%; }
 .assumptions strong { font-weight: 600; }
 .assumptions ul { margin: var(--s2) 0 0; padding-left: var(--s4); }
 .assumptions code { color: inherit; font-weight: 600; }
+
+/* ── Diccionario ── */
+.filters { display: flex; flex-wrap: wrap; gap: var(--s1); margin: var(--s3) 0; }
+.filter { font: 600 13px/1 var(--sans); padding: 8px 12px; border-radius: 99px; border: 1px solid var(--border-strong); background: var(--surface); color: var(--text); cursor: pointer; transition: background-color .12s ease-out, border-color .12s ease-out; }
+.filter:hover { border-color: var(--brand-500); }
+.filter[aria-pressed=true] { background: var(--brand-800); border-color: var(--brand-800); color: var(--brand-50); }
+#dict-query, #dict-word { width: 100%; }
+.dict-table td { vertical-align: top; padding-block: var(--s2); }
+.dict-table td:first-child code { font-size: 16px; font-weight: 600; color: var(--text); }
+.dict-table .chip { margin-left: var(--s2); }
+.dict-table .kind { display: inline-block; padding: 4px 8px; border-radius: 99px; font: 600 12px/1 var(--sans); }
+.dict-table .hint { display: block; margin-top: 3px; }
+.dict-forms { font: 13px/1.5 var(--mono); color: var(--text-muted); }
+.kind.name { background: var(--surface-sunken); color: var(--text); }
+.kind.predicate { background: var(--k-predicate-bg); color: var(--k-predicate-fg); }
+.kind.constant { background: var(--k-constant-bg); color: var(--k-constant-fg); }
+.kind.function { background: var(--k-function-bg); color: var(--k-function-fg); }
+.button.small { padding: 6px 10px; font-size: 12px; }
+.assumptions .button.small { margin-left: var(--s2); }
+.dict-fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 var(--s3); }
+.dict-fields input, .dict-fields select { width: 100%; }
+.dict-fields + .more { margin-top: var(--s4); }
+#dict-irregular .dict-fields { gap: var(--s2) var(--s3); margin-top: var(--s2); }
+#dict-irregular label input { display: block; margin-top: var(--s1); max-width: 260px; }
+#dict-form h3 { font: 600 17px/1.3 var(--serif); margin: var(--s5) 0 var(--s1); }
+.dict-preview { font: 15px/1.6 var(--mono); }
+.dictionary .run { border-top: 0; align-items: center; }
+#dict-proposal { margin-top: var(--s3); font-size: 14px; color: var(--text); }
+@media (max-width: 900px) { .dict-fields { grid-template-columns: minmax(0, 1fr); } .dict-table th:nth-child(4), .dict-table td:nth-child(4) { display: none; } }

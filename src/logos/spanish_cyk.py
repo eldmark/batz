@@ -90,6 +90,14 @@ def grammar():
                 binary.setdefault((words[0], tail), set()).add(head)
         else:
             lex.setdefault(words, set()).add(head)
+    # Diccionario: cada forma flexionada entra con su categoría. Las palabras que ya trae la
+    # gramática conservan sus categorías y símbolos (de ellas dependen los 51 casos).
+    from . import lexicon
+    builtin = {phrase[0] for phrase in lex if len(phrase) == 1}
+    for tag, forms in lexicon.grammar_forms().items():
+        for form in forms:
+            if form not in builtin:
+                lex.setdefault((form,), set()).add(tag)
     return lex, unary, binary
 
 

@@ -7,6 +7,7 @@ import re
 from .ast import And, Const, Eq, Exists, Forall, Iff, Implies, Not, Or, Pred, Var
 from .spanish_cyk import Tree
 from .spanish_tagger import plain
+from . import lexicon
 
 # Símbolos de palabras fuera del léxico, propuestos por el etiquetador para la frase en curso:
 # {("N" | "Adj" | "V", palabra): predicado}. `spanish.translate_spanish` lo llena y lo vacía.
@@ -99,7 +100,7 @@ class Composer:
         if kind(tree) in ("N", "Adj"):
             word = leaf(tree)
             table = NOUN | NOUN_FORMS if kind(tree) == "N" else ADJ | ADJ_FORMS
-            symbol = table.get(word) or EXTRA[(kind(tree), word)]
+            symbol = table.get(word) or lexicon.symbol(kind(tree), word) or EXTRA[(kind(tree), word)]
             return Pred(symbol, (term,))
         if kind(tree) == "Pred":
             if len(tree.children) == 1: return self.nominal(tree.children[0], term)
@@ -214,7 +215,7 @@ class Composer:
 
     def verb(self, tree):
         word = leaf(tree)
-        return VERB.get(word) or PLURAL.get(word) or EXTRA[("V", word)]
+        return VERB.get(word) or PLURAL.get(word) or lexicon.symbol("V", word) or EXTRA[("V", word)]
 
     def transitive(self, verb_tree, obj_tree, subject, negative_object=False):
         name = self.verb(verb_tree) + "2"
@@ -254,6 +255,16 @@ class Composer:
         if k[:1] == ("Obien",):
             a, b = self.sentence(parts[1]), self.sentence(parts[3])
             return And(Or(a, b), Not(And(a, b)))
+        if k[:2] == ("Si", "SNc"):
+            # «Si un N hace A, entonces hace B»: el consecuente no repite el sujeto. Con sujeto
+            # indefinido es una afirmación general sobre cualquier N; con nombre propio, una implicación.
+            subject, first, second = parts[1], parts[2], parts[-1]
+            if len(subject.children) == 1:
+                name = self.np(subject.children[0]).name
+                return Implies(self.vp(first, name), self.vp(second, name))
+            var = self.fresh()
+            return Forall(var.name, Implies(And(self.nominal(subject.children[1], var), self.vp(first, var)),
+                                            self.vp(second, var)))
         if k[:1] == ("Si",):
             return Implies(self.sentence(parts[1]), self.sentence(parts[-1]))
         if len(parts) == 3 and k[1] in ("Y", "Ox", "Si", "SoloSi", "Ssi"):

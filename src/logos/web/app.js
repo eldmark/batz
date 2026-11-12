@@ -640,7 +640,9 @@ async function showSpanishReadings() {
         const item = node('li');
         item.append(node('code', a.word), document.createTextNode(` es ${a.label} `),
           node('span', `${Math.round(a.probability * 100)} %`, 'chip'), document.createTextNode(' → símbolo '), node('code', a.symbol));
-        list.append(item);
+        const fix = node('button', 'Añadir al diccionario', 'button secondary small'); fix.type = 'button';
+        fix.addEventListener('click', () => openDictionaryWith(a.word));
+        item.append(fix); list.append(item);
       }
       assumed.append(list); box.append(assumed);
     }
@@ -806,10 +808,137 @@ async function proveFormula() {
   finally { button.removeAttribute('aria-busy'); button.textContent = 'Buscar prueba'; checkProofSyntax(); }
 }
 
+// --- diccionario ---
+const DICT_FEATURES = {N: [['M', 'Masculino'], ['F', 'Femenino'], ['C', 'Los dos']], NP: [['M', 'Masculino'], ['F', 'Femenino']],
+  V: [['I', 'Sin objeto (duerme)'], ['T', 'Con objeto (admira a…)'], ['IT', 'Las dos (lee / lee un libro)']], ADJ: [['-', 'Se flexiona solo']]};
+const DICT_FORMS = ['él/ella, presente', 'ellos, presente', 'él/ella, subjuntivo', 'ellos, subjuntivo', 'él/ella, pasado', 'ellos, pasado'];
+let dictState = {category: '', offset: 0, request: 0};
+
+function dictEntryRow(entry) {
+  const row = node('tr');
+  const word = node('td'); word.append(node('code', entry.lemma));
+  if (entry.source === 'usuario') word.append(node('span', 'tuya', 'chip'));
+  const kind = node('td', undefined); kind.append(node('span', entry.category_label, `kind ${({N: 'predicate', ADJ: 'constant', V: 'function', NP: 'name'})[entry.category]}`));
+  if (entry.feature_label) kind.append(node('span', entry.feature_label, 'hint'));
+  const remove = node('td');
+  if (entry.source === 'usuario') {
+    const button = node('button', 'Quitar', 'button secondary small'); button.type = 'button';
+    button.addEventListener('click', async () => {
+      await api('/api/lexicon/remove', {lemma: entry.lemma, category: entry.category});
+      $('dict-note').textContent = `«${entry.lemma}» ya no está en tu diccionario.`; searchDictionary(true);
+    });
+    remove.append(button);
+  }
+  row.append(word, kind, node('td', entry.forms.join(' · '), 'dict-forms'), node('td'), remove);
+  row.children[3].append(node('code', entry.symbol));
+  return row;
+}
+
+async function searchDictionary(reset) {
+  const request = ++dictState.request;
+  if (reset) dictState.offset = 0;
+  const result = await api('/api/lexicon/search', {query: $('dict-query').value, category: dictState.category, offset: dictState.offset});
+  if (request !== dictState.request || result.status !== 'ok') return;
+  const body = $('dict-results'); if (reset) body.replaceChildren();
+  result.entries.forEach(entry => body.append(dictEntryRow(entry)));
+  if (!result.total) { const row = node('tr'); const cell = node('td', 'No está en el diccionario. Añádela a la derecha.', 'hint'); cell.colSpan = 5; row.append(cell); body.append(row); }
+  dictState.offset += result.entries.length;
+  $('dict-more').hidden = dictState.offset >= result.total;
+  const c = result.counts;
+  $('dict-counts').textContent = `${c.total} palabras: ${c.by_category.N} sustantivos, ${c.by_category.ADJ} adjetivos, ${c.by_category.V} verbos y ${c.by_category.NP} nombres. ${c.user} añadidas por ti.`;
+  if (reset && $('dict-query').value.trim()) $('dict-note').textContent = `${result.total} coincidencia(s).`;
+  else if (reset) $('dict-note').textContent = '';
+}
+
+function dictFields() {
+  const forms = [...$('dict-irregular').querySelectorAll('input[data-form]')].map(i => i.value.trim());
+  const plural = $('dict-irregular').querySelector('input[data-plural]')?.value.trim();
+  let extra = '';
+  if ($('dict-category').value === 'V' && forms.some(Boolean)) extra = `formas=${forms.join(',')}`;
+  else if (plural) extra = `pl=${plural}`;
+  return {lemma: $('dict-lemma').value.trim(), category: $('dict-category').value, feature: $('dict-feature').value, extra};
+}
+
+function dictSetCategory(category, feature) {
+  $('dict-category').value = category;
+  const select = $('dict-feature'); select.replaceChildren();
+  for (const [value, label] of DICT_FEATURES[category]) { const o = node('option', label); o.value = value; select.append(o); }
+  if (feature && DICT_FEATURES[category].some(([v]) => v === feature)) select.value = feature;
+  $('dict-feature-label').textContent = category === 'V' ? '¿Lleva objeto?' : category === 'ADJ' ? 'Flexión' : 'Género';
+  select.disabled = category === 'ADJ';
+  const box = $('dict-irregular'); box.replaceChildren();
+  if (category === 'V') {
+    box.append(node('p', 'Llena las seis formas solo si el verbo no sigue la conjugación regular.', 'hint'));
+    const grid = node('div', undefined, 'dict-fields');
+    DICT_FORMS.forEach(label => { const cell = node('div'); const input = node('input'); input.className = 'formal'; input.dataset.form = '1'; input.setAttribute('aria-label', label); input.placeholder = label; input.addEventListener('input', dictPreview); cell.append(input); grid.append(cell); });
+    box.append(grid);
+  } else if (category !== 'NP') {
+    const label = node('label', 'Plural, si es irregular'); const input = node('input'); input.className = 'formal'; input.dataset.plural = '1'; input.placeholder = 'jóvenes';
+    input.addEventListener('input', dictPreview); label.append(input); box.append(label);
+  } else box.append(node('p', 'Los nombres propios no se flexionan.', 'hint'));
+}
+
+let dictPreviewRequest = 0;
+async function dictPreview() {
+  const request = ++dictPreviewRequest;
+  const result = await api('/api/lexicon/preview', dictFields());
+  if (request !== dictPreviewRequest) return;
+  const error = $('dict-error');
+  if (result.status !== 'ok') { error.textContent = result.errors?.[0]?.message || 'Datos inválidos.'; error.hidden = false; $('dict-preview').textContent = ''; $('dict-save').disabled = true; return; }
+  error.hidden = true; $('dict-save').disabled = false;
+  $('dict-preview').replaceChildren(node('span', result.entry.forms.join(' · ')), node('span', ' → símbolo ', 'hint'), node('code', result.entry.symbol));
+}
+
+async function dictConsult() {
+  const word = $('dict-word').value.trim();
+  const note = $('dict-proposal'); $('dict-form').hidden = true;
+  if (!word) { note.textContent = 'Escribe una palabra.'; return; }
+  const result = await api('/api/lexicon/suggest', {word});
+  if (result.status !== 'ok') { note.textContent = result.errors?.[0]?.message || 'Palabra inválida.'; return; }
+  if (result.found.length) {
+    const e = result.found[0];
+    note.textContent = `Ya está: «${e.lemma}», ${e.category_label}${e.feature_label ? ' ' + e.feature_label : ''}. Símbolo ${e.symbol}.`;
+    $('dict-query').value = word; searchDictionary(true); return;
+  }
+  const p = result.proposal || {lemma: word.toLowerCase(), category: 'N', feature: 'M'};
+  note.textContent = result.proposal ? `No está. El modelo cree que es ${p.label} (${Math.round(p.probability * 100)} %). Revisa y corrige:` : 'No está. Indica qué es:';
+  $('dict-lemma').value = p.lemma; dictSetCategory(p.category, p.feature);
+  $('dict-form').hidden = false; dictPreview();
+}
+
+async function dictSave() {
+  const result = await api('/api/lexicon/add', dictFields());
+  if (result.status !== 'ok') { $('dict-error').textContent = result.errors?.[0]?.message || 'No se pudo guardar.'; $('dict-error').hidden = false; return; }
+  $('dict-form').hidden = true; $('dict-word').value = '';
+  $('dict-proposal').textContent = `«${result.entry.lemma}» guardada. Ya puedes usarla en una frase.`;
+  $('dict-query').value = result.entry.lemma; searchDictionary(true);
+}
+
+function openDictionaryWith(word) { setMode('dictionary'); $('dict-word').value = word; dictConsult(); }
+
+for (const [value, label] of [['', 'Todas'], ['N', 'Sustantivos'], ['ADJ', 'Adjetivos'], ['V', 'Verbos'], ['NP', 'Nombres']]) {
+  const chip = node('button', label, 'filter'); chip.type = 'button'; chip.setAttribute('aria-pressed', String(value === ''));
+  chip.addEventListener('click', () => {
+    dictState.category = value;
+    for (const other of $('dict-filters').children) other.setAttribute('aria-pressed', String(other === chip));
+    searchDictionary(true);
+  });
+  $('dict-filters').append(chip);
+}
+let dictTimer = null;
+$('dict-query').addEventListener('input', () => { clearTimeout(dictTimer); dictTimer = setTimeout(() => searchDictionary(true), 180); });
+$('dict-more').addEventListener('click', () => searchDictionary(false));
+$('dict-check').addEventListener('click', dictConsult);
+$('dict-word').addEventListener('keydown', event => { if (event.key === 'Enter') dictConsult(); });
+$('dict-category').addEventListener('change', () => { dictSetCategory($('dict-category').value); dictPreview(); });
+for (const id of ['dict-lemma', 'dict-feature']) $(id).addEventListener('input', dictPreview);
+$('dict-save').addEventListener('click', dictSave);
+
 // --- modos ---
+const MODES = ['evaluate', 'prove', 'dictionary'];
 function setMode(mode) {
   document.body.dataset.mode = mode;
-  for (const name of ['evaluate', 'prove']) {
+  for (const name of MODES) {
     const active = name === mode;
     $(`mode-${name}`).hidden = !active;
     $(`tab-${name}`).setAttribute('aria-selected', String(active));
@@ -817,11 +946,13 @@ function setMode(mode) {
   }
   clearStory(); $('story-section').hidden = true;
   if (mode === 'prove') checkProofSyntax();
+  if (mode === 'dictionary') searchDictionary(true);
 }
-for (const name of ['evaluate', 'prove']) $(`tab-${name}`).addEventListener('click', () => setMode(name));
+for (const name of MODES) $(`tab-${name}`).addEventListener('click', () => setMode(name));
 document.querySelector('.modes').addEventListener('keydown', event => {
   if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
-  const next = document.body.dataset.mode === 'evaluate' ? 'prove' : 'evaluate';
+  const at = MODES.indexOf(document.body.dataset.mode);
+  const next = MODES[(at + (event.key === 'ArrowRight' ? 1 : MODES.length - 1)) % MODES.length];
   setMode(next); $(`tab-${next}`).focus();
 });
 $('story-close').addEventListener('click', () => { pauseStory(); $('story-section').hidden = true; });
