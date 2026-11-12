@@ -12,7 +12,12 @@ from .errors import LogosError, SCHEMA_VERSION
 from .countermodels import CountermodelConfig, find_countermodel
 from .interpretation import build_interpretation
 from .project import evaluar, libres
-from .symbols import Signature
+from .symbols import Signature, check
+from .parser import parse
+from .printer import to_string
+from .transform import free_vars
+from .modelfile import parse_model_file
+from .resolution import ResolutionConfig, resolve_text, _MATRIX as MATRIX
 from .spanish import translate_spanish
 from .proof import SearchConfig, prove_text
 from .proof_story import build_proof_narration
@@ -56,12 +61,49 @@ def handle_api(route, data):
         if result.status == "invalid_input":
             return {"schema_version": SCHEMA_VERSION, "status": "invalid_input",
                     "errors": [result.diagnostic]}
+        # Motor B: segunda opinión independiente. Nunca convierte un «unknown» en «proved».
+        second = resolve_text(premises, conclusion, constants, ResolutionConfig(timeout=2))
+        verdict, message = MATRIX[("proved" if result.status == "proved" else "unknown", second.status)]
+        contrast = {"verdict": verdict, "message": message, "engine_b": second.to_dict()}
         if result.status == "unknown":
             return {"schema_version": SCHEMA_VERSION, "status": "unknown",
-                    "reason": result.reason, "nodes": result.nodes}
+                    "reason": result.reason, "nodes": result.nodes, "contrast": contrast}
         return {"schema_version": SCHEMA_VERSION, "status": "proved",
                 "certificate": result.certificate.to_dict(),
-                "story": build_proof_narration(result.certificate).to_dict()}
+                "story": build_proof_narration(result.certificate).to_dict(), "contrast": contrast}
+    if route == "/api/parse":
+        # Revisión sintáctica de varias fórmulas sin evaluarlas (modo de pruebas).
+        formulas, constants = data.get("formulas"), data.get("constants", [])
+        if (not isinstance(formulas, list) or len(formulas) > 12 or
+            not all(isinstance(f, str) and len(f) <= 400 for f in formulas) or
+            not isinstance(constants, list) or not all(isinstance(c, str) for c in constants)):
+            raise LogosError("syntactic", "expected_formula", "lista de fórmulas inválida")
+        results, known = [], Signature()
+        for text in formulas:
+            try:
+                f = parse(text, constants)
+                known = check(f, known, source=text)  # la aridad debe ser coherente entre fórmulas
+                results.append({"ok": True, "text": to_string(f), "free": sorted(free_vars(f))})
+            except LogosError as exc:
+                results.append({"ok": False, "error": exc.to_diagnostic()})
+        return {"schema_version": SCHEMA_VERSION, "status": "ok", "results": results}
+    if route == "/api/load":
+        package = parse_model_file(data.get("text"))
+        sig = _signature(package["signature"])
+        model = build_interpretation(sig, package["interpretation"])
+        results = []
+        for entry in package["formulas"][:200]:
+            r = evaluar(sig, package["interpretation"], entry["formula"], entry["assignment"])
+            row = {"formula": entry["formula"], "assignment": entry["assignment"], "line": entry["line"]}
+            if r.status == "ok":
+                row.update(status="ok", value=r.value, summary=r.explanation.summary)
+                if "expected" in entry:
+                    row.update(expected=entry["expected"], matches=entry["expected"] == r.value)
+            else:
+                row.update(status="invalid_input", error=r.errors[0])
+            results.append(row)
+        return {"schema_version": SCHEMA_VERSION, "status": "ok", "signature": package["signature"],
+                "model": model.to_dict(), "results": results}
     sig = _signature(data.get("signature"))
     formula = data.get("formula")
     if route == "/api/free":
@@ -126,7 +168,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         route = urlsplit(self.path).path
-        if route not in ("/api/free", "/api/validate", "/api/evaluate", "/api/countermodel", "/api/spanish", "/api/proof", "/api/voice/status", "/api/voice/transcribe"):
+        if route not in ("/api/free", "/api/validate", "/api/evaluate", "/api/countermodel", "/api/spanish", "/api/proof", "/api/parse", "/api/load", "/api/voice/status", "/api/voice/transcribe"):
             self.send_error(404)
             return
         try:

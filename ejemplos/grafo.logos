@@ -1,0 +1,15 @@
+# Un grafo dirigido de tres nodos. Cárgalo con «Cargar archivo» en la interfaz.
+dominio: 0, 1, 2
+constante a = 0
+funcion s/1: 0 -> 1, 1 -> 2, 2 -> 0          # sucesor en el ciclo
+predicado P/1: 0, 2
+predicado R/2: (0, 1), (1, 2), (2, 0)
+
+formula: ∀x ∃y R(x, y)                        | espera: verdadero
+formula: ∃y ∀x R(x, y)                        | espera: falso
+formula: ∀x R(x, s(x))                        | espera: verdadero
+formula: ∀x (P(x) → P(s(x)))                  | espera: falso
+formula: P(x) ∧ R(x, y)                       | x = 2, y = 0 | espera: verdadero
+formula: ∃x (P(x) ∧ ¬P(s(x)))
+formula: R(a, a) ∨ ¬R(a, a)
+formula: Q(a)                                 # símbolo no declarado: debe salir como error

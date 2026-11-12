@@ -8,38 +8,50 @@
   <link rel="stylesheet" href="/style.css">
   <script defer src="/app.js"></script>
 </head>
-<body>
+<body data-mode="evaluate">
   <header class="topbar">
     <h1 class="wordmark">LOGOS <span>Evaluador semántico</span></h1>
-    <p class="topbar-note">Lógica de primer orden · MM3032</p>
-    <button id="sample" class="button on-brand" type="button">Cargar ejemplo</button>
+    <div class="modes" role="tablist" aria-label="Modo de trabajo">
+      <button id="tab-evaluate" class="mode" role="tab" type="button" aria-selected="true" aria-controls="mode-evaluate">Evaluar en un modelo</button>
+      <button id="tab-prove" class="mode" role="tab" type="button" aria-selected="false" aria-controls="mode-prove" tabindex="-1">Demostrar</button>
+    </div>
+    <div class="topbar-actions">
+      <button id="import-json" class="button on-brand" type="button">Cargar archivo</button>
+      <button id="sample" class="button on-brand quiet" type="button">Ejemplo</button>
+      <input id="import-file" type="file" accept=".logos,.txt,.json,application/json,text/plain" hidden>
+    </div>
   </header>
+  <p id="transfer-note" class="transfer-note" role="status"></p>
 
-  <main class="workspace">
+  <main id="mode-evaluate" class="workspace" role="tabpanel" aria-labelledby="tab-evaluate">
     <section class="pane model" aria-labelledby="model-heading">
       <h2 id="model-heading" class="pane-title">Construye el modelo</h2>
-      <p class="pane-lede">Declara los símbolos y di qué significan en un dominio finito.</p>
 
       <div class="block" aria-labelledby="language-heading">
         <h3 id="language-heading">Lenguaje</h3>
         <div class="table-wrap"><table class="symbols-table"><thead><tr><th>Nombre</th><th>Tipo</th><th>Aridad</th><th><span class="sr-only">Quitar</span></th></tr></thead><tbody id="symbols"></tbody></table></div>
-        <div class="actions"><button id="add-symbol" class="button secondary" type="button">Añadir símbolo</button><span class="hint">Una constante es una función de aridad 0. Los predicados llevan aridad ≥ 1.</span></div>
+        <div class="actions"><button id="add-symbol" class="button secondary" type="button">Añadir símbolo</button></div>
       </div>
 
       <div class="block" aria-labelledby="interpretation-heading">
         <h3 id="interpretation-heading">Interpretación</h3>
-        <label for="domain">Dominio D</label>
+        <label for="domain">Dominio D <span class="hint">separado por comas: <code>0, 1, 2</code> o <code>Ana, Luis</code></span></label>
         <div class="inline"><input id="domain" value="0, 1" spellcheck="false"><button id="prepare" class="button secondary" type="button">Preparar tablas</button></div>
-        <p class="hint">Elementos separados por comas: <code>0, 1, 2</code> o <code>Ana, Luis</code>. Cada relación necesita al menos una tupla.</p>
         <p id="model-error" class="error" role="alert" hidden></p>
         <div id="interpretation"></div>
-        <div class="actions"><button id="export-json" class="button secondary" type="button" disabled>Exportar JSON</button><button id="import-json" class="button secondary" type="button">Importar JSON</button><input id="import-file" type="file" accept=".json,application/json" hidden><span id="transfer-note" class="hint" role="status"></span></div>
+        <div class="actions"><button id="export-json" class="button secondary" type="button" disabled>Exportar JSON</button></div>
       </div>
     </section>
 
     <section class="pane question" aria-labelledby="formula-heading">
       <div class="question-inner">
         <h2 id="formula-heading" class="pane-title">Evalúa una fórmula</h2>
+
+        <div id="batch" class="batch" hidden>
+          <h3 id="batch-heading">Fórmulas del archivo</h3>
+          <ol id="batch-list" class="batch-list" aria-labelledby="batch-heading"></ol>
+        </div>
+
         <label for="formula" class="sr-only">Expresión formal</label>
         <textarea id="formula" rows="2" spellcheck="false" placeholder="∀x (P(x) → Q(x))"></textarea>
         <div id="symbols-keyboard" class="keyboard" aria-label="Símbolos lógicos"></div>
@@ -56,12 +68,44 @@
 
         <div id="result" class="result" aria-live="polite"></div>
 
-        <details class="spanish-panel"><summary>Escribir la fórmula en español controlado</summary>
-          <p class="hint">La grabación se transcribe en este equipo con Whisper si está configurado. Revisa y corrige el texto antes de mostrar las lecturas.</p>
+        <details class="more"><summary>Buscar un modelo donde sea falsa</summary>
+          <p class="hint">Explora interpretaciones de la sentencia de arriba con dominios pequeños. Tiene límites (5000 modelos o 2 segundos): no encontrar uno no prueba que sea válida.</p>
+          <div class="actions"><label for="max-size" class="inline-label">Tamaño máximo de D <select id="max-size"><option value="1">1</option><option value="2">2</option><option value="3" selected>3</option></select></label><button id="find-countermodel" class="button secondary" type="button">Buscar contramodelo</button></div>
+          <div id="countermodel-result" class="result" aria-live="polite"></div>
+        </details>
+
+        <details class="more spanish-panel"><summary>Escribir la fórmula en español</summary>
           <label for="spanish-input">Frase</label><input id="spanish-input" placeholder="Todos los estudiantes leyeron un libro" spellcheck="true">
-          <div class="actions"><button id="record-spanish" class="button secondary" type="button">Grabar frase</button><button id="stop-spanish" class="button secondary" type="button" disabled>Detener grabación</button><button id="translate-spanish" class="button secondary" type="button">Mostrar lecturas</button><span id="record-status" class="hint" role="status"></span></div>
+          <div class="actions"><button id="translate-spanish" class="button secondary" type="button">Mostrar lecturas</button><button id="record-spanish" class="button secondary" type="button">Grabar frase</button><button id="stop-spanish" class="button secondary" type="button" disabled>Detener</button><span id="record-status" class="hint" role="status"></span></div>
           <div id="spanish-readings" aria-live="polite"></div>
         </details>
+      </div>
+    </section>
+  </main>
+
+  <main id="mode-prove" class="workspace prove" role="tabpanel" aria-labelledby="tab-prove" hidden>
+    <section class="pane model" aria-labelledby="proof-heading">
+      <h2 id="proof-heading" class="pane-title">Plantea la consecuencia</h2>
+      <p class="pane-lede">Aquí no hay modelo: se pregunta si la conclusión se sigue de las premisas en todos.</p>
+      <div class="block">
+        <label for="proof-premises">Premisas, una por línea</label>
+        <textarea id="proof-premises" class="formal" rows="4" spellcheck="false" placeholder="∀x (P(x) → Q(x))&#10;P(a)"></textarea>
+        <label for="proof-conclusion">Conclusión</label>
+        <input id="proof-conclusion" class="formal" spellcheck="false" placeholder="Q(a)">
+        <div id="proof-keyboard" class="keyboard" aria-label="Símbolos lógicos"></div>
+        <label for="proof-constants">Constantes <span class="hint">separadas por coma; lo demás en minúscula es variable</span></label>
+        <input id="proof-constants" spellcheck="false" placeholder="a, b">
+        <ul id="proof-check" class="syntax-check" aria-live="polite"></ul>
+      </div>
+    </section>
+    <section class="pane question" aria-labelledby="proof-result-heading">
+      <div class="question-inner">
+        <h2 id="proof-result-heading" class="pane-title">Demuestra</h2>
+        <div class="run">
+          <p class="hint run-env">Dos motores independientes: deducción natural con verificador, y resolución como segunda opinión.</p>
+          <div class="run-action"><button id="prove" class="button primary" type="button">Buscar prueba</button><span id="prove-note" class="hint"></span></div>
+        </div>
+        <div id="proof-result" class="result" aria-live="polite"></div>
       </div>
     </section>
   </main>
@@ -69,7 +113,7 @@
   <section id="story-section" class="story" aria-labelledby="story-heading" hidden>
     <div class="story-head">
       <h2 id="story-heading" class="pane-title">Paso a paso</h2>
-      <p class="pane-lede">Cada frase y cada cambio en el dominio sale de un nodo verificado de la evaluación.</p>
+      <button id="story-close" class="button secondary" type="button">Cerrar</button>
     </div>
     <div class="story-body">
       <div class="story-stage">
@@ -85,38 +129,12 @@
           <button id="story-next" class="button secondary" type="button">Siguiente</button>
           <button id="story-replay" class="button secondary" type="button">Desde el inicio</button>
         </div>
-        <div class="story-options"><label><input id="story-voice" type="checkbox"> Leer los pasos en voz alta</label><label><input id="story-3d" type="checkbox" checked> Vista 3D</label><span id="story-status" class="hint" role="status"></span></div>
+        <div class="story-options"><label><input id="story-voice" type="checkbox"> Leer en voz alta</label><label><input id="story-3d" type="checkbox" checked> Vista 3D</label><span id="story-status" class="hint" role="status"></span></div>
         <details><summary>Ver todos los pasos</summary><ol id="story-list" class="story-list"></ol></details>
       </div>
     </div>
   </section>
 
-  <section class="lab" aria-labelledby="lab-heading">
-    <h2 id="lab-heading" class="pane-title">Explora más allá del modelo</h2>
-    <p class="pane-lede">Dos preguntas que van más allá de este modelo.</p>
-    <div class="lab-grid">
-      <div class="block" aria-labelledby="countermodel-heading">
-        <h3 id="countermodel-heading">¿Hay un modelo donde sea falsa?</h3>
-        <p class="hint">Busca una interpretación que falsifique la sentencia de arriba. La búsqueda tiene límites (5000 modelos o 2 segundos) y solo muestra hallazgos verificados.</p>
-        <div class="actions"><label for="max-size" class="inline-label">Tamaño máximo de D <select id="max-size"><option value="1">1</option><option value="2">2</option><option value="3" selected>3</option></select></label><button id="find-countermodel" class="button secondary" type="button">Buscar contramodelo</button></div>
-        <div id="countermodel-result" class="result" aria-live="polite"></div>
-      </div>
-
-      <div class="block" aria-labelledby="proof-heading">
-        <h3 id="proof-heading">¿Se puede demostrar?</h3>
-        <p class="hint">Busca una derivación y muestra solo los pasos que acepta el verificador independiente. «No encontrada» no significa falsa.</p>
-        <label for="proof-premises">Premisas, una por línea</label>
-        <textarea id="proof-premises" class="small" rows="3" spellcheck="false" placeholder="P → Q&#10;P"></textarea>
-        <label for="proof-conclusion">Conclusión</label>
-        <input id="proof-conclusion" spellcheck="false" placeholder="Q">
-        <label for="proof-constants">Constantes declaradas (opcional, separadas por coma)</label>
-        <input id="proof-constants" spellcheck="false" placeholder="a, b">
-        <div class="actions"><button id="prove" class="button secondary" type="button">Buscar prueba</button></div>
-        <div id="proof-result" class="result" aria-live="polite"></div>
-      </div>
-    </div>
-  </section>
-
-  <footer>LOGOS evalúa la verdad en la interpretación indicada. Una fórmula verdadera aquí no es necesariamente válida en todos los modelos.</footer>
+  <footer>La verdad se evalúa en la interpretación indicada: verdadera aquí no significa válida en todos los modelos.</footer>
 </body>
 </html>

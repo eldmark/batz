@@ -1,0 +1,11 @@
+# Dominio con nombres propios en vez de números.
+dominio: Ana, Luis, Eva
+constante jefe = Ana
+predicado Estudiante/1: Luis, Eva
+predicado Ama/2: (Ana, Luis), (Luis, Ana), (Eva, Eva)
+
+formula: ∀x (Estudiante(x) → ∃y Ama(x, y))    | espera: verdadero
+formula: ∃x Ama(x, x)                          | espera: verdadero
+formula: ∀x ∀y (Ama(x, y) → Ama(y, x))         | espera: verdadero
+formula: Estudiante(jefe)                      | espera: falso
+formula: ∃x (¬Estudiante(x) ∧ ∀y (Ama(y, x) → Estudiante(y)))
