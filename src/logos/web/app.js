@@ -89,15 +89,15 @@ function renderStoryStep() {
 }
 
 async function initStory3D() {
-  if (!storyState?.model || !$('story-3d').checked) return;
+  if (!storyState || !$('story-3d').checked || storyScene) return;
   const nonce = storyNonce;
   try {
     const {createStoryScene} = await import('/story3d.js');
     if (nonce !== storyNonce || !storyState || !$('story-3d').checked) return;
-    storyScene = createStoryScene($('story-visual'), storyState.model);
+    storyScene = createStoryScene($('story-visual'), storyState.model, {onPick: pickStoryElement});
     storyScene.setEvent(storyState.events[storyState.index]);
     $('story-visual').hidden = false;
-    $('story-status').textContent = 'Vista 3D local activa. La vista 2D también está disponible.';
+    $('story-status').textContent = storyState.model ? 'Haz clic en un elemento para ver ese caso.' : '';
   } catch {
     $('story-3d').checked = false;
     $('story-visual').hidden = true;
@@ -114,10 +114,10 @@ function showStory(story, model, host) {
     host.append(open);
   }
   storyState = {events: story.events, model, index: 0};
-  $('story-3d').disabled = !model;
-  $('story-3d').checked = Boolean(model);
-  $('story-visual').hidden = !model;
-  $('story-status').textContent = model ? 'Cargando vista 3D local…' : 'Pasos del certificado en vista 2D.';
+  $('story-3d').disabled = false;
+  $('story-3d').checked = true;
+  $('story-visual').hidden = false;
+  $('story-status').textContent = '';
   $('story-list').replaceChildren();
   for (const [i, event] of story.events.entries()) {
     const item = node('li');
@@ -129,6 +129,23 @@ function showStory(story, model, host) {
   renderStoryStep();
 }
 
+// Clic en un elemento del dominio: salta al paso donde el cuantificador en curso prueba ese caso.
+function pickStoryElement(element) {
+  if (!storyState) return;
+  const {events, index} = storyState;
+  let path = events[index].trace_path;
+  while (path) {
+    const owner = events.find(e => e.trace_path === path);
+    if (owner?.kind === 'quantifier') {
+      const depth = path.split('.').length + 1;
+      const hit = events.findIndex(e => e.trace_path.startsWith(path + '.') && e.trace_path.split('.').length === depth && sameValue(e.element, element));
+      if (hit >= 0) { pauseStory(); storyState.index = hit; renderStoryStep(); return; }
+    }
+    path = path.includes('.') ? path.slice(0, path.lastIndexOf('.')) : '';
+  }
+  $('story-status').textContent = 'Ese elemento no se prueba en este paso: avanza hasta un cuantificador.';
+}
+
 function localSpanishVoice() {
   if (!('speechSynthesis' in window)) return null;
   return window.speechSynthesis.getVoices().find(voice => voice.lang.toLowerCase().startsWith('es') && voice.localService === true) || null;
@@ -136,7 +153,11 @@ function localSpanishVoice() {
 
 function advanceStory() {
   if (!storyState || !storyPlaying) return;
-  if (storyState.index >= storyState.events.length - 1) { pauseStory(); return; }
+  if (storyState.index >= storyState.events.length - 1) {   // fin del recorrido: el avatar reacciona al valor de la fórmula
+    pauseStory();
+    if (storyState.events[0].value !== null) storyScene?.verdict(storyState.events[0].value);
+    return;
+  }
   storyState.index++;
   renderStoryStep(); narrateCurrent();
 }

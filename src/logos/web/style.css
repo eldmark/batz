@@ -193,7 +193,7 @@ details[open] > .explanation { animation: arrive .18s var(--out); }
 .story { padding: var(--s6) var(--gutter); background: var(--brand-950); color: var(--brand-50); }
 .story .pane-lede, .story .hint { color: var(--brand-200); }
 .story-body { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); gap: var(--s6); margin-top: var(--s5); }
-.story-visual { height: 320px; border-radius: var(--r); background: var(--brand-900); overflow: hidden; }
+.story-visual { height: 380px; border-radius: var(--r); background: var(--brand-900); overflow: hidden; }
 .story-2d { margin-top: var(--s3); }
 .story-domain { display: flex; flex-wrap: wrap; gap: var(--s2); }
 .story-node { display: grid; place-items: center; min-width: 46px; height: 46px; padding: 0 10px; border-radius: 99px; background: var(--brand-800); color: var(--brand-100); font: 600 15px/1 var(--mono); transition: background-color .2s ease-out, color .2s ease-out, transform .2s var(--out); }

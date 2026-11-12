@@ -151,6 +151,10 @@ class Handler(BaseHTTPRequestHandler):
                  "/tokens.css": ("tokens.css", "text/css; charset=utf-8"),
                  "/vendor/three.module.js": ("vendor/three.module.js", "text/javascript; charset=utf-8"),
                  "/vendor/three.core.js": ("vendor/three.core.js", "text/javascript; charset=utf-8"),
+                 "/vendor/GLTFLoader.js": ("vendor/GLTFLoader.js", "text/javascript; charset=utf-8"),
+                 "/vendor/BufferGeometryUtils.js": ("vendor/BufferGeometryUtils.js", "text/javascript; charset=utf-8"),
+                 "/vendor/SkeletonUtils.js": ("vendor/SkeletonUtils.js", "text/javascript; charset=utf-8"),
+                 "/avatar/logos.glb": ("avatar/logos.glb", "model/gltf-binary"),
                  "/vendor/LICENSE-three.txt": ("vendor/LICENSE-three.txt", "text/plain; charset=utf-8")}
         font = Path(path).name  # solo el nombre: sin rutas relativas
         if path == f"/fonts/{font}" and font.endswith(".woff2") and (WEB / "fonts" / font).is_file():

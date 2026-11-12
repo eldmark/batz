@@ -80,7 +80,7 @@ def run(seed):
                  "predicates": {"P": {"arity": 1, "tuples": [[0], [2]]},
                                 "Q": {"arity": 1, "tuples": [[1], [2]]}}}
         for path, marker in (("/", b"LOGOS"), ("/app.js", b"searchCountermodel"),
-                             ("/style.css", b".verdict"), ("/", b"mode-prove"), ("/tokens.css", b"--emph-5-bg"), ("/story3d.js", b"createStoryScene"),
+                             ("/style.css", b".verdict"), ("/", b"mode-prove"), ("/tokens.css", b"--emph-5-bg"), ("/story3d.js", b"createStoryScene"), ("/vendor/GLTFLoader.js", b"GLTFLoader"), ("/avatar/logos.glb", b"glTF"),
                              ("/vendor/three.module.js", b"three.core.js"),
                              ("/vendor/three.core.js", b"Vector3")):
             status, body = request(url, path)

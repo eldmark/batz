@@ -119,6 +119,6 @@ Deben estar implementados, probados y justificados; elegir **dos o tres**, no to
 
 **Pendiente.**
 - Etiquetador entrenado para palabras fuera del léxico del español. Las conversaciones de clase del cerebro casi no contienen frases en lenguaje natural para formalizar (son sobre sintaxis formal), así que no alcanzan como corpus etiquetado: sirven de conjunto de prueba, no de entrenamiento.
-- Avatar que narre las comprobaciones y los contraejemplos (modelo desde Meshy, animación en Blender).
+- Avatar: **hecho (2026-11-12)**. Modelado y animado en Blender, exportado a GLB y conectado al paso a paso: señala el elemento que se está probando, piensa en los conectivos y reacciona al valor final. Un clic en un elemento del dominio salta al caso que el cuantificador prueba con él. Falta darle voz sincronizada y que guíe la búsqueda de contramodelos.
 - Vista Fitch de las pruebas.
 - Revisión cruzada firmada y ensayo de defensa.
