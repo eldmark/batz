@@ -110,6 +110,9 @@ class Handler(BaseHTTPRequestHandler):
                  "/vendor/three.module.js": ("vendor/three.module.js", "text/javascript; charset=utf-8"),
                  "/vendor/three.core.js": ("vendor/three.core.js", "text/javascript; charset=utf-8"),
                  "/vendor/LICENSE-three.txt": ("vendor/LICENSE-three.txt", "text/plain; charset=utf-8")}
+        font = Path(path).name  # solo el nombre: sin rutas relativas
+        if path == f"/fonts/{font}" and font.endswith(".woff2") and (WEB / "fonts" / font).is_file():
+            files[path] = (f"fonts/{font}", "font/woff2")
         if path not in files:
             self.send_error(404)
             return

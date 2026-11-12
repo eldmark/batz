@@ -190,7 +190,8 @@ function addSymbol(name = '', kind = 'predicate', arity = 1) {
   remove.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M2 2l10 10M12 2L2 12"/></svg>'; remove.type = 'button'; remove.setAttribute('aria-label', 'Eliminar símbolo');
   remove.addEventListener('click', () => { row.remove(); invalidateTables(); });
   removeCell.append(remove);
-  kindSelect.addEventListener('change', () => { arityInput.disabled = kindSelect.value === 'constant'; invalidateTables(); });
+  row.dataset.kind = kind;
+  kindSelect.addEventListener('change', () => { row.dataset.kind = kindSelect.value; arityInput.disabled = kindSelect.value === 'constant'; invalidateTables(); });
   nameInput.addEventListener('input', invalidateTables);
   arityInput.addEventListener('input', invalidateTables);
   row.append(nameCell, kindCell, arityCell, removeCell);
@@ -268,7 +269,7 @@ function valueSelect(label, options) {
 
 const KIND_LABEL = {constant: 'constante', function: 'función', predicate: 'predicado'};
 function group(name, kind, arity, description) {
-  const box = node('div', undefined, 'interpret-group');
+  const box = node('div', undefined, 'interpret-group'); box.dataset.kind = kind;
   const title = node('h3', name);
   title.append(node('span', arity ? `${KIND_LABEL[kind]} · aridad ${arity}` : KIND_LABEL[kind], `kind ${kind}`));
   box.append(title, node('p', description));
@@ -426,6 +427,7 @@ function explanationElement(data, root = false) {
 async function evaluateFormula() {
   clearStory();
   const resultBox = $('result'); resultBox.replaceChildren();
+  const run = $('evaluate'); run.setAttribute('aria-busy', 'true'); run.textContent = 'Evaluando…';
   try {
     const model = interpretation();
     const assignment = {};
@@ -456,6 +458,7 @@ async function evaluateFormula() {
     resultBox.append(tree);
     showStory(result.story, result.model);
   } catch (exc) { resultBox.append(node('p', exc.message || 'No se pudo evaluar.', 'error')); }
+  finally { run.removeAttribute('aria-busy'); run.textContent = 'Evaluar'; }
 }
 
 function loadSample() {

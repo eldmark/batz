@@ -11,3 +11,15 @@ npm pack three@0.187.0 --pack-destination /tmp
 ```
 
 Dentro del archivo `.tgz` están `package/build/three.module.js`, `package/build/three.core.js` y `package/LICENSE`. No se usa npm al ejecutar LOGOS.
+
+## Tipografías
+
+La interfaz sirve sus fuentes desde `src/logos/web/fonts/`, sin CDN, para que la demo se vea igual sin internet.
+
+| Archivo | Familia | Uso | Licencia | Origen |
+|---|---|---|---|---|
+| `literata.woff2` | Literata (variable, subconjunto latino) | titulares y veredicto | SIL OFL 1.1 | npm `@fontsource-variable/literata@5.3.0` |
+| `plex-sans.woff2` | IBM Plex Sans (variable, subconjunto latino) | texto de la interfaz | SIL OFL 1.1 | npm `@fontsource-variable/ibm-plex-sans@5.3.0` |
+| `jbmono-400.woff2`, `jbmono-600.woff2` | JetBrains Mono NL (sin ligaduras) | fórmulas y tuplas | SIL OFL 1.1 (fuente); MIT (empaquetado) | npm `jetbrains-mono@1.0.6` |
+
+JetBrains Mono NL se eligió para las fórmulas porque el archivo completo contiene `∀ ∃ ∧ ∨ ¬ → ↔ ⊥ ≠ ∈`; los subconjuntos latinos de las otras dos no los traen. Las licencias están junto a los archivos (`LICENSE-*.txt`).
