@@ -6,6 +6,11 @@ import re
 
 from .ast import And, Const, Eq, Exists, Forall, Iff, Implies, Not, Or, Pred, Var
 from .spanish_cyk import Tree
+from .spanish_tagger import plain
+
+# Símbolos de palabras fuera del léxico, propuestos por el etiquetador para la frase en curso:
+# {("N" | "Adj" | "V", palabra): predicado}. `spanish.translate_spanish` lo llena y lo vacía.
+EXTRA = {}
 
 
 NOUN = {"estudiante": "Estudiante", "libro": "Libro", "profesor": "Profesor",
@@ -93,7 +98,8 @@ class Composer:
     def nominal(self, tree: Tree, term):
         if kind(tree) in ("N", "Adj"):
             word = leaf(tree)
-            symbol = (NOUN | NOUN_FORMS if kind(tree) == "N" else ADJ | ADJ_FORMS)[word]
+            table = NOUN | NOUN_FORMS if kind(tree) == "N" else ADJ | ADJ_FORMS
+            symbol = table.get(word) or EXTRA[(kind(tree), word)]
             return Pred(symbol, (term,))
         if kind(tree) == "Pred":
             if len(tree.children) == 1: return self.nominal(tree.children[0], term)
@@ -110,9 +116,9 @@ class Composer:
         if k in ("Obj", "ObjNeg") and len(tree.children) == 2:
             return self.np(tree.children[1])
         if k.startswith("NProp"):
-            return NP("name", name=Const(leaf(tree).replace("í", "i")))
+            return NP("name", name=Const(plain(leaf(tree))))
         if k in ("ListM", "ListF", "ListAny", "OListM", "OListF", "OListAny", "NPAny"):
-            names = tuple(Const(leaf(child).replace("í", "i")) for child in self.name_leaves(tree))
+            names = tuple(Const(plain(leaf(child))) for child in self.name_leaves(tree))
             return NP("or_names" if k.startswith("OList") else "and_names", names=names)
         if k in ("SN", "SNneg", "SNex"):
             if len(tree.children) == 1:
@@ -208,7 +214,7 @@ class Composer:
 
     def verb(self, tree):
         word = leaf(tree)
-        return VERB.get(word) or PLURAL[word]
+        return VERB.get(word) or PLURAL.get(word) or EXTRA[("V", word)]
 
     def transitive(self, verb_tree, obj_tree, subject, negative_object=False):
         name = self.verb(verb_tree) + "2"

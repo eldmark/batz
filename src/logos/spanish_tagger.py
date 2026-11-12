@@ -78,8 +78,8 @@ def guess_predicate(word, tag):
         if form.endswith("P"):
             if w.endswith("ces"):
                 w = w[:-3] + "z"
-            elif w.endswith("es") and len(w) > 3 and w[-3] not in "aeiou":
-                w = w[:-2]
+            elif w.endswith("es") and len(w) > 4 and w[-3] not in "aeiou" and w[-4] in "aeiou":
+                w = w[:-2]          # flores → flor; pero hombres → hombre (el español no acaba en «br»)
             elif w.endswith("s"):
                 w = w[:-1]
         if kind == "Adj" and form.startswith("F"):
@@ -89,6 +89,11 @@ def guess_predicate(word, tag):
                 w = w[:-1] + "o"
         return w.capitalize()
     # verbos: infinitivo aproximado a partir de la vocal temática
+    for ending, infinitive in (("aron", "ar"), ("ieron", "er"), ("io", "er")):
+        if w.endswith(ending) and len(w) > len(ending) + 1:
+            return (w[:-len(ending)] + infinitive).capitalize()      # pretérito
+    if word.casefold().endswith("ó"):
+        return (w[:-1] + "ar").capitalize()
     if form == "P" and w.endswith("n"):
         w = w[:-1]
     subjunctive = "sub" in kind

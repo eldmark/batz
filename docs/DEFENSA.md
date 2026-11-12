@@ -55,3 +55,9 @@ La revisión cruzada del equipo de `FORMAL_LANGUAGE.md`, `SEMANTICS.md` y `ACCEP
 En el modo «Demostrar», escribir `∀x (P(x) → Q(x))` y `P(a)` como premisas, `Q(a)` como conclusión y `a` como constante. Debe salir «Demostrada» con cuatro pasos y, debajo, «Los dos motores coinciden» con la refutación por resolución de cinco cláusulas. Cambiar a premisa `P → Q` y conclusión `Q → P`: sale «No se sigue», porque la resolución satura sin contradicción; el motor de deducción natural por sí solo solo habría dicho «sin prueba». Borrar un paréntesis de una premisa: la revisión de sintaxis marca el punto exacto y el botón se desactiva.
 
 Para el evaluador, cargar `ejemplos/grafo.logos`: ocho fórmulas se evalúan de una vez, siete coinciden con el valor que el archivo esperaba y una (`Q(a)`) se rechaza por símbolo no declarado, sin valor de verdad.
+
+## Demostración del español y del avatar
+
+En «Escribir la fórmula en español», probar «Todos los perros ladran». Ninguna de las dos palabras está en el léxico: aparece un aviso con lo que se supuso (`perros`, sustantivo masculino plural; `ladran`, verbo sin objeto, plural), con su probabilidad, y la fórmula `∀x (Perro(x) → Ladrar(x))`. Probar después «Perros los todos ladran»: se rechaza, porque la categoría propuesta no basta si la gramática no encuentra análisis. Pregunta probable: *¿el modelo decide la fórmula?* No: solo propone la categoría de una palabra; la estructura sale de la gramática y la persona ve el supuesto antes de usarla.
+
+Tras evaluar una fórmula con cuantificadores, pulsar «Ver paso a paso». El avatar señala el elemento que se está probando, y un clic en cualquier elemento del dominio salta al caso que el cuantificador prueba con él. Al terminar el recorrido reacciona al valor de la fórmula.

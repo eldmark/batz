@@ -1,0 +1,25 @@
+# Frases de lógica de clase con palabras fuera del léxico de la gramática.
+# Formato: frase <TAB> fórmula esperada (una de las lecturas), o RECHAZA.
+# Las tres primeras salen de las conversaciones de clase; el resto son ejercicios típicos del curso.
+# Los nombres de predicado son lemas aproximados: con verbos irregulares conservan la raíz de la forma
+# conjugada (duerme → Duermer). Lo que se comprueba es la categoría propuesta y la estructura de la fórmula.
+Todos los estudiantes aprobaron	∀x (Estudiante(x) → Aprobar(x))
+Existe un estudiante que aprueba	∃x (Estudiante(x) ∧ Aprobar(x))
+Todos los hombres son mortales	∀x (Hombre(x) → Mortal(x))
+Sócrates es un hombre	Hombre(socrates)
+Sócrates es mortal	Mortal(socrates)
+Ningún perro vuela	¬∃x (Perro(x) ∧ Vuelar(x))
+Todos los perros ladran	∀x (Perro(x) → Ladrar(x))
+Algún gato duerme	∃x (Gato(x) ∧ Duermer(x))
+Carlos respeta a Lucía	Respetar2(carlos, lucia)
+Todo filósofo admira a Sócrates	∀x (Filosofo(x) → Admirar2(x, socrates))
+Hay una mujer que canta	∃x (Mujer(x) ∧ Cantar(x))
+Ninguna ballena es un pez	¬∃x (Ballena(x) ∧ Pez(x))
+Todos los números primos son impares	∀x (Numero(x) ∧ Primo(x) → Impar(x))
+Si Carlos canta, entonces Lucía baila	Cantar(carlos) → Bailar(lucia)
+Carlos es valiente y honesto	Valiente(carlos) ∧ Honesto(carlos)
+Todas las ballenas nadan	∀x (Ballena(x) → Nadar(x))
+Algunos políticos mienten	∃x (Politico(x) ∧ Mienter(x))
+Cada niño quiere a un perro	∀x (Niño(x) → ∃y (Perro(y) ∧ Quierer2(x, y)))
+No hay ningún triángulo que sea cuadrado	RECHAZA
+Perros los todos ladran	RECHAZA

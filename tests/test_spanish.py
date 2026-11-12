@@ -48,8 +48,12 @@ class ControlledSpanish(unittest.TestCase):
                 self.assertEqual(cm.exception.code, "unsupported_spanish")
 
     def test_unknown_word_reports_its_span(self):
+        # Desde el etiquetador entrenado, «Juan corre» se acepta declarando el supuesto sobre «corre».
+        accepted = translate_spanish("Juan corre")
+        self.assertEqual([a["word"] for a in accepted.assumptions], ["corre"])
+        # Si ni con la categoría propuesta hay análisis, se señala la palabra desconocida.
         with self.assertRaises(LogosError) as cm:
-            translate_spanish("Juan corre")
+            translate_spanish("Juan corre los")
         self.assertEqual((cm.exception.span.start, cm.exception.span.end), (5, 10))
 
 

@@ -118,7 +118,7 @@ Deben estar implementados, probados y justificados; elegir **dos o tres**, no to
 **Pruebas.** 195 automáticas. Reportes regenerables: `scripts/report_spanish.py` (51 casos) y `scripts/validate_demo.py` (recorrido de la demo).
 
 **Pendiente.**
-- Etiquetador entrenado para palabras fuera del léxico del español. Las conversaciones de clase del cerebro casi no contienen frases en lenguaje natural para formalizar (son sobre sintaxis formal), así que no alcanzan como corpus etiquetado: sirven de conjunto de prueba, no de entrenamiento.
+- Etiquetador entrenado: **hecho (2026-11-12)**. Regresión logística por descenso de gradiente sobre frases generadas; 94.4 % de exactitud en palabras nunca vistas y 19 de 20 frases de clase (`docs/validation/ETIQUETADOR-ESPANOL.md`). Las conversaciones del cerebro solo sirvieron de prueba: casi no traen frases para formalizar. Pendiente: revisión humana de las listas de lemas.
 - Avatar: **hecho (2026-11-12)**. Modelado y animado en Blender, exportado a GLB y conectado al paso a paso: señala el elemento que se está probando, piensa en los conectivos y reacciona al valor final. Un clic en un elemento del dominio salta al caso que el cuantificador prueba con él. Falta darle voz sincronizada y que guíe la búsqueda de contramodelos.
 - Vista Fitch de las pruebas.
 - Revisión cruzada firmada y ensayo de defensa.

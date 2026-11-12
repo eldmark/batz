@@ -310,3 +310,7 @@ input.formal, #proof-constants { width: 100%; }
   .batch-item { grid-template-columns: 22px minmax(0, 1fr); }
   .batch-item .chip, .batch-note { grid-column: 2; justify-self: start; }
 }
+.assumptions { margin-top: var(--s3); padding: var(--s3); border-radius: var(--r); background: var(--warning-bg); color: var(--warning-fg); }
+.assumptions strong { font-weight: 600; }
+.assumptions ul { margin: var(--s2) 0 0; padding-left: var(--s4); }
+.assumptions code { color: inherit; font-weight: 600; }

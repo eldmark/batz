@@ -36,6 +36,7 @@ El español y la voz **no son motores**: son adaptadores de entrada que producen
 | `proof/__init__.py` | hecho | `prove`, `prove_text`, `find_inconsistency`; compone buscador + checker | todo lo anterior |
 | `countermodel.py` | **Fase 4** | Buscador de contramodelos finitos con cotas explícitas | model, semantics |
 | `resolution/` | hecho | Motor B: forma clausal, unificación y resolución con factorización; solo oráculo de contraste (`contrast`) | ast, transform |
+| `spanish_tagger.py` | hecho | Propone la categoría de palabras fuera del léxico (modelo entrenado en `scripts/train_spanish_tagger.py`); la gramática decide si encaja y la interfaz declara el supuesto | — |
 | `modelfile.py` | hecho | Lee archivos `.logos` y JSON con un modelo y sus fórmulas | errors |
 | `spanish/` | **Fase 5** | Aho-Corasick, léxico, CYK, adaptador a `FormulaAST` | ast, parser |
 | `explain/` | **Fase 7** | `ExplanationBuilder` determinista | certificado verificado |

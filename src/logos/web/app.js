@@ -631,6 +631,19 @@ async function showSpanishReadings() {
       box.append(node('p', result.errors?.[0]?.message || 'Frase no admitida.', 'error'));
       return;
     }
+    if (result.assumptions?.length) {
+      // palabras fuera del léxico: se muestra qué categoría se les supuso antes de ofrecer la fórmula
+      const assumed = node('div', undefined, 'assumptions');
+      assumed.append(node('strong', 'Palabras que no conocía. Supuse esto; revísalo antes de usar la fórmula:'));
+      const list = node('ul');
+      for (const a of result.assumptions) {
+        const item = node('li');
+        item.append(node('code', a.word), document.createTextNode(` es ${a.label} `),
+          node('span', `${Math.round(a.probability * 100)} %`, 'chip'), document.createTextNode(' → símbolo '), node('code', a.symbol));
+        list.append(item);
+      }
+      assumed.append(list); box.append(assumed);
+    }
     if (result.status === 'ambiguous') {
       box.append(node('p', 'Hay más de una lectura. Elige la que quisiste decir.', 'hint'));
     }
