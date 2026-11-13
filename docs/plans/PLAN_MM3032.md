@@ -119,9 +119,9 @@ Deben estar implementados, probados y justificados; elegir **dos o tres**, no to
 
 **Pendiente.**
 - Etiquetador entrenado: **hecho (2026-11-12)**. Regresión logística por descenso de gradiente sobre frases generadas; 94.4 % de exactitud en palabras nunca vistas y 19 de 20 frases de clase (`docs/validation/ETIQUETADOR-ESPANOL.md`). Las conversaciones del cerebro solo sirvieron de prueba: casi no traen frases para formalizar. Pendiente: revisión humana de las listas de lemas.
-- Avatar: **hecho (2026-11-12)**. Modelado y animado en Blender, exportado a GLB y conectado al paso a paso: señala el elemento que se está probando, piensa en los conectivos y reacciona al valor final. Un clic en un elemento del dominio salta al caso que el cuantificador prueba con él. Falta darle voz sincronizada y que guíe la búsqueda de contramodelos.
-- Vista Fitch de las pruebas.
-- Revisión cruzada firmada y ensayo de defensa.
+- Avatar: **hecho (2026-11-12)**. Modelado y animado en Blender, exportado a GLB y conectado al paso a paso: señala el elemento que se está probando, piensa en los conectivos y reacciona al valor final. Un clic en un elemento del dominio salta al caso que el cuantificador prueba con él. Voz sincronizada y guía de la búsqueda de contramodelos: **hechas (2026-11-13)**, ver §10.
+- Vista Fitch de las pruebas: **hecha (2026-11-13)**, ver §10.
+- Revisión cruzada firmada y ensayo de defensa: siguen pendientes; necesitan personas (`docs/validation/REVISION-EQUIPO.md`).
 
 ## 9. Diccionario del español (2026-11-12)
 
@@ -131,3 +131,22 @@ Deben estar implementados, probados y justificados; elegir **dos o tres**, no to
 - **Página «Diccionario»** (tercer modo): buscar por lema o por cualquier forma, ver formas y símbolo, y añadir palabras. Al consultar una palabra que no está, el etiquetador propone categoría, género o uso y lema; la persona corrige y guarda. Las altas van a `datos/lexico_usuario.tsv` (volumen en Docker) y sirven de inmediato.
 - **Gramática**: nueva regla para el condicional con sujeto tácito («Si una persona es humana, entonces es mortal» → `∀x (Persona(x) ∧ Humano(x) → Mortal(x))`) y predicado nominal de otro género («Ninguna ballena es un pez»). Cuando lo único que falla es la concordancia de un adjetivo, el error propone la forma correcta. Los 51 casos de la especificación siguen cumpliendo; «Los estudiantes leen» sigue rechazada, como pide la especificación, ahora con una explicación.
 - **Etiquetador**: reentrenado con el diccionario como fuente; 97.1 % en palabras nunca vistas. Solo actúa sobre palabras que no están en el diccionario.
+
+## 10. Estado al 2026-11-13 (rama `mejoras/plan-movil-animaciones`)
+
+**Correcciones.**
+- *Alcance en español*: la segunda lectura ya no depende de un único patrón (∀ sujeto, ∃ objeto). Cualquier par de cuantificadores del sujeto y del objeto directo de la oración principal la tiene, salvo ∀∀ y ∃∃ (equivalentes) y «ningún». Las relativas y el antecedente de «si» siguen siendo islas. «Algún profesor admira a cada estudiante» da ∃∀ y ∀∃. Los 51 casos siguen cumpliendo.
+- *Reglas en notación de libro*: la derivación y la narración dicen «Hipótesis», «∀E», «→E», no `assume`, `all_e`, `imp_e`.
+- *«No se sigue» con contramodelo*: si no hay prueba, se busca un modelo de 1 a 3 elementos con las premisas verdaderas y la conclusión falsa (semántica estándar, con relaciones vacías), verificado con el evaluador, y se puede abrir en el modo Evaluar.
+- *Contramodelo legible*: tablas y matriz en vez de JSON. *Detalles*: plurales («1 elemento», «el único elemento de D»), favicon, pie de página abajo, `THREE.Timer` en vez de `THREE.Clock`, avisos que se van solos en vez de una franja fija.
+
+**Pendientes del plan resueltos.**
+- *Vista Fitch* (`proof/fitch.py`): cajas por cada hipótesis descargada y por la variable nueva de ∀I/∃E; `check_layout` comprueba la fidelidad con el certificado (corpus completo y Kalmár). La narración sigue su numeración.
+- *Avatar*: boca con dos formas (`Boca_abierta`, `Boca_redonda`) que siguen las vocales de cada palabra de la voz; cuenta la búsqueda de contramodelos (tamaños, descartes, un ejemplo) antes de explicar por qué falla la fórmula.
+- *Q4, letras proposicionales*: en Demostrar, `p → q` se decide como lógica proposicional (tabla de verdad y Kalmár). En Evaluar sigue el perfil MM3032 (aridad ≥ 1).
+- *Whisper*: `scripts/instalar_voz.ps1` (probado en Windows) y `.sh` (sin probar en Linux real) instalan whisper.cpp 1.9.5, el modelo base y ffmpeg por usuario; la transcripción local funciona de punta a punta.
+- *Léxico*: auditoría automática con `scripts/auditar_lexico.py`; lo dudoso queda para firma humana en `docs/validation/LEXICO-AUDITORIA.md`.
+
+**Teléfono y movimiento.** Ver README («En el teléfono»). Verificado en Chrome con 360 y 390 px y pantalla táctil emulada: sin desborde horizontal, objetivos de toque de 40 px o más y campos de 16 px.
+
+**Siguen necesitando personas** (`docs/validation/REVISION-EQUIPO.md`): revisión cruzada firmada, ensayo de defensa, recorrido en la computadora de entrega, ensayo audible con una voz española instalada, firma de la auditoría del léxico, prueba en un teléfono real y la fecha de entrega (Q2).

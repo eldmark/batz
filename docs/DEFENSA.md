@@ -25,7 +25,9 @@ Abrir `http://127.0.0.1:8765/` en el navegador (también `docker compose up --bu
 | `proof/`, `propositional.py` | Aportes creativos existentes: prueba, verificador y decisión proposicional | Un certificado aceptado respalda `proved`; agotar búsqueda en FOL significa `unknown`. No forma parte del cálculo del valor en un modelo. |
 | `resolution/` | Aporte creativo: segundo demostrador, por resolución, independiente del primero | Refuta premisas ∪ {¬conclusión}. Si deriva la cláusula vacía, la consecuencia vale; si satura sin ella, no vale; si agota límites, no dice nada. Solo contrasta: `proved` exige certificado de deducción natural. |
 | `modelfile.py` | Lee archivos `.logos` con modelo y fórmulas | Solo lee la forma; la validación matemática la hace `build_interpretation`. |
-| `countermodels.py` | Aporte creativo: busca modelos estrictos que falsifican una sentencia | Enumera por tamaño de dominio, respeta límites de tiempo/candidatos/tablas y revalida el hallazgo. Sin hallazgo: `unknown`, nunca «válida». |
+| `countermodels.py` | Aporte creativo: busca modelos estrictos que falsifican una sentencia, y modelos donde las premisas valen y la conclusión no | Enumera por tamaño de dominio, respeta límites de tiempo/candidatos/tablas y revalida el hallazgo. Sin hallazgo: `unknown`, nunca «válida». Deja una bitácora (tamaños, candidatos, un ejemplo descartado) que el avatar narra. |
+| `proof/fitch.py` | Dispone un certificado ya verificado en notación de Fitch | Cada hipótesis que una regla descarga abre una caja; ∀I y ∃E marcan su variable nueva. `check_layout` comprueba que cada línea cite líneas visibles y lo mismo que el paso del certificado. |
+| `spanish_semantics.py` | Compone los árboles del español en fórmulas | El sujeto y el objeto de la oración principal pueden intercambiar su alcance; las relativas y el antecedente de «si» son islas; «ningún» no reparte su negación. |
 
 ## Diez preguntas probables
 
@@ -40,6 +42,14 @@ Abrir `http://127.0.0.1:8765/` en el navegador (también `docker compose up --bu
 9. **Si la fórmula salió verdadera, ¿es válida universalmente?** No. Solo es verdadera en la interpretación y, si es abierta, el entorno elegidos. Validez universal requiere todos los modelos; la búsqueda acotada no la decide.
 10. **¿Cómo saben que la explicación no inventa el resultado?** `explain` llama primero a `check_trace`; cada resumen usa los valores de los hijos verificados. Una traza manipulada produce `invalid_trace`.
 
+### Preguntas sobre los aportes nuevos
+
+11. **¿La vista Fitch es la misma prueba que aceptó el verificador?** Sí. El verificador revisa el certificado con contextos explícitos; la vista solo lo reordena y renumera. `check_layout` comprueba, línea por línea, que se citan las mismas fórmulas que el paso del certificado y que cada caja empieza con lo que su regla descarga. Se probó con las 88 pruebas del corpus y con certificados de Kalmár.
+12. **¿Por qué hay pasos escritos antes de abrir una caja?** Porque no dependen de lo que la caja supone: así siguen visibles después de cerrarla. Lo que menciona la variable nueva de ∀I o ∃E se queda dentro de su caja.
+13. **¿Por qué «Algún profesor admira a cada estudiante» tiene dos lecturas y «Todos leyeron todos los libros» una?** Con cuantificadores distintos (∃ y ∀) el orden cambia lo que se afirma: hay modelos donde una lectura es verdadera y la otra falsa. Con el mismo cuantificador simple, ∀x∀y ≡ ∀y∀x y ∃x∃y ≡ ∃y∃x, así que no hay nada que preguntar.
+14. **¿Por qué `p → q` se lee como lógica proposicional?** En posición de fórmula, una minúscula sola no puede ser un término (los términos van dentro de un predicado o de `=`). Si todo el problema es proposicional, la validez es decidible: la tabla de verdad da el veredicto y Kalmár construye la prueba, que el verificador revisa.
+15. **El contramodelo de Demostrar tiene una relación vacía, ¿no lo prohíbe el proyecto?** El perfil MM3032 la prohíbe para el modo Evaluar. Una consecuencia se juzga en todos los modelos de la semántica clásica, que sí admite relaciones vacías; por eso ese contramodelo no se puede abrir en Evaluar, y la interfaz lo dice.
+
 ## Ensayo con fórmulas no preparadas
 
 Pedir a otra persona una fórmula que use los símbolos declarados. Antes de pulsar Evaluar, identificar libres y predecir el resultado a mano con la tabla de `D`. Comparar el resultado y desplegar cada paso. Probar también una entrada inválida (por ejemplo `P(a,a)`); debe aparecer el diagnóstico sin badge de verdad.
@@ -48,11 +58,13 @@ Para el aporte creativo, buscar un contramodelo de `∀x P(x)` con `P` unario: c
 
 ## Revisión humana pendiente
 
-La revisión cruzada del equipo de `FORMAL_LANGUAGE.md`, `SEMANTICS.md` y `ACCEPTANCE_FIXTURES.md` no se puede firmar automáticamente. Cada integrante debe revisar ejemplos, condiciones laterales y límites, y registrar nombre, fecha y observaciones en `docs/decisions/OPEN_QUESTIONS.md`.
+La revisión cruzada del equipo de `FORMAL_LANGUAGE.md`, `SEMANTICS.md` y `ACCEPTANCE_FIXTURES.md` no se puede firmar automáticamente. Cada integrante debe revisar ejemplos, condiciones laterales y límites, y registrar nombre, fecha y observaciones en `docs/decisions/OPEN_QUESTIONS.md`. La lista completa de lo que necesita personas, para ir marcando, está en `docs/validation/REVISION-EQUIPO.md`.
 
 ## Demostración de los dos motores
 
-En el modo «Demostrar», escribir `∀x (P(x) → Q(x))` y `P(a)` como premisas, `Q(a)` como conclusión y `a` como constante. Debe salir «Demostrada» con cuatro pasos y, debajo, «Los dos motores coinciden» con la refutación por resolución de cinco cláusulas. Cambiar a premisa `P → Q` y conclusión `Q → P`: sale «No se sigue», porque la resolución satura sin contradicción; el motor de deducción natural por sí solo solo habría dicho «sin prueba». Borrar un paréntesis de una premisa: la revisión de sintaxis marca el punto exacto y el botón se desactiva.
+En el modo «Demostrar», escribir `∀x (P(x) → Q(x))` y `P(a)` como premisas, `Q(a)` como conclusión y `a` como constante. Debe salir «Demostrada» con cuatro líneas en notación de Fitch y, debajo, «Los dos motores coinciden» con la refutación por resolución de cinco cláusulas. Borrar un paréntesis de una premisa: la revisión de sintaxis marca el punto exacto y el botón se desactiva.
+
+Con «Ejemplo» se recorren tres casos. El segundo, `∀x ∃y Ama(x, y)` contra `∃y ∀x Ama(x, y)`, sale «No se sigue» con un contramodelo verificado de dos elementos (`Ama` como matriz: cada uno ama al otro). «Abrir en Evaluar» lo carga con la conclusión, y al evaluarla sale «Falso». «Ver paso a paso» muestra al avatar contando la búsqueda antes de explicar por qué falla. El tercero es la ley de Peirce, `((p → q) → p) → p`: con letras minúsculas se decide como lógica proposicional, y la prueba tiene cajas anidadas con RAA. Cambiar a premisa `p → q` y conclusión `q → p`: sale «No se sigue» con la valuación p = F, q = V.
 
 Para el evaluador, cargar `ejemplos/grafo.logos`: ocho fórmulas se evalúan de una vez, siete coinciden con el valor que el archivo esperaba y una (`Q(a)`) se rechaza por símbolo no declarado, sin valor de verdad.
 
@@ -60,7 +72,9 @@ Para el evaluador, cargar `ejemplos/grafo.logos`: ocho fórmulas se evalúan de 
 
 En «Escribir la fórmula en español», probar «Todos los perros ladran». Ninguna de las dos palabras está en el léxico: aparece un aviso con lo que se supuso (`perros`, sustantivo masculino plural; `ladran`, verbo sin objeto, plural), con su probabilidad, y la fórmula `∀x (Perro(x) → Ladrar(x))`. Probar después «Perros los todos ladran»: se rechaza, porque la categoría propuesta no basta si la gramática no encuentra análisis. Pregunta probable: *¿el modelo decide la fórmula?* No: solo propone la categoría de una palabra; la estructura sale de la gramática y la persona ve el supuesto antes de usarla.
 
-Tras evaluar una fórmula con cuantificadores, pulsar «Ver paso a paso». El avatar señala el elemento que se está probando, y un clic en cualquier elemento del dominio salta al caso que el cuantificador prueba con él. Al terminar el recorrido reacciona al valor de la fórmula.
+Tras evaluar una fórmula con cuantificadores, pulsar «Ver paso a paso». El avatar señala el elemento que se está probando, y un clic en cualquier elemento del dominio salta al caso que el cuantificador prueba con él. Al terminar el recorrido reacciona al valor de la fórmula. Con «Leer en voz alta» (requiere una voz en español instalada en el sistema), su boca se abre y se redondea con las vocales de cada palabra que dice.
+
+En el panel de español, «Algún profesor admira a cada estudiante» da dos lecturas (∃∀ y ∀∃). Pregunta probable: *¿y «Todos los estudiantes leyeron todos los libros»?* Una sola: las dos órdenes son equivalentes.
 
 ## Demostración del diccionario
 
