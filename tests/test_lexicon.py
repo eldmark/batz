@@ -17,7 +17,7 @@ class Inflection(unittest.TestCase):
                                ("canción", "canciones"), ("país", "países"), ("rey", "reyes"), ("café", "cafés"), ("inglés", "ingleses")]:
             self.assertEqual(plural(word), expected)
         for word, expected in [("alto", "alta"), ("trabajador", "trabajadora"), ("inglés", "inglesa"), ("alemán", "alemana"),
-                               ("mortal", "mortal"), ("feliz", "feliz"), ("valiente", "valiente")]:
+                               ("español", "española"), ("mortal", "mortal"), ("feliz", "feliz"), ("valiente", "valiente")]:
             self.assertEqual(feminine(word), expected)
 
     def test_regular_and_orthographic_verbs(self):
