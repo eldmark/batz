@@ -147,6 +147,7 @@ Para que las ambigüedades no se multipliquen sin necesidad, hay **dos únicos c
 La gramática además evita lecturas falsas con estas reglas:
 
 - **Islas de alcance**: un cuantificador que está dentro de una relativa o del antecedente de un "si" no sale de ahí. Por eso "Si algún estudiante lee, Juan aprueba" da `(∃x(E∧L))→A(j)` y nada más.
+- **Implementado (2026-11-13)**: el alcance se invierte para cualquier par de cuantificadores del sujeto y del objeto directo de la oración principal («todo/cada», «algún/un», numerales), no solo para ∀ sujeto con ∃ objeto. "Algún profesor admira a cada estudiante" da `∃x(P∧∀y(E→A))` y `∀y(E→∃x(P∧A))`. No se pregunta cuando los dos cuantificadores son el mismo cuantificador simple (∀∀, ∃∃: las dos órdenes son equivalentes) ni con «ningún». Cada lectura lleva una paráfrasis determinista («Un mismo objeto sirve para todos», «Cada objeto puede tener un miembro distinto»…). Código: `_inverse_scope` en `src/logos/spanish_semantics.py`.
 - La concordancia negativa ("no… ningún") cuenta como **una** negación y no genera lecturas extra.
 - También hay límites de lecturas por alcance (n! permutaciones) y de árboles, ambos configurables. Si se superan, se pide reformular.
 
