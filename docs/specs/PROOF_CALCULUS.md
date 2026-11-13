@@ -108,3 +108,15 @@ Búsqueda dirigida por la meta, con profundización iterativa sobre las decision
 3. Límites configurables de profundidad, nodos y tiempo.
 
 Nada de esto afecta la corrección: lo que el buscador devuelve se verifica de nuevo, paso a paso, por el checker.
+
+## Presentación en notación de Fitch (2026-11-13)
+
+El certificado usa contextos explícitos (`Γ ⊢ φ` en cada paso); la interfaz lo muestra en notación de Fitch (`src/logos/proof/fitch.py`). Solo cambia la presentación:
+
+- Las premisas van primero, una por línea, separadas del resto por una raya.
+- Cada hipótesis que una regla descarga abre una caja: →I y ¬I suponen la hipótesis, RAA supone la negación de la conclusión, ∨E abre dos cajas (una por disyunto) y ∃E una con el testigo. ∀I abre una caja sin hipótesis, marcada con su variable nueva; ∃E marca la suya junto al testigo.
+- Una línea cita líneas visibles (de su caja o de una que la contiene) y las cajas cerradas como rangos `i–j`.
+- Los pasos que no dependen de lo que supone una caja se escriben antes de abrirla, para que sigan visibles después de cerrarla; lo que menciona la variable nueva se queda dentro.
+- Si la conclusión de una caja ya estaba escrita afuera, se repite dentro como «Reiteración».
+
+`check_layout` comprueba la fidelidad: cada línea con regla coincide con su paso del certificado (misma regla, misma fórmula y mismas fórmulas citadas, en orden); cada caja empieza con lo que su regla descarga y termina en la premisa correspondiente; ningún paso del certificado queda sin línea. Se aplica a todo el corpus de pruebas y a certificados de Kalmár (`tests/test_fitch.py`).

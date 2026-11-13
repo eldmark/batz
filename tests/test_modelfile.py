@@ -2,6 +2,7 @@
 import unittest
 from pathlib import Path
 
+from logos import FiniteModel, is_countermodel, parse
 from logos.errors import LogosError
 from logos.modelfile import parse_model_file
 from logos.server import handle_api
@@ -91,9 +92,33 @@ class ProofModeApi(unittest.TestCase):
         proved = handle_api("/api/proof", {"premises": ["P → Q", "P"], "conclusion": "Q", "constants": []})
         self.assertEqual((proved["status"], proved["contrast"]["verdict"]), ("proved", "consistent"))
         self.assertEqual(proved["contrast"]["engine_b"]["steps"][-1]["clause"], "□")
+        # Proposicional: la tabla de verdad decide; «no se sigue» solo con una valuación verificada.
         invalid = handle_api("/api/proof", {"premises": ["P → Q"], "conclusion": "Q → P", "constants": []})
-        self.assertEqual(invalid["status"], "unknown")                           # nunca «falso» por A
+        self.assertEqual((invalid["status"], invalid["mode"]), ("refuted", "propositional"))
+        self.assertEqual(invalid["valuation"], [["P", False], ["Q", True]])
         self.assertEqual(invalid["contrast"]["engine_b"]["status"], "saturated")
+
+    def test_lowercase_letters_are_propositional_and_shown_as_written(self):
+        proved = handle_api("/api/proof", {"premises": ["p → q", "p"], "conclusion": "q", "constants": []})
+        self.assertEqual((proved["status"], proved["mode"]), ("proved", "propositional"))
+        self.assertEqual([line["formula"] for line in proved["fitch"]], ["p → q", "p", "q"])
+        self.assertEqual([line["label"] for line in proved["fitch"]], ["Premisa", "Premisa", "→E"])
+        parsed = handle_api("/api/parse", {"formulas": ["p → q", "P(a)"], "constants": ["a"]})
+        self.assertEqual(parsed["results"][0]["error"]["code"], "mixed_logic")
+        partial = handle_api("/api/parse", {"formulas": ["p → "], "constants": []})
+        self.assertEqual(partial["results"][0]["error"]["message"], "se esperaba una fórmula y se encontró el final de la entrada")
+
+    def test_first_order_refutation_comes_with_a_verified_countermodel(self):
+        refuted = handle_api("/api/proof", {"premises": ["∀x ∃y R(x, y)"], "conclusion": "∃y ∀x R(x, y)", "constants": []})
+        self.assertEqual((refuted["status"], refuted["mode"]), ("refuted", "first_order"))
+        found = refuted["countermodel"]
+        model = FiniteModel.from_dict(found["model"])
+        self.assertTrue(is_countermodel(model, [parse("∀x ∃y R(x, y)")], parse("∃y ∀x R(x, y)")))
+        self.assertTrue(found["loadable"])
+        self.assertEqual(found["story"]["events"][0]["kind"], "search")
+        # Válida pero fuera del alcance del buscador A: B la refuta y no se busca contramodelo.
+        valid = handle_api("/api/proof", {"premises": ["∀x (P(x) → Q(x))", "P(a)"], "conclusion": "Q(a)", "constants": ["a"]})
+        self.assertEqual(valid["status"], "proved")
 
 
 if __name__ == "__main__":
