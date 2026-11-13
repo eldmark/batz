@@ -145,8 +145,8 @@ Deben estar implementados, probados y justificados; elegir **dos o tres**, no to
 - *Avatar*: boca con dos formas (`Boca_abierta`, `Boca_redonda`) que siguen las vocales de cada palabra de la voz; cuenta la búsqueda de contramodelos (tamaños, descartes, un ejemplo) antes de explicar por qué falla la fórmula.
 - *Q4, letras proposicionales*: en Demostrar, `p → q` se decide como lógica proposicional (tabla de verdad y Kalmár). En Evaluar sigue el perfil MM3032 (aridad ≥ 1).
 - *Whisper*: `scripts/instalar_voz.ps1` (probado en Windows) y `.sh` (sin probar en Linux real) instalan whisper.cpp 1.9.5, el modelo base y ffmpeg por usuario; la transcripción local funciona de punta a punta.
-- *Léxico*: auditoría automática con `scripts/auditar_lexico.py`; lo dudoso queda para firma humana en `docs/validation/LEXICO-AUDITORIA.md`.
+- *Léxico*: auditoría automática con `scripts/auditar_lexico.py` y las 55 dudas decididas y aplicadas (género común, verbos con y sin objeto, nombres propios que chocaban con palabras comunes, «escribe/estudia/aprueba» con objeto en la gramática). Etiquetador reentrenado: 96,3 % en palabras nunca vistas. Falta que una persona confirme el resumen de `docs/validation/LEXICO-AUDITORIA.md`.
 
 **Teléfono y movimiento.** Ver README («En el teléfono»). Verificado en Chrome con 360 y 390 px y pantalla táctil emulada: sin desborde horizontal, objetivos de toque de 40 px o más y campos de 16 px.
 
-**Siguen necesitando personas** (`docs/validation/REVISION-EQUIPO.md`): revisión cruzada firmada, ensayo de defensa, recorrido en la computadora de entrega, ensayo audible con una voz española instalada, firma de la auditoría del léxico, prueba en un teléfono real y la fecha de entrega (Q2).
+**Siguen necesitando personas** (`docs/validation/REVISION-EQUIPO.md`): revisión cruzada firmada, ensayo de defensa, recorrido en la computadora de entrega, ensayo audible con una voz española instalada, confirmación de las decisiones del léxico, prueba en un teléfono real y la fecha de entrega (Q2).

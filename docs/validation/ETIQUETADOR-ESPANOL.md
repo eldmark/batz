@@ -8,9 +8,9 @@ La gramática del español controlado tiene un léxico cerrado. Cuando una frase
 
 ## Modelo y datos
 
-- Regresión logística multinomial, 18 etiquetas, 2172 rasgos (terminaciones de 1 a 4 letras, mayúscula, tilde, longitud y las palabras funcionales vecinas).
+- Regresión logística multinomial, 18 etiquetas, 2214 rasgos (terminaciones de 1 a 4 letras, mayúscula, tilde, longitud y las palabras funcionales vecinas).
 - Entrenada por descenso de gradiente por lotes (64) sobre la entropía cruzada, con penalización L2 y tasa de aprendizaje decreciente.
-- 26496 ejemplos de entrenamiento, generados con plantillas a partir de 1551 lemas. Las etiquetas son correctas por construcción.
+- 26462 ejemplos de entrenamiento, generados con plantillas a partir de 1569 lemas. Las etiquetas son correctas por construcción.
 - **Partición por lema** (70 % / 15 % / 15 %): validación y prueba solo contienen palabras que el modelo nunca vio.
 - Las conversaciones de clase no se usaron para entrenar: casi no contienen frases en lenguaje natural. Sirven de prueba final (abajo).
 
@@ -18,31 +18,31 @@ La gramática del español controlado tiene un léxico cerrado. Cuando una frase
 
 | Tasa de aprendizaje | L2 | Mejor época | Exactitud en validación | Exactitud en la última época |
 |---|---|---|---|---|
-| 0.1 | 0.0 | 14 | 0.968 | 0.968 |
-| 0.1 | 0.0001 | 14 | 0.968 | 0.968 |
-| 0.1 | 0.001 | 12 | 0.968 | 0.968 |
-| 0.5 | 0.0 | 11 | 0.969 | 0.968 |
-| 0.5 | 0.0001 | 11 | 0.969 | 0.968 |
-| 0.5 | 0.001 | 5 | 0.969 | 0.967 |
-| 2.0 | 0.0 | 6 | 0.971 **← elegido** | 0.968 |
-| 2.0 | 0.0001 | 11 | 0.971 | 0.969 |
-| 2.0 | 0.001 | 4 | 0.968 | 0.965 |
+| 0.1 | 0.0 | 11 | 0.969 | 0.968 |
+| 0.1 | 0.0001 | 11 | 0.969 | 0.968 |
+| 0.1 | 0.001 | 12 | 0.969 | 0.968 |
+| 0.5 | 0.0 | 11 | 0.972 **← elegido** | 0.969 |
+| 0.5 | 0.0001 | 12 | 0.972 | 0.969 |
+| 0.5 | 0.001 | 11 | 0.971 | 0.969 |
+| 2.0 | 0.0 | 3 | 0.969 | 0.965 |
+| 2.0 | 0.0001 | 4 | 0.971 | 0.967 |
+| 2.0 | 0.001 | 14 | 0.971 | 0.971 |
 
 ## Resultado en palabras nunca vistas
 
-- Exactitud con etiqueta completa (categoría, género y número): **97.1%** sobre 4461 palabras.
-- Exactitud de la categoría gruesa (sustantivo / adjetivo / verbo con objeto / verbo sin objeto / nombre): **99.8%**.
+- Exactitud con etiqueta completa (categoría, género y número): **96.3%** sobre 4457 palabras.
+- Exactitud de la categoría gruesa (sustantivo / adjetivo / verbo con objeto / verbo sin objeto / nombre): **99.6%**.
 
 Confusiones más frecuentes (real → propuesta):
 
-- NProp_F → NProp_M: 36
-- Adj_MS → Adj_FS: 16
-- N_FP → N_MP: 16
+- NProp_F → NProp_M: 31
+- N_FP → N_MP: 28
+- N_FS → N_MS: 21
+- Adj_MS → Adj_FS: 14
+- Adj_FS → VI_S: 14
+- Adj_MP → Adj_FP: 11
+- N_MP → N_FP: 9
 - NProp_M → NProp_F: 8
-- Adj_FP → Adj_MP: 7
-- N_MP → N_FP: 7
-- Adj_FS → VI_S: 6
-- N_FS → N_MS: 6
 
 La gramática corrige parte de estos errores: una etiqueta que no concuerda con el resto de la frase no produce ningún árbol, y por eso se prueban las dos más probables.
 
@@ -74,7 +74,7 @@ La gramática corrige parte de estos errores: una etiqueta que no concuerda con 
 | Perros los todos ladran | RECHAZA | rechazada: Frase fuera de la gramática controlada; revisa concordancia o usa el editor formal |  | sí |
 | Si una persona es humana, entonces es mortal | `∀x (Persona(x) ∧ Humano(x) → Mortal(x))` | `∀x (Persona(x) ∧ Humano(x) → Mortal(x))` |  | sí |
 | Si Juan estudia, aprueba | `Estudiar(juan) → Aprobar(juan)` | `Estudiar(juan) → Aprobar(juan)` |  | sí |
-| Todos los unicornios galopan | `∀x (Unicornio(x) → Galopar(x))` | `∀x (Unicornio(x) → Galopar(x))` | unicornios→N_MP (100%); galopan→VI_P (100%) | sí |
+| Todos los unicornios galopan | `∀x (Unicornio(x) → Galopar(x))` | `∀x (Unicornio(x) → Galopar(x))` | unicornios→N_MP (100%); galopan→VI_P (99%) | sí |
 | Los políticos mienten | RECHAZA | rechazada: «Los» solo no dice cuántos: empieza con «todos los», «algunos», «ningún» o «un». |  | sí |
 | si una persona es humano entonces es mortal | RECHAZA | rechazada: «humano» no concuerda en género con su sujeto. ¿Quisiste decir «humana»? |  | sí |
 

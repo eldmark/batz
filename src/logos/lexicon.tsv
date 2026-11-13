@@ -28,7 +28,7 @@ doctor	N	M
 ingeniero	N	M	
 abogado	N	M	
 músico	N	M	
-poeta	N	M	
+poeta	N	C	
 planeta	N	M	
 río	N	M	
 carro	N	M	
@@ -56,7 +56,7 @@ abuelo	N	M
 primo	N	M	
 tío	N	M	
 jefe	N	M	
-soldado	N	M	
+soldado	N	C	
 campesino	N	M	
 pintor	N	M	
 escritor	N	M	
@@ -251,7 +251,7 @@ accidente	N	M
 crimen	N	M	pl=crímenes
 ladrón	N	M	
 policía	N	C	
-juez	N	M	
+juez	N	C	
 testigo	N	C	
 prisionero	N	M	
 ciudadano	N	M	
@@ -281,7 +281,7 @@ príncipe	N	M
 emperador	N	M	
 esclavo	N	M	
 sirviente	N	M	
-huésped	N	M	
+huésped	N	C	
 viajero	N	M	
 extranjero	N	M	
 turista	N	C	
@@ -301,7 +301,7 @@ camarero	N	M
 granjero	N	M	
 pastor	N	M	
 marinero	N	M	
-piloto	N	M	
+piloto	N	C	
 capitán	N	M	
 estudiante	N	C	
 gato	N	M	
@@ -313,8 +313,8 @@ humano	N	M
 mortal	N	M	
 lógico	N	M	
 matemático	N	M	
-cliente	N	M	
-paciente	N	M	
+cliente	N	C	
+paciente	N	C	
 gallo	N	M	
 burro	N	M	
 conejo	N	M	
@@ -545,7 +545,7 @@ carne	N	F
 sopa	N	F	
 ensalada	N	F	
 sal	N	F	
-azúcar	N	F	
+azúcar	N	C	
 miel	N	F	
 harina	N	F	
 cebolla	N	F	
@@ -925,13 +925,13 @@ inofensivo	ADJ	-
 gigante	ADJ	-	
 diminuto	ADJ	-	
 enorme	ADJ	-	
-bailar	V	I	
+bailar	V	IT	
 ladrar	V	I	
 nadar	V	I	
 caminar	V	I	
 trabajar	V	I	
 llorar	V	I	
-saltar	V	I	
+saltar	V	IT	
 respirar	V	I	
 viajar	V	I	
 descansar	V	I	
@@ -941,7 +941,7 @@ trotar	V	I
 correr	V	IT	
 vivir	V	I	
 toser	V	I	
-sufrir	V	I	
+sufrir	V	IT	
 crecer	V	I	
 nacer	V	I	
 aparecer	V	I	
@@ -962,19 +962,19 @@ insistir	V	I
 partir	V	I	
 llegar	V	I	
 entrar	V	I	
-pasear	V	I	
+pasear	V	IT	
 flotar	V	I	
 girar	V	I	
 reinar	V	I	
 navegar	V	I	
 patinar	V	I	
-pescar	V	I	
+pescar	V	IT	
 remar	V	I	
 madurar	V	I	
 envejecer	V	I	
 enfermar	V	I	
 sanar	V	I	
-mejorar	V	I	
+mejorar	V	IT	
 empeorar	V	I	
 sudar	V	I	
 roncar	V	I	
@@ -1009,8 +1009,8 @@ razonar	V	I
 respetar	V	T	
 admirar	V	T	
 odiar	V	T	
-ayudar	V	T	
-enseñar	V	T	
+ayudar	V	IT	
+enseñar	V	IT	
 visitar	V	T	
 saludar	V	T	
 llamar	V	T	
@@ -1030,15 +1030,15 @@ dibujar	V	IT
 usar	V	T	
 necesitar	V	T	
 temer	V	T	
-beber	V	T	
+beber	V	IT	
 vender	V	T	
 romper	V	T	
 abrir	V	T	
 cubrir	V	T	
 recibir	V	T	
 describir	V	T	
-discutir	V	T	
-aplaudir	V	T	
+discutir	V	IT	
+aplaudir	V	IT	
 examinar	V	T	
 observar	V	T	
 acompañar	V	T	
@@ -1057,7 +1057,7 @@ entrevistar	V	T
 buscar	V	T	
 criticar	V	T	
 atacar	V	T	
-cazar	V	T	
+cazar	V	IT	
 abandonar	V	T	
 aceptar	V	T	
 rechazar	V	T	
@@ -1068,12 +1068,12 @@ apoyar	V	T
 arreglar	V	T	
 atrapar	V	T	
 borrar	V	T	
-cambiar	V	T	
+cambiar	V	IT	
 cargar	V	T	
 celebrar	V	T	
 comparar	V	T	
 completar	V	T	
-comprender	V	T	
+comprender	V	IT	
 conquistar	V	T	
 construir	V	T	
 controlar	V	T	
@@ -1121,7 +1121,7 @@ ofender	V	T
 ordenar	V	T	
 organizar	V	T	
 pagar	V	T	
-pintar	V	T	
+pintar	V	IT	
 pisar	V	T	
 preparar	V	T	
 presentar	V	T	
@@ -1179,7 +1179,7 @@ pensar	V	IT	cambio=ie
 sentir	V	T	cambio=ie
 querer	V	T	formas=quiere,quieren,quiera,quieran,quiso,quisieron
 preferir	V	T	cambio=ie
-entender	V	T	cambio=ie
+entender	V	IT	cambio=ie
 defender	V	T	cambio=ie
 cerrar	V	T	cambio=ie
 perder	V	IT	cambio=ie
@@ -1191,7 +1191,7 @@ recordar	V	T	cambio=ue
 contar	V	T	cambio=ue
 mostrar	V	T	cambio=ue
 probar	V	T	cambio=ue
-morder	V	T	cambio=ue
+morder	V	IT	cambio=ue
 mover	V	T	cambio=ue
 resolver	V	T	cambio=ue
 devolver	V	T	cambio=ue
@@ -1216,10 +1216,9 @@ venir	V	I	formas=viene,vienen,venga,vengan,vino,vinieron
 ver	V	T	formas=ve,ven,vea,vean,vio,vieron
 dar	V	T	formas=da,dan,dé,den,dio,dieron
 saber	V	T	formas=sabe,saben,sepa,sepan,supo,supieron
-poder	V	I	formas=puede,pueden,pueda,puedan,pudo,pudieron
 traer	V	T	formas=trae,traen,traiga,traigan,trajo,trajeron
 caer	V	I	formas=cae,caen,caiga,caigan,cayó,cayeron
-oír	V	T	formas=oye,oyen,oiga,oigan,oyó,oyeron
+oír	V	IT	formas=oye,oyen,oiga,oigan,oyó,oyeron
 ir	V	I	formas=va,van,vaya,vayan,fue,fueron
 jugar	V	IT	formas=juega,juegan,juegue,jueguen,jugó,jugaron
 reír	V	I	formas=ríe,ríen,ría,rían,rio,rieron
@@ -1238,7 +1237,7 @@ sostener	V	T	formas=sostiene,sostienen,sostenga,sostengan,sostuvo,sostuvieron
 contener	V	T	formas=contiene,contienen,contenga,contengan,contuvo,contuvieron
 negar	V	T	formas=niega,niegan,niegue,nieguen,negó,negaron
 aprobar	V	IT	formas=aprueba,aprueban,apruebe,aprueben,aprobó,aprobaron
-vencer	V	T	formas=vence,vencen,venza,venzan,venció,vencieron
+vencer	V	IT	formas=vence,vencen,venza,venzan,venció,vencieron
 enviar	V	T	formas=envía,envían,envíe,envíen,envió,enviaron
 esquiar	V	I	formas=esquía,esquían,esquíe,esquíen,esquió,esquiaron
 aullar	V	I	formas=aúlla,aúllan,aúlle,aúllen,aulló,aullaron
@@ -1299,7 +1298,6 @@ Ignacio	NP	M
 Alejandro	NP	M	
 Adrián	NP	M	
 Álvaro	NP	M	
-Ángel	NP	M	
 Arturo	NP	M	
 Benjamín	NP	M	
 Bruno	NP	M	
@@ -1392,7 +1390,6 @@ Marta	NP	F
 Paula	NP	F	
 Sara	NP	F	
 Julia	NP	F	
-Clara	NP	F	
 Rosa	NP	F	
 Luisa	NP	F	
 Andrea	NP	F	
@@ -1417,7 +1414,6 @@ Verónica	NP	F
 Lorena	NP	F	
 Fernanda	NP	F	
 Mariana	NP	F	
-Victoria	NP	F	
 Rebeca	NP	F	
 Susana	NP	F	
 Olga	NP	F	
@@ -1429,19 +1425,16 @@ Amparo	NP	F
 Antonia	NP	F	
 Aurora	NP	F	
 Bárbara	NP	F	
-Blanca	NP	F	
 Carolina	NP	F	
 Catalina	NP	F	
 Claudia	NP	F	
 Cristina	NP	F	
-Dolores	NP	F	
 Elisa	NP	F	
 Emilia	NP	F	
 Esperanza	NP	F	
 Estela	NP	F	
 Ester	NP	F	
 Fabiola	NP	F	
-Flor	NP	F	
 Francisca	NP	F	
 Gloria	NP	F	
 Graciela	NP	F	
@@ -1462,7 +1455,6 @@ Marina	NP	F
 Miriam	NP	F	
 Nadia	NP	F	
 Noelia	NP	F	
-Norma	NP	F	
 Olivia	NP	F	
 Paola	NP	F	
 Raquel	NP	F	
@@ -1473,7 +1465,6 @@ Sandra	NP	F
 Soledad	NP	F	
 Tamara	NP	F	
 Vanesa	NP	F	
-Violeta	NP	F	
 Ximena	NP	F	
 Yolanda	NP	F	
 Zoe	NP	F	
