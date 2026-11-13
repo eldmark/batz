@@ -2,7 +2,7 @@
 
 > Documento generado por `scripts/report_spanish.py`. No se edita a mano: se vuelve a generar.
 
-**Resultado: 51 de 51 casos cumplen.** 39 frases se aceptan (6 con más de una lectura) y 12 se rechazan a propósito.
+**Resultado: 51 de 51 casos cumplen.** 39 frases se aceptan (7 con más de una lectura) y 12 se rechazan a propósito.
 
 Cómo se lee cada fila:
 
@@ -56,7 +56,7 @@ Cómo se lee cada fila:
 | 42 | Juan, Pedro o Ana estudian. | 1 | 1 | `Estudiar(juan) ∨ Estudiar(pedro) ∨ Estudiar(ana)` | sí |
 | 43 | Juan o María es alta. | 0 | 0 | rechazada: «alta» no concuerda en género con su sujeto. ¿Quisiste decir «alto»? | sí |
 | 44 | Dos estudiantes leen. | 1 | 2 | `∃x ∃y (x ≠ y ∧ Estudiante(x) ∧ Leer(x) ∧ Estudiante(y) ∧ Leer(y))`<br>`∃x ∃y (x ≠ y ∧ Estudiante(x) ∧ Leer(x) ∧ Estudiante(y) ∧ Leer(y)) ∧ ¬∃z ∃u ∃v (z ≠ u ∧ z ≠ v ∧ u ≠ v ∧ Estudiante(z) ∧ Leer(z) ∧ Estudiante(u) ∧ Leer(u) ∧ Estudiante(v) ∧ Leer(v))` | sí |
-| 45 | Al menos dos estudiantes leen un libro. | 1 | 2 | `∃x ∃y (x ≠ y ∧ Estudiante(x) ∧ ∃z (Libro(z) ∧ Leer2(x, z)) ∧ Estudiante(y) ∧ ∃u (Libro(u) ∧ Leer2(y, u)))` | sí |
+| 45 | Al menos dos estudiantes leen un libro. | 1 | 2 | `∃x ∃y (x ≠ y ∧ Estudiante(x) ∧ ∃z (Libro(z) ∧ Leer2(x, z)) ∧ Estudiante(y) ∧ ∃u (Libro(u) ∧ Leer2(y, u)))`<br>`∃x (Libro(x) ∧ ∃y ∃z (y ≠ z ∧ Estudiante(y) ∧ Leer2(y, x) ∧ Estudiante(z) ∧ Leer2(z, x)))` | sí |
 | 46 | Exactamente una persona lee. | 1 | 1 | `∃x (Persona(x) ∧ Leer(x)) ∧ ¬∃y ∃z (y ≠ z ∧ Persona(y) ∧ Leer(y) ∧ Persona(z) ∧ Leer(z))` | sí |
 | 47 | A lo sumo tres profesores aprueban. | 1 | 1 | `¬∃x ∃y ∃z ∃u (x ≠ y ∧ x ≠ z ∧ x ≠ u ∧ y ≠ z ∧ y ≠ u ∧ z ≠ u ∧ Profesor(x) ∧ Aprobar(x) ∧ Profesor(y) ∧ Aprobar(y) ∧ Profesor(z) ∧ Aprobar(z) ∧ Profesor(u) ∧ Aprobar(u))` | sí |
 | 48 | Hay al menos dos libros. | 1 | 1 | `∃x ∃y (x ≠ y ∧ Libro(x) ∧ Libro(y))` | sí |
@@ -95,6 +95,11 @@ Cómo se lee cada fila:
 
 - `∃x ∃y (x ≠ y ∧ Estudiante(x) ∧ Leer(x) ∧ Estudiante(y) ∧ Leer(y))` — Al menos esa cantidad
 - `∃x ∃y (x ≠ y ∧ Estudiante(x) ∧ Leer(x) ∧ Estudiante(y) ∧ Leer(y)) ∧ ¬∃z ∃u ∃v (z ≠ u ∧ z ≠ v ∧ u ≠ v ∧ Estudiante(z) ∧ Leer(z) ∧ Estudiante(u) ∧ Leer(u) ∧ Estudiante(v) ∧ Leer(v))` — Exactamente esa cantidad
+
+**Al menos dos estudiantes leen un libro.**
+
+- `∃x ∃y (x ≠ y ∧ Estudiante(x) ∧ ∃z (Libro(z) ∧ Leer2(x, z)) ∧ Estudiante(y) ∧ ∃u (Libro(u) ∧ Leer2(y, u)))` — Cada miembro puede tener un objeto distinto
+- `∃x (Libro(x) ∧ ∃y ∃z (y ≠ z ∧ Estudiante(y) ∧ Leer2(y, x) ∧ Estudiante(z) ∧ Leer2(z, x)))` — Un mismo objeto sirve para todos
 
 ## Cómo repetir la comprobación
 

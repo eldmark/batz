@@ -40,6 +40,33 @@ class ControlledSpanish(unittest.TestCase):
         self.assertEqual([evaluar(r.signature, model, r.text).value for r in result.readings],
                          [True, False])
 
+    def test_inverse_scope_for_any_pair_of_quantifiers(self):
+        # ∃ en el sujeto y ∀ en el objeto también tiene dos lecturas, con valores distintos.
+        result = translate_spanish("Algún profesor admira a cada estudiante")
+        self.assertEqual(result.status, "ambiguous")
+        self.assertEqual([r.text for r in result.readings],
+                         ["∃x (Profesor(x) ∧ ∀y (Estudiante(y) → Admirar2(x, y)))",
+                          "∀y (Estudiante(y) → ∃x (Profesor(x) ∧ Admirar2(x, y)))"])
+        model = {"domain": [0, 1, 2, 3], "predicates": {
+            "Profesor": {"arity": 1, "tuples": [[0], [1]]},
+            "Estudiante": {"arity": 1, "tuples": [[2], [3]]},
+            "Admirar2": {"arity": 2, "tuples": [[0, 2], [1, 3]]}}}
+        self.assertEqual([evaluar(r.signature, model, r.text).value for r in result.readings], [False, True])
+        # Un numeral también cambia de alcance: «al menos dos» estudiantes con el mismo libro o no.
+        self.assertEqual(translate_spanish("Al menos dos estudiantes leen un libro").status, "ambiguous")
+
+    def test_equivalent_orders_and_islands_are_not_asked(self):
+        # ∀∀ y ∃∃ dicen lo mismo en cualquier orden; «ningún» no reparte su negación.
+        for text in ("Todos los estudiantes leyeron todos los libros", "Un estudiante lee un libro",
+                     "Ningún estudiante lee un libro", "Juan lee un libro"):
+            with self.subTest(text=text):
+                self.assertEqual(translate_spanish(text).status, "single")
+        # El «un libro» de la relativa es isla: en las dos lecturas queda dentro de la restricción.
+        result = translate_spanish("Todo estudiante que lee un libro admira a algún profesor")
+        self.assertEqual(len(result.readings), 2)
+        for reading in result.readings:
+            self.assertIn("Estudiante(x) ∧ ∃z (Libro(z) ∧ Leer2(x, z))", reading.text)
+
     def test_outside_fragment_rejected(self):
         for text in ("", "El estudiante lee", "Juan lea", "Todos los estudiantes lee", "Juan lee 😊", "Juan, lee"):
             with self.subTest(text=text):
