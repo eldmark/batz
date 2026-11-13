@@ -99,7 +99,7 @@ def plural(word):
 def feminine(word):
     if word.endswith("o"):
         return word[:-1] + "a"
-    for tail in ("or", "ón", "án", "ín", "és"):
+    for tail in ("or", "ón", "án", "ín", "és", "ol"):  # -ol: gentilicios como español → española
         if word.endswith(tail):
             return word[:-len(tail)] + tail.translate(_ACCENT) + "a"
     return word

@@ -135,7 +135,7 @@ ordenador	N	M
 teléfono	N	M	
 televisor	N	M	
 motor	N	M	
-robot	N	M	
+robot	N	M	pl=robots
 juguete	N	M	
 balón	N	M	
 regalo	N	M	
@@ -248,7 +248,7 @@ sentimiento	N	M
 secreto	N	M	
 peligro	N	M	
 accidente	N	M	
-crimen	N	M	
+crimen	N	M	pl=crímenes
 ladrón	N	M	
 policía	N	C	
 juez	N	M	
@@ -890,7 +890,7 @@ dorado	ADJ	-
 plateado	ADJ	-	
 rosado	ADJ	-	
 gris	ADJ	-	
-marrón	ADJ	-	
+marrón	ADJ	-	inv
 violeta	ADJ	-	
 celeste	ADJ	-	
 transparente	ADJ	-	
@@ -1151,7 +1151,7 @@ definir	V	T
 afirmar	V	T	
 refutar	V	T	
 verificar	V	T	
-evaluar	V	T	
+evaluar	V	T	formas=evalúa,evalúan,evalúe,evalúen,evaluó,evaluaron
 cantar	V	IT	
 hablar	V	IT	
 comer	V	IT	
