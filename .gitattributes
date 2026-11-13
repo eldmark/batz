@@ -1,0 +1,2 @@
+# Los scripts de shell siempre con finales LF: con CRLF, bash no los puede correr (por ejemplo en WSL).
+*.sh text eol=lf
