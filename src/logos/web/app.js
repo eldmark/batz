@@ -282,7 +282,9 @@ function pickStoryElement(element) {
 
 function localSpanishVoice() {
   if (!('speechSynthesis' in window)) return null;
-  return window.speechSynthesis.getVoices().find(voice => voice.lang.toLowerCase().startsWith('es') && voice.localService === true) || null;
+  // Primero una voz latinoamericana (México, EE. UU., Latinoamérica); si no hay, cualquier español local.
+  const local = window.speechSynthesis.getVoices().filter(voice => voice.lang.toLowerCase().startsWith('es') && voice.localService === true);
+  return local.find(voice => /^es-(mx|us|419|gt|co|ar|cl|pe)/i.test(voice.lang)) || local[0] || null;
 }
 
 /** La casilla de voz solo se ofrece si el sistema tiene una voz local en español; si no, dice cómo instalarla. */
