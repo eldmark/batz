@@ -8,24 +8,142 @@ import webbrowser
 from pathlib import Path
 from urllib.parse import urlsplit
 
+import re
+
 from .errors import LogosError, SCHEMA_VERSION
-from .countermodels import CountermodelConfig, find_countermodel
+from .countermodels import CountermodelConfig, find_consequence_countermodel, find_countermodel
 from .interpretation import build_interpretation
 from .project import evaluar, libres
 from .symbols import Signature, check
-from .parser import parse
+from .parser import _Parser, parse
 from .printer import to_string
 from .transform import free_vars
 from .modelfile import parse_model_file
 from . import lexicon, spanish_tagger as tagger
-from .resolution import ResolutionConfig, resolve_text, _MATRIX as MATRIX
+from .propositional import atoms, is_propositional, valuation_model, valuations, value as prop_value
+from .resolution import ResolutionConfig, resolve, _MATRIX as MATRIX
+from .semantics import is_countermodel
 from .spanish import translate_spanish
-from .proof import SearchConfig, prove_text
+from .proof import SearchConfig, prove, verify
+from .proof.kalmar import kalmar_prove
 from .proof_story import build_proof_narration
 from .voice_input import VoiceInputError, availability, transcribe
 
 WEB = Path(__file__).with_name("web")
 MAX_BODY = 1_000_000
+PROOF_CONFIG = SearchConfig(max_depth=6, max_nodes=20_000, timeout=3)
+KALMAR_ATOMS = 6       # el certificado de Kalmár crece como 2ⁿ: más letras, solo búsqueda
+TRUTH_TABLE_ATOMS = 12  # 4096 filas: la tabla de verdad sigue siendo instantánea
+
+
+def read_problem(premises, conclusion, constants):
+    """Lee un problema del modo Demostrar: `(modo, premisas, conclusión, letras)`.
+
+    Una minúscula suelta en posición de fórmula (`p → q`) solo puede ser una letra
+    proposicional: si todas las fórmulas son proposicionales, el problema se decide completo
+    (tabla de verdad y Kalmár). `letras` guarda cómo se escribió cada letra para mostrarla igual.
+    """
+    texts = [*premises, conclusion]
+    try:
+        parsed = [parse(text, constants) for text in texts]
+    except LogosError as first_error:
+        letters, parsed = {}, []
+        try:
+            for text in texts:
+                reader = _Parser(text, (), propositional=True)
+                parsed.append(reader.parse_all())
+                for name, (original, span) in reader.letters.items():
+                    if letters.setdefault(name, original) != original:
+                        raise LogosError("semantic", "letter_collision",
+                                         f"'{letters[name]}' y '{original}' se leerían como la misma letra '{name}'",
+                                         span, text)
+        except LogosError as exc:
+            raise exc if exc.code == "letter_collision" else first_error
+        if not all(is_propositional(f) for f in parsed):
+            raise first_error
+        return "propositional", parsed[:-1], parsed[-1], letters
+    mode = "propositional" if all(is_propositional(f) for f in parsed) else "first_order"
+    return mode, parsed[:-1], parsed[-1], {}
+
+
+def _syntax_error(text, error):
+    """El error más útil para una fórmula del modo Demostrar que no se lee en primer orden.
+
+    Si se lee como fórmula proposicional, el problema es la mezcla con fórmulas de primer orden.
+    Si tampoco, se informa el error que llega más lejos en el texto: quien escribe `p → ` está
+    escribiendo una fórmula proposicional sin terminar, no un término mal puesto."""
+    try:
+        formula = parse(text, (), propositional=True)
+    except LogosError as other:
+        here = lambda e: e.span.start if e.span is not None else -1
+        return (other if here(other) > here(error) else error).to_diagnostic()
+    if is_propositional(formula):
+        return LogosError("syntactic", "mixed_logic",
+                          "Usa letras proposicionales, pero otras fórmulas son de primer orden: no se pueden mezclar.",
+                          formula.span, text).to_diagnostic()
+    return error.to_diagnostic()
+
+
+def formula_text(letters):
+    """Convierte fórmulas en texto con las letras proposicionales como las escribió el usuario."""
+    if not letters:
+        return to_string
+    return lambda f: re.sub(r"[A-Za-z_][A-Za-z0-9_]*", lambda m: letters.get(m.group(0), m.group(0)), to_string(f))
+
+
+def _contrast(engine_a, second, override=None):
+    verdict, message = override or MATRIX[(engine_a, second.status)]
+    return {"verdict": verdict, "message": message, "engine_b": second.to_dict()}
+
+
+def _proved(cert, show, contrast, mode, method):
+    story = build_proof_narration(cert, show).to_dict()
+    return {"schema_version": SCHEMA_VERSION, "status": "proved", "mode": mode, "method": method,
+            "certificate": cert.to_dict(), "fitch": story.pop("fitch"), "story": story, "contrast": contrast}
+
+
+def _prove_propositional(ps, c, show, second):
+    """Lógica proposicional: siempre hay veredicto dentro de los límites de letras."""
+    names = set().union(*(atoms(f) for f in [*ps, c]))
+    if len(names) > TRUTH_TABLE_ATOMS:
+        return {"schema_version": SCHEMA_VERSION, "status": "unknown", "mode": "propositional",
+                "reason": "too_many_atoms", "contrast": _contrast("unknown", second)}
+    for v in valuations(names):
+        if all(prop_value(p, v) for p in ps) and not prop_value(c, v):
+            model = valuation_model(v)
+            if not is_countermodel(model, ps, c):  # el evaluador de la Fase 2 lo confirma
+                raise AssertionError("valuación no verificada")
+            letter = lambda name: show(parse(name))
+            return {"schema_version": SCHEMA_VERSION, "status": "refuted", "mode": "propositional",
+                    "valuation": [[letter(n), v[n]] for n in sorted(names)],
+                    "premises": [{"formula": show(p), "value": True} for p in ps],
+                    "conclusion": {"formula": show(c), "value": False},
+                    "contrast": _contrast("unknown", second)}
+    result = prove(ps, c, PROOF_CONFIG)
+    if result.status == "proved":
+        return _proved(result.certificate, show, _contrast("proved", second), "propositional", "search")
+    if len(names) > KALMAR_ATOMS:
+        return {"schema_version": SCHEMA_VERSION, "status": "unknown", "mode": "propositional",
+                "reason": "too_many_atoms_for_kalmar", "contrast": _contrast("unknown", second)}
+    cert = kalmar_prove(ps, c, max_atoms=KALMAR_ATOMS)
+    verify(cert)
+    return _proved(cert, show, _contrast("proved", second), "propositional", "kalmar")
+
+
+def _prove_first_order(ps, c, constants, show, second):
+    result = prove(ps, c, PROOF_CONFIG)
+    if result.status == "proved":
+        return _proved(result.certificate, show, _contrast("proved", second), "first_order", "search")
+    if second.status == "refuted":  # B la prueba: no tiene sentido buscar un contramodelo
+        return {"schema_version": SCHEMA_VERSION, "status": "unknown", "mode": "first_order",
+                "reason": result.reason, "nodes": result.nodes, "contrast": _contrast("unknown", second)}
+    search = find_consequence_countermodel(ps, c, constants)
+    if search.status == "found":
+        return {"schema_version": SCHEMA_VERSION, "status": "refuted", "mode": "first_order",
+                "countermodel": search.to_dict(), "contrast": _contrast("unknown", second)}
+    return {"schema_version": SCHEMA_VERSION, "status": "unknown", "mode": "first_order",
+            "reason": result.reason, "nodes": result.nodes, "search": search.to_dict(),
+            "contrast": _contrast("unknown", second)}
 
 
 def _signature(data):
@@ -91,21 +209,19 @@ def handle_api(route, data):
             not isinstance(conclusion, str) or len(conclusion) > 200 or
             not isinstance(constants, list) or not all(isinstance(c, str) for c in constants)):
             raise LogosError("syntactic", "expected_formula", "premisas, conclusión o constantes inválidas")
-        result = prove_text(premises, conclusion, constants=constants,
-                            config=SearchConfig(max_depth=6, max_nodes=20_000, timeout=3))
-        if result.status == "invalid_input":
-            return {"schema_version": SCHEMA_VERSION, "status": "invalid_input",
-                    "errors": [result.diagnostic]}
+        try:
+            mode, ps, c, letters = read_problem(premises, conclusion, constants)
+            known = Signature()
+            for f in [*ps, c]:
+                known = check(f, known)  # la aridad debe ser coherente entre fórmulas
+        except LogosError as exc:
+            return {"schema_version": SCHEMA_VERSION, "status": "invalid_input", "errors": [exc.to_diagnostic()]}
+        show = formula_text(letters)
         # Motor B: segunda opinión independiente. Nunca convierte un «unknown» en «proved».
-        second = resolve_text(premises, conclusion, constants, ResolutionConfig(timeout=2))
-        verdict, message = MATRIX[("proved" if result.status == "proved" else "unknown", second.status)]
-        contrast = {"verdict": verdict, "message": message, "engine_b": second.to_dict()}
-        if result.status == "unknown":
-            return {"schema_version": SCHEMA_VERSION, "status": "unknown",
-                    "reason": result.reason, "nodes": result.nodes, "contrast": contrast}
-        return {"schema_version": SCHEMA_VERSION, "status": "proved",
-                "certificate": result.certificate.to_dict(),
-                "story": build_proof_narration(result.certificate).to_dict(), "contrast": contrast}
+        second = resolve(ps, c, ResolutionConfig(timeout=2))
+        if mode == "propositional":
+            return _prove_propositional(ps, c, show, second)
+        return _prove_first_order(ps, c, constants, show, second)
     if route == "/api/parse":
         # Revisión sintáctica de varias fórmulas sin evaluarlas (modo de pruebas).
         formulas, constants = data.get("formulas"), data.get("constants", [])
@@ -113,6 +229,23 @@ def handle_api(route, data):
             not all(isinstance(f, str) and len(f) <= 400 for f in formulas) or
             not isinstance(constants, list) or not all(isinstance(c, str) for c in constants)):
             raise LogosError("syntactic", "expected_formula", "lista de fórmulas inválida")
+        if formulas:
+            try:  # todas a la vez: si juntas son proposicionales, cada una se muestra como letra
+                mode, ps, c, letters = read_problem(formulas[:-1], formulas[-1], constants)
+                if mode == "propositional" and letters:
+                    show = formula_text(letters)
+                    return {"schema_version": SCHEMA_VERSION, "status": "ok", "mode": "propositional",
+                            "results": [{"ok": True, "text": show(f), "free": []} for f in [*ps, c]]}
+            except LogosError:
+                pass
+        first_order = []
+        for text in formulas:
+            try:
+                first_order.append(parse(text, constants))
+            except LogosError:
+                first_order.append(None)
+        # Solo hay mezcla si alguna otra fórmula es de verdad de primer orden.
+        mixed = any(f is not None and not is_propositional(f) for f in first_order)
         results, known = [], Signature()
         for text in formulas:
             try:
@@ -120,8 +253,16 @@ def handle_api(route, data):
                 known = check(f, known, source=text)  # la aridad debe ser coherente entre fórmulas
                 results.append({"ok": True, "text": to_string(f), "free": sorted(free_vars(f))})
             except LogosError as exc:
-                results.append({"ok": False, "error": exc.to_diagnostic()})
-        return {"schema_version": SCHEMA_VERSION, "status": "ok", "results": results}
+                error = _syntax_error(text, exc)
+                if error["code"] == "mixed_logic" and not mixed:
+                    reader = _Parser(text, (), propositional=True)
+                    f = reader.parse_all()
+                    shown = formula_text({name: original for name, (original, _) in reader.letters.items()})
+                    results.append({"ok": True, "text": shown(f), "free": []})
+                else:
+                    results.append({"ok": False, "error": error})
+        mode = "first_order" if mixed else "propositional" if results and all(r["ok"] for r in results) else "first_order"
+        return {"schema_version": SCHEMA_VERSION, "status": "ok", "mode": mode, "results": results}
     if route == "/api/load":
         package = parse_model_file(data.get("text"))
         sig = _signature(package["signature"])
@@ -190,7 +331,12 @@ class Handler(BaseHTTPRequestHandler):
                  "/vendor/BufferGeometryUtils.js": ("vendor/BufferGeometryUtils.js", "text/javascript; charset=utf-8"),
                  "/vendor/SkeletonUtils.js": ("vendor/SkeletonUtils.js", "text/javascript; charset=utf-8"),
                  "/avatar/logos.glb": ("avatar/logos.glb", "model/gltf-binary"),
+                 "/favicon.svg": ("favicon.svg", "image/svg+xml"),
                  "/vendor/LICENSE-three.txt": ("vendor/LICENSE-three.txt", "text/plain; charset=utf-8")}
+        if path == "/favicon.ico":  # los navegadores lo piden aunque la página declare el SVG
+            self.send_response(204)
+            self.end_headers()
+            return
         font = Path(path).name  # solo el nombre: sin rutas relativas
         if path == f"/fonts/{font}" and font.endswith(".woff2") and (WEB / "fonts" / font).is_file():
             files[path] = (f"fonts/{font}", "font/woff2")
@@ -225,7 +371,7 @@ class Handler(BaseHTTPRequestHandler):
             else:
                 data = json.loads(self.rfile.read(size))
                 response = handle_api(route, data)
-            self._json(200 if response["status"] in ("ok", "found", "unknown", "single", "ambiguous", "proved") else 400, response)
+            self._json(200 if response["status"] in ("ok", "found", "unknown", "single", "ambiguous", "proved", "refuted") else 400, response)
         except VoiceInputError as exc:
             self._json(503 if exc.code == "voice_unavailable" else 400,
                        {"schema_version": SCHEMA_VERSION, "status": "invalid_input",

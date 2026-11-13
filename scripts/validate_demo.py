@@ -149,12 +149,16 @@ def run(seed):
         status, proof = request(url, "/api/proof", {
             "premises": ["P → Q", "P"], "conclusion": "Q"})
         assert status == 200 and proof["status"] == "proved"
-        assert len(proof["story"]["events"]) == len(proof["certificate"]["steps"])
-        assert all(event["verified_by"] == {"certificate_step": event["step_id"]}
+        steps = {step["id"] for step in proof["certificate"]["steps"]}
+        # La narración sigue la vista Fitch: cada evento cita un paso aceptado por el checker.
+        assert all(event["verified_by"] == {"certificate_step": event["step_id"]} and event["step_id"] in steps
                    for event in proof["story"]["events"])
+        assert [event["line"] for event in proof["story"]["events"]] == [line["n"] for line in proof["fitch"]]
+        # Proposicional: «no se sigue» solo con una valuación verificada, y sin narración de prueba.
         status, unproved = request(url, "/api/proof", {
             "premises": ["P"], "conclusion": "Q"})
-        assert status == 200 and unproved["status"] == "unknown" and "story" not in unproved
+        assert status == 200 and unproved["status"] == "refuted" and "story" not in unproved
+        assert unproved["valuation"] == [["P", True], ["Q", False]]
 
         durations = []
         benchmark = {"signature": signature, "interpretation": canonical,

@@ -10,6 +10,8 @@ _NAMES = {
     "iff_e1": "↔E₁", "iff_e2": "↔E₂", "all_i": "∀I", "all_e": "∀E", "ex_i": "∃I",
     "ex_e": "∃E", "eq_i": "=I", "eq_e": "=E",
 }
+# Nombre corto de cada regla, como en los libros: «∀E», «→I», «RAA».
+RULE_SYMBOLS = _NAMES
 
 
 def format_certificate(cert):
