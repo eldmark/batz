@@ -71,7 +71,9 @@ export function createStoryScene(container, model, options = {}) {
 
   // ── avatar ──
   const avatar = new THREE.Group();
-  avatar.position.set(count ? -2.1 : 0, -1.75, 0); avatar.scale.setScalar(1.55); avatar.rotation.y = count ? .22 : 0;
+  // Avatar de proporciones reales (1,78 m): encuadre de medio cuerpo para que la cara se vea grande.
+  const AVATAR_SCALE = 5.0;
+  avatar.position.set(count ? -2.55 : 0, 1.95 - 1.78 * AVATAR_SCALE, 0); avatar.scale.setScalar(AVATAR_SCALE); avatar.rotation.y = count ? .22 : 0;
   scene.add(avatar);
   let mixer = null, current = null, wanted = 'Saluda';
   const clips = {};
