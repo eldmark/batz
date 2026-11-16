@@ -47,6 +47,12 @@ blender -b rig_src.blend --python build_body.py -- D/ out.blend out.glb  # esque
 - **`build_head.py`**:
   - Proyecta la foto con una interpolación de placas delgadas que cierra la boca.
   - Arma el pelo como una cáscara sobre el cuero cabelludo. Su borde queda bajo la piel, así que la línea del pelo la dibuja la textura.
+  - Proyecta la malla a la foto de frente con la pose real de la cabeza (la rotación que estima `fit.py`). La interpolación solo corrige el residuo fino.
+  - El grosor del pelo sale de las siluetas:
+    - **Arriba:** la curva del perfil, suavizada.
+    - **Lados:** al menos 7 mm.
+    - **Atrás:** el perfil, con tope de 12 mm.
+    - **Tope general:** 22 mm.
   - La línea del pelo sale de la foto de frente. En costados y nuca sale de los perfiles: es pelo lo que está dentro de la silueta y no es piel ni camisa.
   - Hornea pasadas flotantes con Cycles (incluida una de normales) y compone la textura en numpy:
     - **Cara:** la foto de frente.
@@ -56,7 +62,8 @@ blender -b rig_src.blend --python build_body.py -- D/ out.blend out.glb  # esque
     - **Boca:** el interior va oscuro.
 - **`build_body.py`**:
   - Mueve los huesos del esqueleto a las articulaciones medidas en la malla y pesa con calor. La cabeza queda rígida sobre el hueso `head`.
-  - Arma la ropa como copias suavizadas de la piel, que heredan los pesos: camiseta azul marino de manga corta con dos botones, pantalón caqui y zapatos. Borra la piel tapada.
+  - Arma la ropa como copias suavizadas de la piel, que heredan los pesos: camiseta azul marino de manga corta con cuello redondo y dos botones, pantalón caqui y zapatos. Borra la piel tapada.
+  - La camiseta cuelga como tela: bajo el pecho cae recta y la cintura casi no se angosta, así no marca busto ni cintura de reloj de arena.
   - Crea las formas `Boca_abierta` (mandíbula que gira) y `Boca_redonda`, y exporta.
 
 `shots.py` tiene la cámara y las luces de los renders de control.

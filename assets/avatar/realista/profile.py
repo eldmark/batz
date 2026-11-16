@@ -1,7 +1,7 @@
 """Silueta de los perfiles: borde delantero, superior y trasero (ambos lados, el de -x espejado)."""
 import json, cv2, numpy as np
 out = {}
-for name, flip in (('side_px', False), ('side_nx', True)):
+for name, flip in (('side_px', False), ('side_nx', True), ('foto', False)):
     im = cv2.imread(name + '.png')
     if flip: im = im[:, ::-1].copy()
     H, W = im.shape[:2]
@@ -17,6 +17,7 @@ for name, flip in (('side_px', False), ('side_nx', True)):
     top = [int(np.nonzero(fg[:, c])[0].min()) if fg[:, c].any() else -1 for c in range(W)]
     cv2.imwrite(name + '_fg.png', fg)
     out[name] = {'w': W, 'h': H, 'front': front, 'back': back, 'top': top}
+    if name == 'foto': out[name]['left'], out[name]['right'] = front, back
     # gráfico de control
     dbg = im.copy()
     for r, c in enumerate(front):

@@ -42,8 +42,13 @@ def tps_eval(model, X):
         x = X[i:i + 4000]; r = np.sqrt(((x[:, None] - S[None]) ** 2).sum(-1)); K = r ** 2 * np.log(r + 1e-12)
         out[i:i + 4000] = K @ sol[:len(S)] + np.c_[np.ones(len(x)), x] @ sol[len(S):]
     return out
-model = tps_fit(src[ok[:468]], dst[ok[:468]])
-def photo_px(X): return tps_eval(model, X[:, [0, 2]])
+# proyección con la pose real de la cabeza en la foto (giro incluido) + TPS solo para el residuo fino
+SIMf = fl['sim']; Rs, ts, ss = np.array(SIMf['R']), np.array(SIMf['t']), SIMf['s']
+def proj(X):
+    Uq = (Rs.T @ (np.asarray(X) - ts).T).T / ss          # (u, profundidad, −v) en píxeles de la foto
+    return np.c_[Uq[:, 0], -Uq[:, 2]]
+model = tps_fit(src[ok[:468]], dst[ok[:468]] - proj(B[:468][ok[:468]]), lam=1e-5)
+def photo_px(X): return proj(X) + tps_eval(model, np.asarray(X)[:, [0, 2]])
 head = V[:, 2] > ZCUT - .02
 pix = np.zeros((nV, 2)); pix[head] = photo_px(V[head])
 
@@ -137,14 +142,76 @@ while pq:
         if w not in vmap: continue
         nd = d + e.calc_length()
         if nd < dist.get(w, 1e9): dist[w] = nd; heapq.heappush(pq, (nd, id(w), w))
-part_x = -.028                               # raya del lado izquierdo de la imagen (−x)
+# grosor del pelo medido en las siluetas: cuánto sobresale el pelo del cráneo en cada foto
+PJ = json.load(open(D + 'profile.json'))
+skull = V[head & ~is_eye & (V[:, 2] > chin)]
+def interp_gap(qs, keys, vals, default):
+    keys, vals = np.asarray(keys), np.asarray(vals)
+    ok_ = ~np.isnan(vals)
+    if ok_.sum() < 3: return np.full(len(qs), default)
+    o = np.argsort(keys[ok_]); return np.interp(qs, keys[ok_][o], vals[ok_][o], left=default, right=default)
+GAPS = {}
+# de frente: la silueta se compara con el cráneo proyectado a la foto (con la pose real)
+fpj = PJ['foto']
+sk_uv = photo_px(skull)
+sil_top = np.array(fpj['top'], float); sil_top[sil_top < 0] = np.nan
+sil_l = np.array(fpj['left'], float); sil_r = np.array(fpj['right'], float)
+sil_l[sil_l < 0] = np.nan; sil_r[sil_r < 0] = np.nan
+Wf, Hf = fpj['w'], fpj['h']
+ucol = np.clip(np.round(sk_uv[:, 0]).astype(int), 0, Wf - 1); vrow = np.clip(np.round(sk_uv[:, 1]).astype(int), 0, Hf - 1)
+top_v = np.full(Wf, np.nan); left_u = np.full(Hf, np.nan); right_u = np.full(Hf, np.nan)
+for uu, vv in zip(ucol, vrow):
+    top_v[uu] = vv if np.isnan(top_v[uu]) else min(top_v[uu], vv)
+for uu, vv in zip(sk_uv[:, 0], vrow):
+    left_u[vv] = uu if np.isnan(left_u[vv]) else min(left_u[vv], uu)
+    right_u[vv] = uu if np.isnan(right_u[vv]) else max(right_u[vv], uu)
+gap_top_px = (top_v - sil_top) * ss; gap_l_px = (left_u - sil_l) * ss; gap_r_px = (sil_r - right_u) * ss
+def front_gaps(p):
+    uv = photo_px(np.array([p[:]]))[0]; u_, v_ = int(np.clip(round(uv[0]), 0, Wf - 1)), int(np.clip(round(uv[1]), 0, Hf - 1))
+    k = slice(max(0, u_ - 3), u_ + 4); kr = slice(max(0, v_ - 3), v_ + 4)
+    gt = np.nanmean(gap_top_px[k]) if np.isfinite(gap_top_px[k]).any() else np.nan
+    side = gap_l_px if uv[0] < np.nanmean(sk_uv[:, 0]) else gap_r_px
+    gsd = np.nanmean(side[kr]) if np.isfinite(side[kr]).any() else np.nan
+    return gt, gsd
+# de perfil: arriba (por y) y atrás (por z), promedio de los dos lados
+SMh = json.load(open(D + 'side_maps.json'))
+ys_ = np.arange(cy - .12, cy + .14, .002); zb_ = np.arange(nose - .07, TOP, .002)
+tops_s, backs_s = [], []
+for name in ('side_px', 'side_nx'):
+    m = SMh[name]; sp_ = PJ[name]
+    c_ = np.arange(sp_['w']); tp = np.array(sp_['top'], float); g_ = tp >= 0
+    y_t = c_[g_] * m['s'] + m['off']; z_t = m['z_sel'] - (tp[g_] - m['r_sel']) * m['s']
+    tops_s.append(np.interp(ys_, y_t, z_t, left=np.nan, right=np.nan))
+    r_ = np.arange(sp_['h']); bk = np.array(sp_['back'], float); g_ = bk >= 0
+    y_b = bk[g_] * m['s'] + m['off']; z_b = m['z_sel'] - (r_[g_] - m['r_sel']) * m['s']
+    o = np.argsort(z_b); backs_s.append(np.interp(zb_, z_b[o], y_b[o], left=np.nan, right=np.nan))
+mid = skull[np.abs(skull[:, 0]) < .02]
+sk_ty = np.array([mid[np.abs(mid[:, 1] - y) < .003, 2].max() if (np.abs(mid[:, 1] - y) < .003).any() else np.nan for y in ys_])
+sk_bz = np.array([skull[np.abs(skull[:, 2] - z) < .002, 1].max() if (np.abs(skull[:, 2] - z) < .002).any() else np.nan for z in zb_])
+gap_ts = np.nanmean(np.array(tops_s), 0) - sk_ty
+gap_b = np.nanmean(np.array(backs_s), 0) - sk_bz
+print('pelo (mm) arriba frente', np.round(np.nanmedian(gap_top_px) * 1000, 1), 'arriba perfil', np.round(np.nanmedian(gap_ts) * 1000, 1),
+      'lados', np.round(np.nanmedian(gap_l_px) * 1000, 1), np.round(np.nanmedian(gap_r_px) * 1000, 1), 'atrás', np.round(np.nanmedian(gap_b) * 1000, 1))
+gap_ts_s = gap_ts.copy()
+okk = np.isfinite(gap_ts_s)
+if okk.sum() > 5:                                     # curva de arriba suavizada (sin crestas)
+    gap_ts_s = np.interp(ys_, ys_[okk], gap_ts_s[okk])
+    kk = np.exp(-np.arange(-15, 16) ** 2 / 2 / 6.0 ** 2); kk /= kk.sum()
+    gap_ts_s = np.convolve(np.pad(gap_ts_s, 15, mode='edge'), kk, 'valid')
+SIDE_T = float(np.clip(np.nanmedian(np.r_[gap_l_px, gap_r_px]), .007, .014))
+print('pelo: lados', round(SIDE_T * 1000, 1), 'mm; arriba (perfil suavizado) máx', round(np.nanmax(gap_ts_s) * 1000, 1), 'mm')
 for v in new_verts:
-    p = v.co; hz = np.clip((p.z - (brow + .015)) / (TOP - brow - .015), 0, 1)
-    T = .0035 + .015 * hz ** .9
-    front_top = (p.y < cy - .035) * hz
-    T += .007 * front_top                                     # tupé: el pelo se levanta adelante
-    T *= .55 + .45 * smooth01((p.x - part_x) / .02 + .5)      # del lado de la raya, más pegado
-    R = .006 + .006 * (1 - front_top)
+    p = v.co; n = v.normal
+    t_top = interp_gap([p.y], ys_, gap_ts_s, .012)[0] * 1.1
+    t_side = SIDE_T
+    t_back = min(.012, interp_gap([p.z], zb_, gap_b, .006)[0])
+    if np.isnan(t_top): t_top = .012
+    wt, ws_, wb, wf = max(n.z, 0) ** 2, n.x ** 2, max(n.y, 0) ** 2, max(-n.y, 0) ** 2
+    kf = .3 + .55 * smooth01((p.z - (brow + .035)) / .025)          # tupé: arriba al frente el pelo se levanta
+    T = (wt * t_top + ws_ * t_side + wb * t_back + wf * t_top * kf) / max(wt + ws_ + wb + wf, 1e-6)
+    T = float(np.clip(T * 1.05, .002, .022))
+    front_top = float((p.y < cy - .035) * np.clip((p.z - (brow + .015)) / (TOP - brow - .015), 0, 1))
+    R = .015 + .01 * (1 - front_top)
     r = smooth01(dist.get(v, 1) / R) * smooth01((field[orig[v]] - .5) / .35)
     v.co = p + v.normal * (-.0007 + (.0019 + T) * r)     # en el borde queda bajo la piel: la línea la pone la textura
 # suavizar la cáscara sin mover el borde
@@ -240,7 +307,7 @@ px, py = u * W, (1 - v) * H
 ph = sample(photo, px, py); per = sample(person, px, py)[..., 0]
 GAIN = float(fi.get('gain', 1.05))
 phc = np.clip(ph[..., :3] * GAIN, 0, 1); a_face = ph[..., 3]
-skin = np.array(fi['skin_srgb']) * 1.1; hairc = np.array(fi['hair_srgb']) * .95
+skin = np.array(fi['skin_srgb']) * 1.1; hairc = np.array(fi['hair_srgb']) * .8
 field_t, eye_t, hair_t = p_m2[..., 0], p_m2[..., 1] > .5, p_m2[..., 2] > .5
 P3 = p_pos[..., :3]
 # pelo plano con mechones peinados hacia atrás (ruido según la posición)
@@ -326,6 +393,8 @@ for sgn, (C, rad, S) in EC.items():
     col[m] = c
 mo = (p_m1[..., 0] > .5)
 col[mo] = np.array([.16, .07, .07])
+hd = (hair_t * smooth01((field_t - .5) / .2))[..., None] * .6     # la cáscara tira al color del pelo de frente
+col = col * (1 - hd) + hair_flat * hd
 col[~cov] = skin
 img = bpy.data.images.new('CaraTex', RES, RES)
 img.pixels.foreach_set(np.dstack([np.clip(col, 0, 1), np.ones((RES, RES))]).ravel().astype(np.float32))
