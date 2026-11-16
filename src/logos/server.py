@@ -20,6 +20,8 @@ from .printer import to_string
 from .transform import free_vars
 from .modelfile import parse_model_file
 from . import lexicon, spanish_tagger as tagger
+from .tree import semantic_tree, syntax_tree
+from .symbols import parse_checked
 from .propositional import atoms, is_propositional, valuation_model, valuations, value as prop_value
 from .resolution import ResolutionConfig, resolve, _MATRIX as MATRIX
 from .semantics import is_countermodel
@@ -235,7 +237,7 @@ def handle_api(route, data):
                 if mode == "propositional" and letters:
                     show = formula_text(letters)
                     return {"schema_version": SCHEMA_VERSION, "status": "ok", "mode": "propositional",
-                            "results": [{"ok": True, "text": show(f), "free": []} for f in [*ps, c]]}
+                            "results": [{"ok": True, "text": show(f), "free": [], "tree": syntax_tree(f, letters)} for f in [*ps, c]]}
             except LogosError:
                 pass
         first_order = []
@@ -251,14 +253,15 @@ def handle_api(route, data):
             try:
                 f = parse(text, constants)
                 known = check(f, known, source=text)  # la aridad debe ser coherente entre fórmulas
-                results.append({"ok": True, "text": to_string(f), "free": sorted(free_vars(f))})
+                results.append({"ok": True, "text": to_string(f), "free": sorted(free_vars(f)), "tree": syntax_tree(f)})
             except LogosError as exc:
                 error = _syntax_error(text, exc)
                 if error["code"] == "mixed_logic" and not mixed:
                     reader = _Parser(text, (), propositional=True)
                     f = reader.parse_all()
                     shown = formula_text({name: original for name, (original, _) in reader.letters.items()})
-                    results.append({"ok": True, "text": shown(f), "free": []})
+                    results.append({"ok": True, "text": shown(f), "free": [],
+                                    "tree": syntax_tree(f, {n: o for n, (o, _) in reader.letters.items()})})
                 else:
                     results.append({"ok": False, "error": error})
         mode = "first_order" if mixed else "propositional" if results and all(r["ok"] for r in results) else "first_order"
@@ -295,6 +298,7 @@ def handle_api(route, data):
             return {"schema_version": SCHEMA_VERSION, "status": "invalid_input", "errors": list(result.errors)}
         return {"schema_version": SCHEMA_VERSION, "status": "ok", "value": result.value,
                 "explanation": result.explanation.to_dict(), "story": result.story.to_dict(),
+                "tree": semantic_tree(result.trace), "syntax": syntax_tree(parse_checked(formula, sig, strict=True)),
                 "model": result.model.to_dict()}
     if route == "/api/countermodel":
         max_size = data.get("max_size", 3)

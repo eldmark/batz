@@ -85,3 +85,7 @@ Preguntas probables: *¿de dónde sale el género de un sustantivo?* Del diccion
 ## Sinónimos y sentidos
 
 «Todo can ladra» da exactamente la misma fórmula que «Todo perro ladra»: los sinónimos comparten símbolo, así que para la lógica son la misma frase. «Juan compra un banco» da dos lecturas, `Banco_asiento` y `Banco_entidad`, con una nota que dice qué sentido es cada una: igual que la ambigüedad de alcance, no se elige en silencio. Pregunta probable: *¿por qué dos símbolos distintos para «banco»?* Porque en lógica un predicado fija un significado; si fueran el mismo, se podría «demostrar» algo mezclando los dos sentidos.
+
+## Árbol de cada fórmula
+
+Evaluar `∀x (P(x) → ∃y R(x, y))` y pulsar «Árbol»: cada nodo trae su valor y bajo cada cuantificador hay una rama por elemento del dominio (`x = 0`, `x = 1`…); las hojas dicen si la tupla pertenece a la relación (`(0, 1) ∈ Rᴵ`). Es la definición de Tarski dibujada: se ve por qué un `∀` es falso (una rama falsa) o un `∃` verdadero (una rama verdadera). Con «Estructura» se ve el árbol sintáctico. Pregunta probable: *¿el árbol se calcula aparte?* No: se lee de la traza que el verificador ya aceptó, así que no puede contradecir el resultado.

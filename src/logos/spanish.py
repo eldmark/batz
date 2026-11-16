@@ -14,6 +14,7 @@ from .printer import to_string
 from .spanish_cyk import grammar, parse
 from .spanish_semantics import readings as compose_readings
 from .symbols import check, parse_checked
+from .tree import syntax_tree
 from . import lexicon
 
 
@@ -40,7 +41,7 @@ class SpanishReading:
     note: str
 
     def to_dict(self):
-        return {"id": self.id, "formula": self.text, "note": self.note,
+        return {"id": self.id, "formula": self.text, "note": self.note, "tree": syntax_tree(self.formula),
                 "signature": {"constants": sorted(self.signature.constants),
                               "functions": self.signature.functions,
                               "predicates": self.signature.predicates}}

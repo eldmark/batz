@@ -609,3 +609,46 @@ label.check input:checked + svg .tick { stroke-dashoffset: 0; }
   .story-visual { height: 64vh; }
   .subtabs { position: static; }
 }
+
+/* ── Visor de árboles ── */
+.view-switch { display: inline-flex; gap: 2px; padding: 3px; border-radius: 99px; background: var(--surface-sunken); border: 1px solid var(--border); }
+.view { font: 600 13px/1 var(--sans); padding: 7px 13px; border: 0; border-radius: 99px; background: transparent; color: var(--text-muted); cursor: pointer; transition: background-color .15s ease-out, color .15s ease-out; }
+.view:hover { color: var(--text); }
+.view[aria-pressed=true] { background: var(--brand-800); color: var(--brand-50); }
+.result-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s2) var(--s4); margin: var(--s5) 0 var(--s2); }
+.result-head h3 { margin: 0; }
+.tree-viewer { margin-top: var(--s3); }
+.tree-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s2) var(--s3); margin-bottom: var(--s2); }
+.tree-title { font: 600 13px/1 var(--sans); color: var(--text-muted); }
+.tree-tools { display: flex; flex-wrap: wrap; gap: var(--s1); }
+.tree-scroll { overflow: auto; max-height: 540px; border: 1px solid var(--border); border-radius: var(--r); background: var(--surface); scrollbar-width: thin; }
+.tree-svg { display: block; min-width: 100%; }
+.tree-caption { margin-top: var(--s2); }
+.tree-edge { fill: none; stroke: var(--border-strong); stroke-width: 1.5; }
+.tree-edge-tag { fill: var(--surface-sunken); stroke: var(--border); }
+.tree-edge-text { font: 500 11px var(--mono); fill: var(--text-muted); }
+.tn rect { fill: var(--surface-sunken); stroke: var(--border-strong); stroke-width: 1.5; transition: fill .15s ease-out, stroke .15s ease-out; }
+.tn-label { font: 600 14px var(--mono); fill: var(--text); pointer-events: none; }
+.tn-sub { font: 400 11px var(--mono); fill: var(--text-muted); pointer-events: none; }
+.tn-mark { font: 700 10px var(--sans); fill: var(--text-muted); pointer-events: none; }
+.tn.branch { cursor: pointer; }
+.tn:hover rect, .tn:focus-visible rect { stroke: var(--brand-700); stroke-width: 2.5; }
+.tn:focus-visible { outline: none; }
+/* estructura: el color dice qué es cada cosa (el mismo código que el diccionario) */
+.tn.pred rect, .tn.atom rect { fill: var(--k-predicate-bg); stroke: var(--k-predicate-line); }
+.tn.func rect { fill: var(--k-function-bg); stroke: var(--k-function-line); }
+.tn.const rect { fill: var(--k-constant-bg); stroke: var(--k-constant-line); }
+.tn.var rect { fill: var(--surface); stroke: var(--border-strong); }
+.tn.quantifier rect { fill: var(--accent-100); stroke: var(--accent-400); }
+.tn.quantifier .tn-label { fill: var(--accent-900); }
+/* evaluación: el color dice el valor de verdad */
+.tn.true rect { fill: var(--success-bg); stroke: var(--success-solid); }
+.tn.false rect { fill: var(--danger-bg); stroke: var(--danger-solid); }
+.tn.true .tn-label, .tn.true .tn-mark { fill: var(--success-fg); }
+.tn.false .tn-label, .tn.false .tn-mark { fill: var(--danger-fg); }
+.tn-more { fill: var(--brand-800); }
+.tn-more-text { font: 700 10px var(--sans); fill: var(--brand-50); pointer-events: none; }
+.tree-slot { margin-top: var(--s2); }
+.syntax-check .tree-slot, .spanish-reading .tree-slot { grid-column: 1 / -1; }
+.syntax-check li > .button.small, .tree-slot > .button { justify-self: start; }
+@media (max-width: 900px) { .tree-scroll { max-height: 420px; } }

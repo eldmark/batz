@@ -653,6 +653,165 @@ async function updateFree() {
   refreshReady();
 }
 
+// --- visor de árboles (SVG, sin dependencias) ---
+// Dos vistas del mismo objeto: «Evaluación» (valor de cada nodo bajo la interpretación; las ramas de un
+// cuantificador son los elementos de D) y «Estructura» (el árbol sintáctico, también sin modelo).
+const SVG_NS = 'http://www.w3.org/2000/svg';
+const TREE = {padX: 12, boxH: 32, boxH2: 58, gapX: 14, gapY: 42, margin: 14,
+  font: '600 14px "JetBrains Mono NL", ui-monospace, monospace', small: '400 11px "JetBrains Mono NL", ui-monospace, monospace'};
+let measureContext = null;
+function textWidth(text, font) {
+  measureContext ||= document.createElement('canvas').getContext('2d');
+  measureContext.font = font; return measureContext.measureText(text).width;
+}
+function svgNode(tag, attrs = {}, text) {
+  const el = document.createElementNS(SVG_NS, tag);
+  for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+  if (text !== undefined) el.textContent = text;
+  return el;
+}
+function treeDetail(raw) {
+  if (raw.truncated) return `… ${raw.truncated} más`;
+  if (!raw.values) return '';
+  if (raw.relation) return `(${raw.values.map(valueLabel).join(', ')}) ${raw.value ? '∈' : '∉'} ${raw.relation}ᴵ`;
+  if (raw.values.length === 2 && raw.label.includes('=')) return `${valueLabel(raw.values[0])} ${raw.value ? '=' : '≠'} ${valueLabel(raw.values[1])}`;
+  return '';
+}
+function prepareTree(raw, depth = 0) {
+  const n = {raw, depth, collapsed: false, sub: treeDetail(raw)};
+  n.w = Math.max(textWidth(raw.label, TREE.font), n.sub ? textWidth(n.sub, TREE.small) : 0, 14) + 2 * TREE.padX;
+  const marked = raw.value !== undefined;                     // los nodos con V/F llevan la marca en la esquina
+  n.marked = marked;
+  n.h = n.sub ? TREE.boxH2 : marked ? TREE.boxH + 8 : TREE.boxH;
+  n.children = (raw.children || []).map(child => prepareTree(child, depth + 1));
+  return n;
+}
+function treeNodes(n, out = []) { out.push(n); n.children.forEach(c => treeNodes(c, out)); return out; }
+function layoutTree(n) {
+  const kids = n.collapsed ? [] : n.children;
+  kids.forEach(layoutTree);
+  n.kidsWidth = kids.reduce((sum, c) => sum + c.span, 0) + TREE.gapX * Math.max(0, kids.length - 1);
+  n.span = Math.max(n.w, n.kidsWidth);
+}
+function placeTree(n, left) {
+  n.x = left + n.span / 2; n.y = n.depth * (TREE.boxH2 + TREE.gapY);
+  let x = left + (n.span - n.kidsWidth) / 2;
+  for (const c of (n.collapsed ? [] : n.children)) { placeTree(c, x); x += c.span + TREE.gapX; }
+}
+function treeTitle(raw) {
+  const parts = [raw.formula || raw.label];
+  if (raw.assignment?.length) parts.push('con ' + raw.assignment.map(([v, e]) => `${v} = ${valueLabel(e)}`).join(', '));
+  if (raw.value !== undefined) parts.push(raw.value ? 'verdadero' : 'falso');
+  return parts.join(' · ');
+}
+
+function treeCanvas(raw) {
+  const root = prepareTree(raw), all = treeNodes(root);
+  if (all.length > 60) all.forEach(n => { if (n.depth >= 4 && n.children.length) n.collapsed = true; });
+  const svg = svgNode('svg', {class: 'tree-svg', role: 'group', 'aria-label': `Árbol de ${raw.formula || raw.label}`});
+  const state = {root, zoom: 1, svg, all};
+  state.draw = () => {
+    layoutTree(root); placeTree(root, TREE.margin);
+    const shown = []; (function walk(n) { shown.push(n); if (!n.collapsed) n.children.forEach(walk); })(root);
+    const width = root.span + 2 * TREE.margin, depth = Math.max(...shown.map(n => n.depth));
+    const height = (depth + 1) * (TREE.boxH2 + TREE.gapY) - TREE.gapY + 2 * TREE.margin;
+    svg.replaceChildren();
+    svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+    svg.style.width = `${width * state.zoom}px`; svg.style.height = `${height * state.zoom}px`;
+    state.size = [width, height];
+    const edges = svgNode('g', {class: 'tree-edges'}), boxes = svgNode('g');
+    for (const n of shown) {
+      const top = n.y + TREE.margin;
+      if (!n.collapsed) for (const c of n.children) {
+        const x1 = n.x, y1 = top + n.h, x2 = c.x, y2 = c.y + TREE.margin, mid = (y1 + y2) / 2;
+        edges.append(svgNode('path', {d: `M${x1} ${y1} C${x1} ${mid} ${x2} ${mid} ${x2} ${y2}`, class: 'tree-edge'}));
+        if (c.raw.edge) {
+          const lx = (x1 + x2) / 2, ly = mid + 4, w = textWidth(c.raw.edge, TREE.small) + 10;
+          edges.append(svgNode('rect', {x: lx - w / 2, y: ly - 11, width: w, height: 16, rx: 8, class: 'tree-edge-tag'}),
+                       svgNode('text', {x: lx, y: ly + 1, class: 'tree-edge-text', 'text-anchor': 'middle'}, c.raw.edge));
+        }
+      }
+      const kind = n.raw.kind, value = n.raw.value === undefined ? '' : n.raw.value ? 'true' : 'false';
+      const group = svgNode('g', {class: `tn ${kind} ${value}${n.children.length ? ' branch' : ''}`, tabindex: 0,
+        role: n.children.length ? 'button' : 'img', 'aria-label': treeTitle(n.raw)});
+      if (n.children.length) group.setAttribute('aria-expanded', String(!n.collapsed));
+      group.append(svgNode('title', {}, treeTitle(n.raw)),
+        svgNode('rect', {x: n.x - n.w / 2, y: top, width: n.w, height: n.h, rx: ['var', 'const', 'func'].includes(kind) ? n.h / 2 : 7}));
+      const labelY = n.sub ? top + 26 : n.marked ? top + 28 : top + n.h / 2 + 5;
+      group.append(svgNode('text', {x: n.x, y: labelY, 'text-anchor': 'middle', class: 'tn-label'}, n.raw.label));
+      if (n.sub) group.append(svgNode('text', {x: n.x, y: top + 46, 'text-anchor': 'middle', class: 'tn-sub'}, n.sub));
+      if (value) group.append(svgNode('text', {x: n.x - n.w / 2 + 8, y: top + 13, class: 'tn-mark'}, value === 'true' ? 'V' : 'F'));
+      if (n.collapsed && n.children.length) {
+        const count = treeNodes(n).length - 1;
+        group.append(svgNode('circle', {cx: n.x + n.w / 2 - 2, cy: top + n.h, r: 11, class: 'tn-more'}),
+                     svgNode('text', {x: n.x + n.w / 2 - 2, y: top + n.h + 4, 'text-anchor': 'middle', class: 'tn-more-text'}, `+${count}`));
+      }
+      const toggle = () => { if (!n.children.length) return; n.collapsed = !n.collapsed; state.draw(); svg.querySelector(`[data-id="${n.id}"]`)?.focus(); };
+      n.id ??= `${n.depth}-${shown.indexOf(n)}-${Math.round(n.x)}`;
+      group.dataset.id = n.id;
+      group.addEventListener('click', toggle);
+      group.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); toggle(); } });
+      boxes.append(group);
+    }
+    svg.append(edges, boxes);
+  };
+  state.setAll = collapsed => { all.forEach(n => { if (n.children.length) n.collapsed = collapsed && n.depth > 0; }); state.draw(); };
+  state.draw();
+  return state;
+}
+
+function treeViewer({semantic = null, syntax = null}) {
+  const box = node('div', undefined, 'tree-viewer');
+  const bar = node('div', undefined, 'tree-bar');
+  const scroll = node('div', undefined, 'tree-scroll');
+  const caption = node('p', undefined, 'hint tree-caption');
+  const views = {}; let current = null;
+  const sources = [['semantic', 'Evaluación', semantic], ['syntax', 'Estructura', syntax]].filter(([, , raw]) => raw);
+  const switcher = node('div', undefined, 'view-switch'); switcher.setAttribute('role', 'group');
+  function fit() {
+    if (!current) return;
+    const [w] = current.size, room = scroll.clientWidth - 8;
+    current.zoom = room > 0 && w > room ? Math.max(.4, room / w) : 1; current.draw();
+  }
+  function show(key) {
+    for (const button of switcher.children) button.setAttribute('aria-pressed', String(button.dataset.key === key));
+    views[key] ||= treeCanvas(sources.find(([k]) => k === key)[2]);
+    current = views[key]; scroll.replaceChildren(current.svg); fit();
+    caption.textContent = key === 'semantic'
+      ? 'Cada nodo lleva su valor (V o F). Bajo un cuantificador hay una rama por elemento de D. Haz clic en un nodo para plegarlo.'
+      : 'Estructura de la fórmula: conectivos y cuantificadores arriba, predicados en verde, funciones en azul y constantes en amarillo.';
+  }
+  for (const [key, label] of sources) {
+    const button = node('button', label, 'view'); button.type = 'button'; button.dataset.key = key;
+    button.addEventListener('click', () => show(key)); switcher.append(button);
+  }
+  const tool = (text, label, action) => { const b = node('button', text, 'button secondary small'); b.type = 'button'; b.setAttribute('aria-label', label); b.addEventListener('click', action); return b; };
+  const tools = node('div', undefined, 'tree-tools');
+  tools.append(tool('−', 'Alejar', () => { current.zoom = Math.max(.3, current.zoom - .15); current.draw(); }),
+    tool('+', 'Acercar', () => { current.zoom = Math.min(2.2, current.zoom + .15); current.draw(); }),
+    tool('Ajustar', 'Ajustar al ancho', fit),
+    tool('Plegar', 'Plegar ramas', () => { current.setAll(true); fit(); }),
+    tool('Desplegar', 'Desplegar todo', () => { current.setAll(false); fit(); }));
+  bar.append(sources.length > 1 ? switcher : node('span', sources[0][1], 'tree-title'), tools);
+  box.append(bar, scroll, caption);
+  show(sources[0][0]);
+  new ResizeObserver(() => { if (box.isConnected) fit(); }).observe(scroll);
+  return box;
+}
+
+// Botón que despliega el árbol bajo `host` la primera vez que se pide.
+function treeToggle(label, build) {
+  const wrap = node('div', undefined, 'tree-slot');
+  const button = node('button', label, 'button secondary small'); button.type = 'button'; button.setAttribute('aria-expanded', 'false');
+  let panel = null;
+  button.addEventListener('click', () => {
+    if (!panel) { panel = build(); wrap.append(panel); button.setAttribute('aria-expanded', 'true'); return; }
+    panel.hidden = !panel.hidden; button.setAttribute('aria-expanded', String(!panel.hidden));
+  });
+  wrap.prepend(button);
+  return wrap;
+}
+
 function explanationElement(data, root = false) {
   const wrapper = node('div', undefined, 'explanation');
   const details = node('details'); details.open = root;
@@ -691,7 +850,7 @@ async function evaluateFormula() {
       }
       showFormulaError(null);
       resultBox.append(verdictElement(result.value ? 'Verdadero' : 'Falso', result.value ? 'true' : 'false', result.explanation.summary));
-      resultBox.append(node('h3', 'Por qué'));
+      const reasons = node('div', undefined, 'reasons');
       const tree = explanationElement(result.explanation, true);
       const toggle = node('button', 'Desplegar todo', 'button secondary'); toggle.type = 'button';
       toggle.addEventListener('click', () => {
@@ -699,8 +858,22 @@ async function evaluateFormula() {
         tree.querySelectorAll('details').forEach((item, i) => { item.open = open || i === 0; });
         toggle.textContent = open ? 'Contraer' : 'Desplegar todo';
       });
-      if (result.explanation.children?.length) resultBox.append(toggle);
-      resultBox.append(tree);
+      if (result.explanation.children?.length) reasons.append(toggle);
+      reasons.append(tree);
+      let treePanel = null;
+      const head = node('div', undefined, 'result-head'), switcher = node('div', undefined, 'view-switch');
+      switcher.setAttribute('role', 'group');
+      const choose = key => {
+        for (const b of switcher.children) b.setAttribute('aria-pressed', String(b.dataset.key === key));
+        reasons.hidden = key !== 'reasons';
+        if (key === 'tree') { treePanel ||= (() => { const v = treeViewer({semantic: result.tree, syntax: result.syntax}); resultBox.insertBefore(v, reasons.nextSibling); return v; })(); }
+        if (treePanel) treePanel.hidden = key !== 'tree';
+      };
+      for (const [key, label] of [['reasons', 'Razones'], ['tree', 'Árbol']]) {
+        const b = node('button', label, 'view'); b.type = 'button'; b.dataset.key = key; b.addEventListener('click', () => choose(key)); switcher.append(b);
+      }
+      head.append(node('h3', 'Por qué'), switcher);
+      resultBox.append(head, reasons); choose('reasons');
       showStory(result.story, result.model, resultBox);
       if (phoneLayout()) resultBox.scrollIntoView({behavior: reduceMotion() ? 'auto' : 'smooth', block: 'start'});
       return 'done';
@@ -923,7 +1096,9 @@ async function showSpanishReadings() {
         setPane($('mode-evaluate'), 'model');
         toast('Lectura elegida: ya están los símbolos. Completa la interpretación.', 'success');
       });
-      row.append(use); box.append(row);
+      row.append(use);
+      if (reading.tree) row.append(treeToggle('Ver árbol', () => treeViewer({syntax: reading.tree})));
+      box.append(row);
     }
   } catch (exc) { box.append(node('p', exc.message || 'No se pudo traducir.', 'error')); }
 }
@@ -1005,6 +1180,7 @@ async function checkProofSyntax() {
     if (entry.ok) {
       item.append(node('code', entry.text));
       if (entry.free.length) item.append(node('span', `libre: ${entry.free.join(', ')}`, 'chip'));
+      if (entry.tree) item.append(treeToggle('Árbol', () => treeViewer({syntax: entry.tree})));
     } else {
       errors++;
       const [start, end] = entry.error.span || [0, 0];

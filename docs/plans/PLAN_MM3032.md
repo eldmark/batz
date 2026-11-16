@@ -172,3 +172,13 @@ Deben estar implementados, probados y justificados; elegir **dos o tres**, no to
 **Teléfono y movimiento.** Ver README («En el teléfono»). Verificado en Chrome con 360 y 390 px y pantalla táctil emulada: sin desborde horizontal, objetivos de toque de 40 px o más y campos de 16 px.
 
 **Siguen necesitando personas** (`docs/validation/REVISION-EQUIPO.md`): revisión cruzada firmada, ensayo de defensa, recorrido en la computadora de entrega, ensayo audible con una voz española instalada, confirmación de las decisiones del léxico, prueba en un teléfono real y la fecha de entrega (Q2).
+
+## 13. Visor de árboles (2026-11-16)
+
+Cada fórmula se puede ver como árbol (`src/logos/tree.py`, visor SVG en `app.js`, sin dependencias):
+
+- **Al evaluar** (también las del archivo cargado, al abrirlas): el resultado tiene un selector «Razones | Árbol». El árbol tiene dos vistas: **Evaluación** (valor V/F en cada nodo, una rama por elemento de D bajo cada cuantificador, y para cada átomo la tupla y si pertenece a la relación) y **Estructura** (el árbol sintáctico).
+- **En cada lectura del español** («Ver árbol») y **en cada premisa y conclusión del modo Demostrar** («Árbol»): solo estructura, porque ahí no hay modelo. En lógica proposicional las letras salen como las escribió la persona (`p`, `q`).
+- **Interacción**: clic o Enter en un nodo para plegar su rama; Plegar / Desplegar todo; acercar, alejar y ajustar al ancho. Los árboles de más de 60 nodos empiezan plegados a partir de la profundidad 4, y el árbol de evaluación se corta a unos 500 nodos con una marca «… n más».
+- **Sin lógica propia**: el árbol de evaluación se lee de la traza que `check_trace` ya verificó; no se recalcula nada. Códigos de color: verde predicados, azul funciones, amarillo constantes, ciruela cuantificadores; en la vista de evaluación, verde y rojo el valor de verdad.
+- Pruebas: `tests/test_tree.py` (estructura, coherencia de cada valor con sus hijos, corte de árboles grandes, API).
