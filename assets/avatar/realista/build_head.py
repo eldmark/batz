@@ -407,6 +407,11 @@ col[mo] = np.array([.16, .07, .07])
 hd = (hair_t * smooth01((field_t - .5) / .2))[..., None] * .6     # la cáscara tira al color del pelo de frente
 col = col * (1 - hd) + hair_flat * hd
 col[~cov] = skin
+# piel más blanca: menos saturación (baja el rojo sin oscurecer); los ojos y el interior de la boca no se tocan
+DESAT = .78
+def desat(c): l = (c * np.array([.3, .59, .11])).sum(-1, keepdims=True); return l + (c - l) * DESAT
+keep = (eye_t | (p_m1[..., 0] > .5))[..., None]
+col = np.where(keep, col, desat(col)); skin = desat(skin[None])[0]
 img = bpy.data.images.new('CaraTex', RES, RES)
 img.pixels.foreach_set(np.dstack([np.clip(col, 0, 1), np.ones((RES, RES))]).ravel().astype(np.float32))
 img.filepath_raw = D + 'cara_tex.png'; img.file_format = 'PNG'; img.save()
@@ -420,8 +425,8 @@ def textured(name, rough):
     b = nt.nodes['Principled BSDF']; nt.links.new(t.outputs['Color'], b.inputs['Base Color'])
     b.inputs['Roughness'].default_value = rough; return m
 piel = bpy.data.materials.new('Piel'); piel.use_nodes = True
-pb = piel.node_tree.nodes['Principled BSDF']; pb.inputs['Base Color'].default_value = (*srgb2lin(skin), 1); pb.inputs['Roughness'].default_value = .55
-for m in (piel, textured('Cara', .55), textured('Pelo', .5), textured('Ojos', .3)): me.materials.append(m)
+pb = piel.node_tree.nodes['Principled BSDF']; pb.inputs['Base Color'].default_value = (*srgb2lin(skin), 1); pb.inputs['Roughness'].default_value = .68
+for m in (piel, textured('Cara', .68), textured('Pelo', .5), textured('Ojos', .3)): me.materials.append(m)
 fi_eye = np.array([all(is_eye[i] for i in p.vertices) for p in me.polygons])
 fi_hair = np.array([all(is_hair[i] for i in p.vertices) for p in me.polygons])
 mi = np.where(fi_eye, 3, np.where(fi_hair, 2, np.where(headfaces, 1, 0)))
