@@ -76,8 +76,12 @@ def _explain(model, trace):
     if isinstance(f, (Forall, Exists)):
         if isinstance(f, Forall) and value or isinstance(f, Exists) and not value:
             table = tuple(f"{f.var} = {_val(child.element)}: {'V' if child.value else 'F'}" for child in kids)
-            summary = (f"Se revisaron los {len(kids)} elementos de D; todos satisfacen la fórmula." if value else
-                       f"Se revisaron los {len(kids)} elementos de D; ninguno satisface la fórmula.")
+            if len(kids) == 1:  # dominio de un solo elemento: sin plurales falsos
+                summary = ("Se revisó el único elemento de D; satisface la fórmula." if value else
+                           "Se revisó el único elemento de D; no satisface la fórmula.")
+            else:
+                summary = (f"Se revisaron los {len(kids)} elementos de D; todos satisfacen la fórmula." if value else
+                           f"Se revisaron los {len(kids)} elementos de D; ninguno satisface la fórmula.")
             return _make(trace, summary, table, tuple(_explain(model, child) for child in kids))
         selected = next(child for child in kids if child.value == value)
         summary = (f"Testigo: {f.var} = {_val(selected.element)} satisface la fórmula." if value else

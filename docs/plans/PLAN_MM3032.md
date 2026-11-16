@@ -119,9 +119,9 @@ Deben estar implementados, probados y justificados; elegir **dos o tres**, no to
 
 **Pendiente.**
 - Etiquetador entrenado: **hecho (2026-11-12)**. Regresión logística por descenso de gradiente sobre frases generadas; 94.4 % de exactitud en palabras nunca vistas y 19 de 20 frases de clase (`docs/validation/ETIQUETADOR-ESPANOL.md`). Las conversaciones del cerebro solo sirvieron de prueba: casi no traen frases para formalizar. Pendiente: revisión humana de las listas de lemas.
-- Avatar: **hecho (2026-11-12)**. Modelado y animado en Blender, exportado a GLB y conectado al paso a paso: señala el elemento que se está probando, piensa en los conectivos y reacciona al valor final. Un clic en un elemento del dominio salta al caso que el cuantificador prueba con él. Falta darle voz sincronizada y que guíe la búsqueda de contramodelos.
-- Vista Fitch de las pruebas.
-- Revisión cruzada firmada y ensayo de defensa.
+- Avatar: **hecho (2026-11-12)**. Modelado y animado en Blender, exportado a GLB y conectado al paso a paso: señala el elemento que se está probando, piensa en los conectivos y reacciona al valor final. Un clic en un elemento del dominio salta al caso que el cuantificador prueba con él. Voz sincronizada y guía de la búsqueda de contramodelos: **hechas (2026-11-13)**, ver §10.
+- Vista Fitch de las pruebas: **hecha (2026-11-13)**, ver §10.
+- Revisión cruzada firmada y ensayo de defensa: siguen pendientes; necesitan personas (`docs/validation/REVISION-EQUIPO.md`).
 
 ## 9. Diccionario del español (2026-11-12)
 
@@ -151,4 +151,24 @@ Deben estar implementados, probados y justificados; elegir **dos o tres**, no to
   - Una forma que el diccionario ya conoce con esa categoría no se duplica, para no crear ambigüedad nueva.
 - **Conjugación**: el acento de `evaluar → evalúa`, `enviar → envía`, `situar → sitúa` se resuelve por regla; `bullir → bulló` y `tañer → tañó` también. Corregidos a mano `decaer`, `bendecir`, `maldecir`, `freír`, `colegir` y `gruñir`.
 - **Etiquetador** reentrenado con el diccionario ampliado: 96.4 % en palabras nuevas.
+- **Auditoría automática de la ampliación** (`scripts/auditar_lexico.py`, del compañero, ahora con `sin=` y `sentido=`): encontró 754 avisos de formato (falsos, por no conocer los sinónimos), ~50 plurales mal generados, 24 adjetivos con `inv` mal puesto, 30 verbos de cambio de raíz sin marcar, 22 irregulares sin formas, 11 de ortografía y 3 géneros. Las reglas de plural (en -s, -n, -t) y de ortografía verbal (`averigüe`, `guio`) se arreglaron **en el generador**, no fila por fila; el resto, desde las sugerencias del auditor, revisadas a mano (dos eran erróneas: `reñó` y `teñó` en vez de `riñó` y `tiñó`). Confianza alta: 0 avisos. Quedan 31 de confianza media (nombres propios que coinciden con palabras comunes, homógrafos como `sentar/sentir`) que se dejan a propósito.
 - **Límites conocidos**: palabras con plural irregular no se detectan solas (`mamut → mamuts`, no `mamutes`; se corrige con `pl=`); verbos que comparten forma (`sientan` de `sentir` y de `sentar`) dan dos lecturas; los diminutivos no distinguen palabras abstractas.
+
+## 12. Estado al 2026-11-13 (rama `mejoras/plan-movil-animaciones`)
+
+**Correcciones.**
+- *Alcance en español*: la segunda lectura ya no depende de un único patrón (∀ sujeto, ∃ objeto). Cualquier par de cuantificadores del sujeto y del objeto directo de la oración principal la tiene, salvo ∀∀ y ∃∃ (equivalentes) y «ningún». Las relativas y el antecedente de «si» siguen siendo islas. «Algún profesor admira a cada estudiante» da ∃∀ y ∀∃. Los 51 casos siguen cumpliendo.
+- *Reglas en notación de libro*: la derivación y la narración dicen «Hipótesis», «∀E», «→E», no `assume`, `all_e`, `imp_e`.
+- *«No se sigue» con contramodelo*: si no hay prueba, se busca un modelo de 1 a 3 elementos con las premisas verdaderas y la conclusión falsa (semántica estándar, con relaciones vacías), verificado con el evaluador, y se puede abrir en el modo Evaluar.
+- *Contramodelo legible*: tablas y matriz en vez de JSON. *Detalles*: plurales («1 elemento», «el único elemento de D»), favicon, pie de página abajo, `THREE.Timer` en vez de `THREE.Clock`, avisos que se van solos en vez de una franja fija.
+
+**Pendientes del plan resueltos.**
+- *Vista Fitch* (`proof/fitch.py`): cajas por cada hipótesis descargada y por la variable nueva de ∀I/∃E; `check_layout` comprueba la fidelidad con el certificado (corpus completo y Kalmár). La narración sigue su numeración.
+- *Avatar*: boca con dos formas (`Boca_abierta`, `Boca_redonda`) que siguen las vocales de cada palabra de la voz; cuenta la búsqueda de contramodelos (tamaños, descartes, un ejemplo) antes de explicar por qué falla la fórmula.
+- *Q4, letras proposicionales*: en Demostrar, `p → q` se decide como lógica proposicional (tabla de verdad y Kalmár). En Evaluar sigue el perfil MM3032 (aridad ≥ 1).
+- *Whisper*: `scripts/instalar_voz.ps1` (probado en Windows) y `.sh` (sin probar en Linux real) instalan whisper.cpp 1.9.5, el modelo base y ffmpeg por usuario; la transcripción local funciona de punta a punta.
+- *Léxico*: auditoría automática con `scripts/auditar_lexico.py` y las 55 dudas decididas y aplicadas (género común, verbos con y sin objeto, nombres propios que chocaban con palabras comunes, «escribe/estudia/aprueba» con objeto en la gramática). Etiquetador reentrenado: 96,3 % en palabras nunca vistas. Falta que una persona confirme el resumen de `docs/validation/LEXICO-AUDITORIA.md`.
+
+**Teléfono y movimiento.** Ver README («En el teléfono»). Verificado en Chrome con 360 y 390 px y pantalla táctil emulada: sin desborde horizontal, objetivos de toque de 40 px o más y campos de 16 px.
+
+**Siguen necesitando personas** (`docs/validation/REVISION-EQUIPO.md`): revisión cruzada firmada, ensayo de defensa, recorrido en la computadora de entrega, ensayo audible con una voz española instalada, confirmación de las decisiones del léxico, prueba en un teléfono real y la fecha de entrega (Q2).

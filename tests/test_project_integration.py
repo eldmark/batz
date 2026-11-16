@@ -152,14 +152,17 @@ class LocalHTTP(unittest.TestCase):
         status, result = self.request("/api/proof", {
             "premises": ["P → Q", "P"], "conclusion": "Q"})
         self.assertEqual((status, result["status"]), (200, "proved"))
-        self.assertEqual(len(result["certificate"]["steps"]), len(result["story"]["events"]))
+        steps = {step["id"] for step in result["certificate"]["steps"]}
         for event in result["story"]["events"]:
             self.assertEqual(event["verified_by"], {"certificate_step": event["step_id"]})
+            self.assertIn(event["step_id"], steps)
             self.assertIsNone(event["value"])
-        status, unknown = self.request("/api/proof", {
+        self.assertEqual([e["line"] for e in result["story"]["events"]], [line["n"] for line in result["fitch"]])
+        # Sin prueba no hay narración de prueba: «P ⊬ Q» se refuta con una valuación verificada.
+        status, refuted = self.request("/api/proof", {
             "premises": ["P"], "conclusion": "Q"})
-        self.assertEqual((status, unknown["status"]), (200, "unknown"))
-        self.assertNotIn("story", unknown)
+        self.assertEqual((status, refuted["status"]), (200, "refuted"))
+        self.assertNotIn("story", refuted)
 
 
 if __name__ == "__main__":

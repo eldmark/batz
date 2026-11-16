@@ -28,4 +28,20 @@ JetBrains Mono NL se eligió para las fórmulas porque el archivo completo conti
 
 `vendor/GLTFLoader.js`, `vendor/BufferGeometryUtils.js` y `vendor/SkeletonUtils.js` vienen del mismo paquete `three@0.187.0` (carpeta `examples/jsm`, licencia MIT). El único cambio es la ruta de sus `import`, que ahora apunta a `./three.module.js` para no depender de un mapa de importación.
 
-El avatar (`src/logos/web/avatar/logos.glb`, fuente editable en `assets/avatar/logos-avatar.blend`) es un modelo propio del proyecto, construido en Blender a partir de tres vistas de referencia: primitivas fundidas por material con remallado de vóxeles y suavizado. No contiene geometría ni texturas de terceros. Trae un esqueleto de 17 huesos con pesos difuminados en las articulaciones y siete animaciones: `Idle`, `Explica`, `Senala`, `Piensa`, `Verdadero`, `Falso` y `Saluda`.
+El avatar (`src/logos/web/avatar/logos.glb`, fuente editable en `assets/avatar/logos-avatar.blend`) es un modelo propio del proyecto, construido en Blender a partir de tres vistas de referencia: primitivas fundidas por material con remallado de vóxeles y suavizado. No contiene geometría ni texturas de terceros. Trae un esqueleto de 17 huesos con pesos difuminados en las articulaciones y siete animaciones: `Idle`, `Explica`, `Senala`, `Piensa`, `Verdadero`, `Falso` y `Saluda`. Desde 2026-11-13 también trae dos formas de boca (shape keys exportadas como morph targets): `Boca_abierta` y `Boca_redonda`, que la narración mueve con cada palabra. En 0 la cara queda igual que antes.
+
+## Voz local (opcional, no incluida en el repositorio)
+
+`scripts/instalar_voz.ps1` y `scripts/instalar_voz.sh` descargan, en la carpeta del usuario y nunca en el repositorio:
+
+| Componente | Licencia | Origen |
+|---|---|---|
+| whisper.cpp 1.9.5 (`whisper-cli` y sus DLL) | MIT | https://github.com/ggml-org/whisper.cpp/releases (SHA-256 fijado en el script) |
+| Modelo `ggml-base.bin` (pesos de Whisper convertidos) | MIT | https://huggingface.co/ggerganov/whisper.cpp (tamaño y SHA-256 fijados en el script) |
+| ffmpeg (paquete `Gyan.FFmpeg` de winget en Windows) | GPL v3 en esa compilación | lo instala winget por usuario; LOGOS solo lo llama para convertir la grabación |
+
+LOGOS no redistribuye ninguno de los tres: solo los ejecuta si el usuario los instaló.
+
+## Microinteracciones de la interfaz
+
+La píldora que se desliza entre pestañas, los botones con estado de carga y borde de luz, el veredicto letra por letra, los avisos flotantes, los contadores y las casillas con palomita se inspiraron en componentes de la galería comunitaria de 21st.dev (Slide Tabs, Eclipse Button, Shine Border, Text Effect, Blur Fade, Number Ticker, Toast). Esos componentes son de React y varios no declaran licencia, así que no se copió código: cada efecto está escrito desde cero en `web/style.css` y `web/app.js`, sin dependencias.

@@ -28,7 +28,7 @@ doctor	N	M
 ingeniero	N	M	
 abogado	N	M	
 músico	N	M	
-poeta	N	M	
+poeta	N	C	
 planeta	N	M	
 río	N	M	
 carro	N	M	
@@ -55,7 +55,7 @@ abuelo	N	M
 primo	N	M	
 tío	N	M	
 jefe	N	M	
-soldado	N	M	
+soldado	N	C	
 campesino	N	M	
 pintor	N	M	
 escritor	N	M	
@@ -132,7 +132,7 @@ ordenador	N	M
 teléfono	N	M	
 televisor	N	M	
 motor	N	M	
-robot	N	M	
+robot	N	M	pl=robots
 juguete	N	M	
 balón	N	M	
 regalo	N	M	
@@ -244,10 +244,10 @@ sentimiento	N	M
 secreto	N	M	
 peligro	N	M	
 accidente	N	M	
-crimen	N	M	
+crimen	N	M	pl=crímenes
 ladrón	N	M	
 policía	N	C	
-juez	N	M	
+juez	N	C	
 testigo	N	C	
 prisionero	N	M	
 ciudadano	N	M	
@@ -277,7 +277,7 @@ príncipe	N	M
 emperador	N	M	
 esclavo	N	M	
 sirviente	N	M	
-huésped	N	M	
+huésped	N	C	
 viajero	N	M	
 extranjero	N	M	
 turista	N	C	
@@ -297,7 +297,7 @@ camarero	N	M
 granjero	N	M	
 pastor	N	M	
 marinero	N	M	
-piloto	N	M	
+piloto	N	C	
 capitán	N	M	
 estudiante	N	C	
 libro	N	M	
@@ -308,8 +308,8 @@ humano	N	M
 mortal	N	M	
 lógico	N	M	
 matemático	N	M	
-cliente	N	M	
-paciente	N	M	
+cliente	N	C	
+paciente	N	C	
 gallo	N	M	
 burro	N	M	
 conejo	N	M	
@@ -532,7 +532,7 @@ carne	N	F
 sopa	N	F	
 ensalada	N	F	
 sal	N	F	
-azúcar	N	F	
+azúcar	N	C	
 miel	N	F	
 harina	N	F	
 cebolla	N	F	
@@ -877,7 +877,7 @@ dorado	ADJ	-
 plateado	ADJ	-	
 rosado	ADJ	-	
 gris	ADJ	-	
-marrón	ADJ	-	
+marrón	ADJ	-	inv
 violeta	ADJ	-	
 celeste	ADJ	-	
 transparente	ADJ	-	
@@ -912,13 +912,13 @@ inofensivo	ADJ	-
 gigante	ADJ	-	
 diminuto	ADJ	-	
 enorme	ADJ	-	
-bailar	V	I	
+bailar	V	IT	
 ladrar	V	I	
 nadar	V	I	
 caminar	V	I	
 trabajar	V	I	
 llorar	V	I	
-saltar	V	I	
+saltar	V	IT	
 respirar	V	I	
 viajar	V	I	
 descansar	V	I	
@@ -928,7 +928,7 @@ trotar	V	I
 correr	V	IT	
 vivir	V	I	
 toser	V	I	
-sufrir	V	I	
+sufrir	V	IT	
 crecer	V	I	
 nacer	V	I	
 aparecer	V	I	
@@ -949,19 +949,19 @@ insistir	V	I
 partir	V	I	
 llegar	V	I	
 entrar	V	I	
-pasear	V	I	
+pasear	V	IT	
 flotar	V	I	
 girar	V	I	
 reinar	V	I	
 navegar	V	I	
 patinar	V	I	
-pescar	V	I	
+pescar	V	IT	
 remar	V	I	
 madurar	V	I	
 envejecer	V	I	
 enfermar	V	I	
 sanar	V	I	
-mejorar	V	I	
+mejorar	V	IT	
 empeorar	V	I	
 sudar	V	I	
 roncar	V	I	
@@ -996,8 +996,8 @@ razonar	V	I
 respetar	V	T	
 admirar	V	T	
 odiar	V	T	
-ayudar	V	T	
-enseñar	V	T	
+ayudar	V	IT	
+enseñar	V	IT	
 visitar	V	T	
 saludar	V	T	
 llamar	V	T	
@@ -1017,15 +1017,15 @@ dibujar	V	IT
 usar	V	T	
 necesitar	V	T	
 temer	V	T	
-beber	V	T	
+beber	V	IT	
 vender	V	T	
 romper	V	T	
 abrir	V	T	
 cubrir	V	T	
 recibir	V	T	
 describir	V	T	
-discutir	V	T	
-aplaudir	V	T	
+discutir	V	IT	
+aplaudir	V	IT	
 examinar	V	T	
 observar	V	T	
 acompañar	V	T	
@@ -1044,7 +1044,7 @@ entrevistar	V	T
 buscar	V	T	
 criticar	V	T	
 atacar	V	T	
-cazar	V	T	
+cazar	V	IT	
 abandonar	V	T	
 aceptar	V	T	
 rechazar	V	T	
@@ -1055,12 +1055,12 @@ apoyar	V	T
 arreglar	V	T	
 atrapar	V	T	
 borrar	V	T	
-cambiar	V	T	
+cambiar	V	IT	
 cargar	V	T	
 celebrar	V	T	
 comparar	V	T	
 completar	V	T	
-comprender	V	T	
+comprender	V	IT	
 conquistar	V	T	
 construir	V	T	
 controlar	V	T	
@@ -1108,7 +1108,7 @@ ofender	V	T
 ordenar	V	T	
 organizar	V	T	
 pagar	V	T	
-pintar	V	T	
+pintar	V	IT	
 pisar	V	T	
 preparar	V	T	
 presentar	V	T	
@@ -1138,7 +1138,7 @@ definir	V	T
 afirmar	V	T	
 refutar	V	T	
 verificar	V	T	
-evaluar	V	T	
+evaluar	V	T	formas=evalúa,evalúan,evalúe,evalúen,evaluó,evaluaron
 cantar	V	IT	
 hablar	V	IT	
 comer	V	IT	
@@ -1166,7 +1166,7 @@ pensar	V	IT	cambio=ie
 sentir	V	T	cambio=ie
 querer	V	T	formas=quiere,quieren,quiera,quieran,quiso,quisieron
 preferir	V	T	cambio=ie
-entender	V	T	cambio=ie
+entender	V	IT	cambio=ie
 defender	V	T	cambio=ie
 cerrar	V	T	cambio=ie
 perder	V	IT	cambio=ie
@@ -1178,7 +1178,7 @@ recordar	V	T	cambio=ue
 contar	V	T	cambio=ue
 mostrar	V	T	cambio=ue
 probar	V	T	cambio=ue
-morder	V	T	cambio=ue
+morder	V	IT	cambio=ue
 mover	V	T	cambio=ue
 resolver	V	T	cambio=ue
 devolver	V	T	cambio=ue
@@ -1203,10 +1203,9 @@ venir	V	I	formas=viene,vienen,venga,vengan,vino,vinieron
 ver	V	T	formas=ve,ven,vea,vean,vio,vieron
 dar	V	T	formas=da,dan,dé,den,dio,dieron
 saber	V	T	formas=sabe,saben,sepa,sepan,supo,supieron
-poder	V	I	formas=puede,pueden,pueda,puedan,pudo,pudieron
 traer	V	T	formas=trae,traen,traiga,traigan,trajo,trajeron
 caer	V	I	formas=cae,caen,caiga,caigan,cayó,cayeron
-oír	V	T	formas=oye,oyen,oiga,oigan,oyó,oyeron
+oír	V	IT	formas=oye,oyen,oiga,oigan,oyó,oyeron
 ir	V	I	formas=va,van,vaya,vayan,fue,fueron
 jugar	V	IT	formas=juega,juegan,juegue,jueguen,jugó,jugaron
 reír	V	I	formas=ríe,ríen,ría,rían,rio,rieron
@@ -1225,7 +1224,7 @@ sostener	V	T	formas=sostiene,sostienen,sostenga,sostengan,sostuvo,sostuvieron
 contener	V	T	formas=contiene,contienen,contenga,contengan,contuvo,contuvieron
 negar	V	T	formas=niega,niegan,niegue,nieguen,negó,negaron
 aprobar	V	IT	formas=aprueba,aprueban,apruebe,aprueben,aprobó,aprobaron
-vencer	V	T	formas=vence,vencen,venza,venzan,venció,vencieron
+vencer	V	IT	formas=vence,vencen,venza,venzan,venció,vencieron
 enviar	V	T	formas=envía,envían,envíe,envíen,envió,enviaron
 esquiar	V	I	formas=esquía,esquían,esquíe,esquíen,esquió,esquiaron
 aullar	V	I	formas=aúlla,aúllan,aúlle,aúllen,aulló,aullaron
@@ -1286,7 +1285,6 @@ Ignacio	NP	M
 Alejandro	NP	M	
 Adrián	NP	M	
 Álvaro	NP	M	
-Ángel	NP	M	
 Arturo	NP	M	
 Benjamín	NP	M	
 Bruno	NP	M	
@@ -1379,7 +1377,6 @@ Marta	NP	F
 Paula	NP	F	
 Sara	NP	F	
 Julia	NP	F	
-Clara	NP	F	
 Rosa	NP	F	
 Luisa	NP	F	
 Andrea	NP	F	
@@ -1404,7 +1401,6 @@ Verónica	NP	F
 Lorena	NP	F	
 Fernanda	NP	F	
 Mariana	NP	F	
-Victoria	NP	F	
 Rebeca	NP	F	
 Susana	NP	F	
 Olga	NP	F	
@@ -1416,19 +1412,16 @@ Amparo	NP	F
 Antonia	NP	F	
 Aurora	NP	F	
 Bárbara	NP	F	
-Blanca	NP	F	
 Carolina	NP	F	
 Catalina	NP	F	
 Claudia	NP	F	
 Cristina	NP	F	
-Dolores	NP	F	
 Elisa	NP	F	
 Emilia	NP	F	
 Esperanza	NP	F	
 Estela	NP	F	
 Ester	NP	F	
 Fabiola	NP	F	
-Flor	NP	F	
 Francisca	NP	F	
 Gloria	NP	F	
 Graciela	NP	F	
@@ -1449,7 +1442,6 @@ Marina	NP	F
 Miriam	NP	F	
 Nadia	NP	F	
 Noelia	NP	F	
-Norma	NP	F	
 Olivia	NP	F	
 Paola	NP	F	
 Raquel	NP	F	
@@ -1460,7 +1452,6 @@ Sandra	NP	F
 Soledad	NP	F	
 Tamara	NP	F	
 Vanesa	NP	F	
-Violeta	NP	F	
 Ximena	NP	F	
 Yolanda	NP	F	
 Zoe	NP	F	
@@ -1565,7 +1556,6 @@ inmueble	N	M	sin=edificio
 sendero	N	M	sin=camino
 senda	N	F	sin=camino
 ruta	N	F	sin=camino
-vía	N	F	sin=camino
 huerto	N	M	sin=jardín
 océano	N	M	sin=mar
 laguna	N	F	sin=lago
@@ -1885,7 +1875,7 @@ intrépido	ADJ	-	sin=valiente
 osado	ADJ	-	sin=valiente
 bravo	ADJ	-	sin=valiente
 gentil	ADJ	-	sin=amable
-cortés	ADJ	-	sin=amable
+cortés	ADJ	-	sin=amable;inv
 autónomo	ADJ	-	sin=libre
 competente	ADJ	-	sin=capaz
 apto	ADJ	-	sin=capaz
@@ -1955,7 +1945,7 @@ entretenido	ADJ	-	sin=divertido
 cómico	ADJ	-	sin=gracioso
 chistoso	ADJ	-	sin=gracioso
 desagradable	ADJ	-	sin=antipático
-descortés	ADJ	-	sin=grosero
+descortés	ADJ	-	sin=grosero;inv
 maleducado	ADJ	-	sin=grosero
 franco	ADJ	-	sin=sincero
 veraz	ADJ	-	sin=sincero
@@ -2027,7 +2017,6 @@ socorrer	V	T	sin=ayudar
 asistir	V	T	sin=ayudar
 instruir	V	T	sin=enseñar
 contemplar	V	T	sin=mirar
-adquirir	V	T	cambio=ie;sin=comprar
 atender	V	T	cambio=ie;sin=cuidar
 pegar	V	T	sin=golpear
 convidar	V	T	sin=invitar
@@ -2057,12 +2046,12 @@ agredir	V	T	sin=atacar
 asaltar	V	T	sin=atacar
 dejar	V	T	sin=abandonar
 admitir	V	T	sin=aceptar
-rehusar	V	T	sin=rechazar
+rehusar	V	T	sin=rechazar;formas=rehúsa,rehúsan,rehúse,rehúsen,rehusó,rehusaron
 denegar	V	T	cambio=ie;sin=rechazar
 culpar	V	T	sin=acusar
 idolatrar	V	T	sin=adorar
 respaldar	V	T	sin=apoyar
-componer	V	T	sin=arreglar
+componer	V	T	sin=arreglar;formas=compone,componen,componga,compongan,compuso,compusieron
 capturar	V	T	sin=atrapar
 apresar	V	T	sin=atrapar
 modificar	V	T	sin=cambiar
@@ -2112,7 +2101,7 @@ asesinar	V	T	sin=matar
 combinar	V	T	sin=mezclar
 desplazar	V	T	sin=mover
 designar	V	T	sin=nombrar
-disponer	V	T	sin=ordenar
+disponer	V	T	sin=ordenar;formas=dispone,disponen,disponga,dispongan,dispuso,dispusieron
 abonar	V	T	sin=pagar
 alistar	V	T	sin=preparar
 exhibir	V	T	sin=presentar
@@ -2129,7 +2118,7 @@ restaurar	V	T	sin=reparar
 liberar	V	T	sin=rescatar
 solucionar	V	T	sin=resolver
 hurtar	V	T	sin=robar
-sustraer	V	T	sin=robar
+sustraer	V	T	sin=robar;formas=sustrae,sustraen,sustraiga,sustraigan,sustrajo,sustrajeron
 escoger	V	T	sin=seleccionar
 indicar	V	T	sin=señalar
 aguantar	V	T	sin=soportar
@@ -2239,7 +2228,7 @@ radio	N	M	sentido=elemento
 cabo	N	M	sentido=militar
 cabo	N	M	sentido=cuerda
 cura	N	M	sentido=sacerdote
-cura	N	M	sentido=remedio
+cura	N	F	sentido=remedio
 pico	N	M	sentido=ave
 pico	N	M	sentido=montaña
 frente	N	F	sentido=cabeza
@@ -2475,7 +2464,7 @@ estante	N	M
 foco	N	M	
 gancho	N	M	
 globo	N	M	
-hacha	N	M	
+hacha	N	F	
 imán	N	M	
 inodoro	N	M	
 jabón	N	M	
@@ -2618,10 +2607,10 @@ aprendizaje	N	M
 aumento	N	M	
 azar	N	M	
 bien	N	M	
-caos	N	M	
+caos	N	M	pl=caos
 cálculo	N	M	
 capricho	N	M	
-carácter	N	M	
+carácter	N	M	pl=caracteres
 castigo	N	M	
 cambio	N	M	
 coraje	N	M	
@@ -2881,7 +2870,7 @@ antecedente	N	M
 consecuente	N	M	
 silogismo	N	M	
 sofisma	N	M	
-paradoja	N	M	
+paradoja	N	F	
 contraejemplo	N	M	
 contexto	N	M	
 supuesto	N	M	
@@ -3012,7 +3001,7 @@ linterna	N	F
 antorcha	N	F	
 cuna	N	F	
 hamaca	N	F	
-sábana	N	F	
+sábana	N	F	sentido=cama
 toalla	N	F	
 cortina	N	F	
 chimenea	N	F	
@@ -3254,7 +3243,7 @@ locutora	N	F
 mecánica	N	F	
 médica	N	F	
 meteoróloga	N	F	
-oficinista	N	F	
+oficinista	N	C	
 panadera	N	F	
 pastora	N	F	
 pintora	N	F	
@@ -3329,7 +3318,7 @@ eficaz	ADJ	-	inv
 eficiente	ADJ	-	inv
 elemental	ADJ	-	inv
 eléctrico	ADJ	-	
-eterno	ADJ	-	inv
+eterno	ADJ	-	
 evidente	ADJ	-	inv
 excelente	ADJ	-	inv
 exigente	ADJ	-	inv
@@ -3337,7 +3326,7 @@ exitoso	ADJ	-
 exótico	ADJ	-	
 experto	ADJ	-	
 explícito	ADJ	-	
-exterior	ADJ	-	
+exterior	ADJ	-	inv
 extremo	ADJ	-	
 fabuloso	ADJ	-	
 familiar	ADJ	-	inv
@@ -3349,13 +3338,13 @@ fértil	ADJ	-	inv
 festivo	ADJ	-	
 flexible	ADJ	-	inv
 florido	ADJ	-	
-fluido	ADJ	-	inv
+fluido	ADJ	-	
 formidable	ADJ	-	inv
 fortuito	ADJ	-	
 frecuente	ADJ	-	inv
 frugal	ADJ	-	
 fugaz	ADJ	-	inv
-funesto	ADJ	-	inv
+funesto	ADJ	-	
 furtivo	ADJ	-	
 futuro	ADJ	-	
 genuino	ADJ	-	
@@ -3372,7 +3361,7 @@ imprevisto	ADJ	-
 impuro	ADJ	-	
 inagotable	ADJ	-	
 incapaz	ADJ	-	inv
-incierto	ADJ	-	inv
+incierto	ADJ	-	
 incómodo	ADJ	-	
 incompleto	ADJ	-	
 increíble	ADJ	-	
@@ -3387,11 +3376,11 @@ infiel	ADJ	-
 inflexible	ADJ	-	
 inmune	ADJ	-	inv
 innato	ADJ	-	
-insensato	ADJ	-	inv
+insensato	ADJ	-	
 inseguro	ADJ	-	
-instantáneo	ADJ	-	inv
+instantáneo	ADJ	-	
 intacto	ADJ	-	
-intenso	ADJ	-	inv
+intenso	ADJ	-	
 interior	ADJ	-	inv
 intocable	ADJ	-	
 inútil	ADJ	-	
@@ -3406,7 +3395,7 @@ juvenil	ADJ	-	inv
 lamentable	ADJ	-	inv
 lastimoso	ADJ	-	
 lateral	ADJ	-	
-legítimo	ADJ	-	inv
+legítimo	ADJ	-	
 leve	ADJ	-	inv
 lírico	ADJ	-	
 literal	ADJ	-	
@@ -3420,7 +3409,7 @@ manifiesto	ADJ	-
 marcado	ADJ	-	
 marino	ADJ	-	
 mayúsculo	ADJ	-	
-mediano	ADJ	-	inv
+mediano	ADJ	-	
 mediocre	ADJ	-	inv
 melodioso	ADJ	-	
 memorable	ADJ	-	inv
@@ -3435,15 +3424,15 @@ nato	ADJ	-
 naval	ADJ	-	inv
 necio	ADJ	-	
 neutral	ADJ	-	inv
-nocivo	ADJ	-	inv
+nocivo	ADJ	-	
 noble	ADJ	-	inv
-nocturno	ADJ	-	inv
+nocturno	ADJ	-	
 nulo	ADJ	-	
 numeroso	ADJ	-	
 obediente	ADJ	-	inv
 objetivo	ADJ	-	
 obligatorio	ADJ	-	
-obvio	ADJ	-	inv
+obvio	ADJ	-	
 ocasional	ADJ	-	
 oculto	ADJ	-	
 ofensivo	ADJ	-	
@@ -3453,11 +3442,11 @@ orgánico	ADJ	-
 original	ADJ	-	
 pacífico	ADJ	-	
 parcial	ADJ	-	inv
-pasajero	ADJ	-	inv
+pasajero	ADJ	-	
 pasivo	ADJ	-	
 paternal	ADJ	-	
 patético	ADJ	-	
-penoso	ADJ	-	inv
+penoso	ADJ	-	
 periódico	ADJ	-	
 permanente	ADJ	-	inv
 perpetuo	ADJ	-	
@@ -3474,7 +3463,7 @@ popular	ADJ	-	inv
 posterior	ADJ	-	inv
 predilecto	ADJ	-	
 presumido	ADJ	-	
-previo	ADJ	-	inv
+previo	ADJ	-	
 primitivo	ADJ	-	
 probable	ADJ	-	
 profano	ADJ	-	
@@ -3483,21 +3472,21 @@ prolijo	ADJ	-
 prometedor	ADJ	-	
 propicio	ADJ	-	
 propio	ADJ	-	
-próspero	ADJ	-	inv
+próspero	ADJ	-	
 provisional	ADJ	-	inv
-puro	ADJ	-	inv
+puro	ADJ	-	
 radiante	ADJ	-	inv
 rebelde	ADJ	-	
 regular	ADJ	-	
 reluciente	ADJ	-	
 repentino	ADJ	-	
 resistente	ADJ	-	inv
-respetuoso	ADJ	-	inv
+respetuoso	ADJ	-	
 revoltoso	ADJ	-	
 ridículo	ADJ	-	
 riguroso	ADJ	-	
 rural	ADJ	-	
-sabroso	ADJ	-	inv
+sabroso	ADJ	-	
 sagrado	ADJ	-	
 secundario	ADJ	-	
 selecto	ADJ	-	
@@ -3534,7 +3523,7 @@ torpe	ADJ	-
 tóxico	ADJ	-	
 trágico	ADJ	-	
 turbio	ADJ	-	
-ulterior	ADJ	-	
+ulterior	ADJ	-	inv
 unánime	ADJ	-	
 unido	ADJ	-	
 urbano	ADJ	-	
@@ -3551,7 +3540,7 @@ victorioso	ADJ	-
 vigente	ADJ	-	
 vil	ADJ	-	
 virtual	ADJ	-	inv
-virtuoso	ADJ	-	inv
+virtuoso	ADJ	-	
 visible	ADJ	-	
 vital	ADJ	-	
 vivaz	ADJ	-	
@@ -3738,7 +3727,7 @@ discernir	V	T	cambio=ie
 divertir	V	T	cambio=ie
 doler	V	I	cambio=ue
 envolver	V	T	cambio=ue
-errar	V	IT	cambio=ie
+errar	V	IT	formas=yerra,yerran,yerre,yerren,erró,erraron
 extender	V	T	cambio=ie
 fregar	V	T	cambio=ie
 helar	V	IT	cambio=ie
@@ -3749,7 +3738,6 @@ poblar	V	IT	cambio=ue
 referir	V	T	cambio=ie
 regar	V	T	cambio=ie
 sentar	V	T	cambio=ie
-soler	V	I	cambio=ue
 soltar	V	T	cambio=ue
 sonar	V	I	cambio=ue
 tender	V	IT	cambio=ie
@@ -3757,8 +3745,8 @@ torcer	V	T	cambio=ue
 tostar	V	T	cambio=ue
 volcar	V	T	cambio=ue
 despedir	V	T	cambio=i
-reñir	V	T	cambio=i
-teñir	V	T	cambio=i
+reñir	V	T	formas=riñe,riñen,riña,riñan,riñó,riñeron
+teñir	V	T	formas=tiñe,tiñen,tiña,tiñan,tiñó,tiñeron
 freír	V	T	formas=fríe,fríen,fría,frían,frio,frieron
 gemir	V	I	cambio=i
 derretir	V	T	cambio=i
@@ -3802,7 +3790,7 @@ aderezar	V	T
 adivinar	V	T	
 administrar	V	T	
 adoptar	V	T	
-advertir	V	T	
+advertir	V	T	cambio=ie
 afeitar	V	T	
 afilar	V	T	
 afinar	V	T	
@@ -3896,7 +3884,7 @@ conformar	V	T
 confundir	V	T	
 congelar	V	T	
 conjugar	V	T	
-conmover	V	T	
+conmover	V	T	cambio=ue
 consumir	V	T	
 contactar	V	T	
 contagiar	V	T	
@@ -3905,7 +3893,7 @@ contestar	V	T
 continuar	V	T	
 contribuir	V	T	
 convencer	V	T	
-convertir	V	T	
+convertir	V	T	cambio=ie
 convocar	V	T	
 coronar	V	T	
 correlacionar	V	T	
@@ -3938,7 +3926,7 @@ descargar	V	T
 descifrar	V	T	
 desempeñar	V	T	
 desenterrar	V	T	
-desmentir	V	T	
+desmentir	V	T	cambio=ie
 desobedecer	V	T	
 destacar	V	T	
 destinar	V	T	
@@ -3948,13 +3936,13 @@ detectar	V	T
 determinar	V	T	
 diagnosticar	V	T	
 dictar	V	T	
-digerir	V	T	
+digerir	V	T	cambio=ie
 digitalizar	V	T	
 diseñar	V	T	
 disfrutar	V	T	
 disimular	V	T	
 disminuir	V	T	
-disolver	V	T	
+disolver	V	T	cambio=ue
 disparar	V	T	
 disputar	V	T	
 distribuir	V	T	
@@ -3972,7 +3960,7 @@ embellecer	V	T
 emitir	V	T	
 emprender	V	T	
 encarcelar	V	T	
-encerrar	V	T	
+encerrar	V	T	cambio=ie
 encuadernar	V	T	
 encubrir	V	T	
 enfocar	V	T	
@@ -4000,7 +3988,7 @@ exceder	V	T
 exigir	V	T	
 expandir	V	T	
 experimentar	V	T	
-exponer	V	T	
+exponer	V	T	formas=expone,exponen,exponga,expongan,expuso,expusieron
 exportar	V	T	
 expulsar	V	T	
 facilitar	V	T	
@@ -4025,7 +4013,7 @@ gestionar	V	T
 gozar	V	T	
 grabar	V	T	
 graduar	V	T	
-herir	V	T	
+herir	V	T	cambio=ie
 hilar	V	T	
 hipnotizar	V	T	
 homenajear	V	T	
@@ -4047,7 +4035,7 @@ incitar	V	T
 incluir	V	T	
 incorporar	V	T	
 incrementar	V	T	
-inducir	V	T	
+inducir	V	T	formas=induce,inducen,induzca,induzcan,indujo,indujeron
 infectar	V	T	
 inflar	V	T	
 influir	V	T	
@@ -4065,7 +4053,7 @@ interrogar	V	T
 interrumpir	V	T	
 inundar	V	T	
 invadir	V	T	
-invertir	V	T	
+invertir	V	T	cambio=ie
 investigar	V	T	
 involucrar	V	T	
 jurar	V	T	
@@ -4115,7 +4103,6 @@ oprimir	V	T
 orientar	V	T	
 originar	V	T	
 parar	V	T	
-parir	V	T	
 pasar	V	T	
 patear	V	T	
 patrocinar	V	T	
@@ -4130,7 +4117,7 @@ picar	V	T
 planificar	V	T	
 plantar	V	T	
 plantear	V	T	
-posponer	V	T	
+posponer	V	T	formas=pospone,posponen,posponga,pospongan,pospuso,pospusieron
 precipitar	V	T	
 preocupar	V	T	
 presenciar	V	T	
@@ -4138,7 +4125,7 @@ preservar	V	T
 presionar	V	T	
 presumir	V	T	
 pretender	V	T	
-prever	V	T	
+prever	V	T	formas=prevé,prevén,prevea,prevean,previó,previeron
 privar	V	T	
 procesar	V	T	
 proclamar	V	T	
@@ -4146,7 +4133,7 @@ procurar	V	T
 programar	V	T	
 prolongar	V	T	
 prometer	V	T	
-promover	V	T	
+promover	V	T	cambio=ue
 pronosticar	V	T	
 pronunciar	V	T	
 proporcionar	V	T	
@@ -4173,8 +4160,8 @@ regular	V	T
 reinventar	V	T	
 rellenar	V	T	
 remendar	V	T	
-remover	V	T	
-renovar	V	T	
+remover	V	T	cambio=ue
+renovar	V	T	cambio=ue
 renunciar	V	T	
 repartir	V	T	
 reprimir	V	T	
@@ -4186,10 +4173,10 @@ restringir	V	T
 resumir	V	T	
 retirar	V	T	
 retratar	V	T	
-reunir	V	T	
+reunir	V	T	formas=reúne,reúnen,reúna,reúnan,reunió,reunieron
 revelar	V	T	
 revivir	V	T	
-revolver	V	T	
+revolver	V	T	cambio=ue
 rodear	V	T	
 rozar	V	T	
 saborear	V	T	
@@ -4214,7 +4201,7 @@ sorprender	V	T
 sospechar	V	T	
 subrayar	V	T	
 subsanar	V	T	
-sugerir	V	T	
+sugerir	V	T	cambio=ie
 sujetar	V	T	
 sumar	V	T	
 supervisar	V	T	
@@ -4232,7 +4219,7 @@ traficar	V	T
 traicionar	V	T	
 tramitar	V	T	
 transcribir	V	T	
-transferir	V	T	
+transferir	V	T	cambio=ie
 transmitir	V	T	
 triturar	V	T	
 trozar	V	T	
@@ -4333,7 +4320,7 @@ hibernar	V	I
 imperar	V	I	
 incidir	V	I	
 inmigrar	V	I	
-intervenir	V	I	
+intervenir	V	I	formas=interviene,intervienen,intervenga,intervengan,intervino,intervinieron
 irrumpir	V	I	
 jadear	V	I	
 jubilar	V	I	
@@ -4384,12 +4371,12 @@ titubear	V	I
 tosear	V	I	
 transcurrir	V	I	
 transpirar	V	I	
-tronar	V	I	
+tronar	V	I	cambio=ue
 tutear	V	I	
 ulular	V	I	
 vacilar	V	I	
 vagar	V	I	
-valer	V	I	
+valer	V	I	formas=vale,valen,valga,valgan,valió,valieron
 vegetar	V	I	
 velar	V	I	
 vibrar	V	I	
@@ -4503,7 +4490,6 @@ Rafaelito	NP	M
 Reinaldo	NP	M	
 Remigio	NP	M	
 Renato	NP	M	
-Reyes	NP	M	
 Rigoberto	NP	M	
 Rodolfo	NP	M	
 Rómulo	NP	M	
@@ -4513,7 +4499,6 @@ Saúl	NP	M
 Segismundo	NP	M	
 Servando	NP	M	
 Severino	NP	M	
-Silvestre	NP	M	
 Sixto	NP	M	
 Tadeo	NP	M	
 Teófilo	NP	M	
@@ -4521,7 +4506,6 @@ Timoteo	NP	M
 Tito	NP	M	
 Tobías	NP	M	
 Tulio	NP	M	
-Urbano	NP	M	
 Valentín	NP	M	
 Venancio	NP	M	
 Vladimiro	NP	M	
@@ -4602,10 +4586,8 @@ Azucena	NP	F
 Berta	NP	F	
 Bianca	NP	F	
 Brígida	NP	F	
-Candela	NP	F	
 Carlota	NP	F	
 Casandra	NP	F	
-Celeste	NP	F	
 Celia	NP	F	
 Concepción	NP	F	
 Constanza	NP	F	
@@ -4622,7 +4604,6 @@ Eleonora	NP	F
 Elvira	NP	F	
 Emma	NP	F	
 Enriqueta	NP	F	
-Esmeralda	NP	F	
 Eugenia	NP	F	
 Eulalia	NP	F	
 Evangelina	NP	F	
@@ -4675,7 +4656,6 @@ Micaela	NP	F
 Mireya	NP	F	
 Nancy	NP	F	
 Nereida	NP	F	
-Nieves	NP	F	
 Nidia	NP	F	
 Odalis	NP	F	
 Ofelia	NP	F	
@@ -4699,7 +4679,6 @@ Silvana	NP	F
 Sonia	NP	F	
 Sulema	NP	F	
 Thelma	NP	F	
-Tránsito	NP	F	
 Úrsula	NP	F	
 Valentina	NP	F	
 Vera	NP	F	
@@ -4717,7 +4696,6 @@ Rosalind	NP	F
 Grace	NP	F	
 Katherine	NP	F	
 Hedy	NP	F	
-Barbara	NP	F	
 Radia	NP	F	
 Frances	NP	F	
 Guatemala	NP	F	
@@ -4732,7 +4710,6 @@ Ecuador	NP	M
 Perú	NP	M	
 Bolivia	NP	F	
 Chile	NP	M	
-Argentina	NP	F	
 Uruguay	NP	M	
 Paraguay	NP	M	
 Brasil	NP	M	
@@ -4747,10 +4724,8 @@ Escocia	NP	F
 Irlanda	NP	F	
 Holanda	NP	F	
 Bélgica	NP	F	
-Suiza	NP	F	
 Austria	NP	F	
 Suecia	NP	F	
-Noruega	NP	F	
 Dinamarca	NP	F	
 Finlandia	NP	F	
 Rusia	NP	F	
@@ -4764,10 +4739,7 @@ Nigeria	NP	F
 Kenia	NP	F	
 Etiopía	NP	F	
 Sudáfrica	NP	F	
-China	NP	F	
 Japón	NP	M	
-Corea	NP	F	
-India	NP	F	
 Tailandia	NP	F	
 Vietnam	NP	M	
 Indonesia	NP	F	
@@ -4781,8 +4753,6 @@ América	NP	F
 Oceanía	NP	F	
 Antártida	NP	F	
 Atlántico	NP	M	
-Pacífico	NP	M	
-Mediterráneo	NP	M	
 Amazonas	NP	M	
 Andes	NP	M	
 Alpes	NP	M	
@@ -4796,7 +4766,6 @@ Sena	NP	F
 Tajo	NP	M	
 Ebro	NP	M	
 Quetzaltenango	NP	M	
-Antigua	NP	F	
 Tikal	NP	M	
 Atitlán	NP	M	
 Petén	NP	M	
@@ -4808,7 +4777,6 @@ Villanueva	NP	F
 Chimaltenango	NP	M	
 Zacapa	NP	F	
 Izabal	NP	M	
-Peten	NP	M	
 Madrid	NP	M	
 Barcelona	NP	F	
 Sevilla	NP	F	
@@ -4839,17 +4807,14 @@ Delhi	NP	M
 Mumbai	NP	M	
 Cairo	NP	M	
 Nairobi	NP	M	
-Lagos	NP	M	
 Bogotá	NP	M	
 Caracas	NP	M	
 Quito	NP	M	
-Lima	NP	F	
 Montevideo	NP	M	
 Asunción	NP	M	
 Habana	NP	F	
 Managua	NP	F	
 Tegucigalpa	NP	F	
-Ciudad	NP	M	
 Medellín	NP	M	
 Cali	NP	M	
 Córdoba	NP	F	
@@ -4860,7 +4825,6 @@ Cuzco	NP	M
 Arequipa	NP	F	
 Guadalajara	NP	F	
 Monterrey	NP	M	
-Puebla	NP	F	
 Tijuana	NP	F	
 Cancún	NP	M	
 Oaxaca	NP	F	
@@ -4978,7 +4942,7 @@ incienso	N	M
 inventario	N	M	
 jarabe	N	M	
 jardinero	N	M	
-jersey	N	M	
+jersey	N	M	pl=jerséis
 kilo	N	M	
 laberinto	N	M	
 lanzamiento	N	M	
@@ -5042,7 +5006,7 @@ rancho	N	M
 rebaño	N	M	
 reflector	N	M	
 regimiento	N	M	
-rehén	N	M	
+rehén	N	C	
 relevo	N	M	
 remolque	N	M	
 repertorio	N	M	
@@ -5426,7 +5390,7 @@ tobillera	N	F
 tolva	N	F	
 trampa	N	F	
 trampilla	N	F	
-trapecio	N	F	
+trapecio	N	M	
 travesía	N	F	
 trenza	N	F	
 tribu	N	F	
@@ -5460,7 +5424,7 @@ agilizar	V	T
 agravar	V	T	
 agrietar	V	T	
 ahuyentar	V	T	
-aislar	V	T	
+aislar	V	T	formas=aísla,aíslan,aísle,aíslen,aisló,aislaron
 ajusticiar	V	T	
 alambrar	V	T	
 alinear	V	T	
@@ -5476,7 +5440,7 @@ amoldar	V	T
 amortiguar	V	T	
 anclar	V	T	
 animar	V	T	
-anteponer	V	T	
+anteponer	V	T	formas=antepone,anteponen,anteponga,antepongan,antepuso,antepusieron
 apadrinar	V	T	
 apaciguar	V	T	
 aparcar	V	T	
@@ -5499,7 +5463,7 @@ asumir	V	T
 atar	V	T	
 atenuar	V	T	
 aumentar	V	T	
-aunar	V	T	
+aunar	V	T	formas=aúna,aúnan,aúne,aúnen,aunó,aunaron
 autenticar	V	T	
 avalar	V	T	
 avasallar	V	T	
@@ -5556,7 +5520,7 @@ condensar	V	T
 condicionar	V	T	
 condimentar	V	T	
 condonar	V	T	
-conferir	V	T	
+conferir	V	T	cambio=ie
 confiar	V	T	
 configurar	V	T	
 confinar	V	T	
@@ -5591,12 +5555,12 @@ defraudar	V	T
 degradar	V	T	
 degustar	V	T	
 delimitar	V	T	
-delinquir	V	I	
+delinquir	V	I	formas=delinque,delinquen,delinca,delincan,delinquió,delinquieron
 demarcar	V	T	
 democratizar	V	T	
 denotar	V	T	
 depender	V	I	
-deponer	V	T	
+deponer	V	T	formas=depone,deponen,deponga,depongan,depuso,depusieron
 depurar	V	T	
 derogar	V	T	
 desactivar	V	T	
@@ -5608,11 +5572,11 @@ desbordar	V	T
 descalificar	V	T	
 descartar	V	T	
 descodificar	V	T	
-descomponer	V	T	
+descomponer	V	T	formas=descompone,descomponen,descomponga,descompongan,descompuso,descompusieron
 desconectar	V	T	
 desconfiar	V	T	
 descongelar	V	T	
-descontar	V	T	
+descontar	V	T	cambio=ue
 descuidar	V	T	
 desdoblar	V	T	
 desechar	V	T	
@@ -5679,14 +5643,14 @@ encargar	V	T
 encasillar	V	T	
 enclaustrar	V	T	
 encoger	V	T	
-encomendar	V	T	
+encomendar	V	T	cambio=ie
 encuadrar	V	T	
 endeudar	V	T	
 endurecer	V	T	
 enfatizar	V	T	
 enfriar	V	T	
 enjuiciar	V	T	
-enmendar	V	T	
+enmendar	V	T	cambio=ie
 enmudecer	V	I	
 ennegrecer	V	T	
 enrojecer	V	T	
@@ -5697,7 +5661,7 @@ ensamblar	V	T
 entablar	V	T	
 entibiar	V	T	
 entorpecer	V	T	
-entretener	V	T	
+entretener	V	T	formas=entretiene,entretienen,entretenga,entretengan,entretuvo,entretuvieron
 entusiasmar	V	T	
 equiparar	V	T	
 escalar	V	T	
@@ -5808,10 +5772,10 @@ insuflar	V	T
 intercalar	V	T	
 interceder	V	T	
 interceptar	V	T	
-interferir	V	T	
+interferir	V	T	cambio=ie
 internar	V	T	
 interpelar	V	T	
-interponer	V	T	
+interponer	V	T	formas=interpone,interponen,interponga,interpongan,interpuso,interpusieron
 intimar	V	T	
 intimidar	V	T	
 intuir	V	T	
@@ -5929,7 +5893,7 @@ posicionar	V	T
 postergar	V	T	
 postrar	V	T	
 potenciar	V	T	
-predisponer	V	T	
+predisponer	V	T	formas=predispone,predisponen,predisponga,predispongan,predispuso,predispusieron
 prefabricar	V	T	
 prefigurar	V	T	
 prejuzgar	V	T	
@@ -5952,7 +5916,7 @@ proscribir	V	T
 prostituir	V	T	
 protagonizar	V	T	
 protocolizar	V	T	
-provenir	V	T	
+provenir	V	T	formas=proviene,provienen,provenga,provengan,provino,provinieron
 proveer	V	T	
 pugnar	V	T	
 pulverizar	V	T	
@@ -5971,7 +5935,7 @@ reaparecer	V	I
 rebajar	V	T	
 rebautizar	V	T	
 recabar	V	T	
-recaer	V	I	
+recaer	V	I	formas=recae,recaen,recaiga,recaigan,recayó,recayeron
 recargar	V	T	
 recelar	V	T	
 recetar	V	T	
@@ -5990,16 +5954,16 @@ redefinir	V	T
 redimir	V	T	
 redoblar	V	T	
 reeditar	V	T	
-reelegir	V	T	
+reelegir	V	T	cambio=i
 reenviar	V	T	
 referenciar	V	T	
 refinar	V	T	
-reforzar	V	T	
+reforzar	V	T	cambio=ue
 refrendar	V	T	
 refrescar	V	T	
 refugiar	V	T	
 regenerar	V	T	
-regir	V	T	
+regir	V	T	cambio=i
 regocijar	V	T	
 rehabilitar	V	T	
 reimprimir	V	T	
@@ -6013,8 +5977,8 @@ relevar	V	T
 remolcar	V	T	
 remontar	V	T	
 remunerar	V	T	
-rendir	V	T	
-renegar	V	T	
+rendir	V	T	cambio=i
+renegar	V	T	cambio=ie
 renombrar	V	T	
 reordenar	V	T	
 reorganizar	V	T	
@@ -6023,12 +5987,12 @@ repeler	V	T
 repercutir	V	T	
 replegar	V	T	
 replicar	V	T	
-reprobar	V	T	
+reprobar	V	T	cambio=ue
 reprochar	V	T	
 requisar	V	T	
 resarcir	V	T	
 rescindir	V	T	
-resentir	V	T	
+resentir	V	T	cambio=ie
 reseñar	V	T	
 resignar	V	T	
 restablecer	V	T	
@@ -6043,7 +6007,7 @@ reunificar	V	T
 revalidar	V	T	
 revalorizar	V	T	
 revertir	V	T	
-revestir	V	T	
+revestir	V	T	cambio=i
 revocar	V	T	
 revolucionar	V	T	
 ridiculizar	V	T	
@@ -6071,7 +6035,7 @@ sintonizar	V	T
 sistematizar	V	T	
 sobrar	V	I	
 sobrellevar	V	T	
-sobresalir	V	I	
+sobresalir	V	I	formas=sobresale,sobresalen,sobresalga,sobresalgan,sobresalió,sobresalieron
 sobrevolar	V	T	
 socializar	V	T	
 sofocar	V	T	
@@ -6094,7 +6058,7 @@ subvencionar	V	T
 sucumbir	V	I	
 suministrar	V	T	
 supeditar	V	T	
-superponer	V	T	
+superponer	V	T	formas=superpone,superponen,superponga,superpongan,superpuso,superpusieron
 suplantar	V	T	
 suplir	V	T	
 suscitar	V	T	
@@ -6160,7 +6124,7 @@ vendimiar	V	T
 verbalizar	V	T	
 versar	V	T	
 vertebrar	V	T	
-verter	V	T	
+verter	V	T	cambio=ie
 vigorizar	V	T	
 visibilizar	V	T	
 visualizar	V	T	
@@ -6168,5 +6132,6 @@ vitalizar	V	T
 vivificar	V	T	
 vocalizar	V	T	
 vulgarizar	V	T	
-yacer	V	I	
+yacer	V	I	formas=yace,yacen,yazca,yazcan,yació,yacieron
 zozobrar	V	I	
+adquirir	V	T	formas=adquiere,adquieren,adquiera,adquieran,adquirió,adquirieron;sin=comprar

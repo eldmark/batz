@@ -18,10 +18,124 @@ let spanishRecordTimer = null;
 
 function sameValue(a, b) { return typeof a === typeof b && a === b; }
 
+// ── Ayudantes de interfaz: plurales, avisos, contadores, botones ocupados y movimiento ──
+const reduceMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const phoneLayout = () => window.matchMedia('(max-width: 720px)').matches;
+
+/** «1 elemento», «2 elementos»: nunca «elemento(s)». */
+function plural(n, one, many) { return `${n} ${n === 1 ? one : many}`; }
+
+/** Aviso flotante que se va solo; también se cierra con la ×, o deslizándolo en el teléfono. */
+function toast(message, kind = 'info', timeout = 4200) {
+  const host = $('toasts');
+  const box = node('div', undefined, `toast ${kind}`);
+  box.append(node('span', message));
+  const close = node('button', undefined, 'toast-close'); close.type = 'button'; close.setAttribute('aria-label', 'Cerrar aviso');
+  close.innerHTML = '<svg viewBox="0 0 14 14" aria-hidden="true"><path d="M3 3l8 8M11 3l-8 8"/></svg>';
+  const dismiss = () => {
+    if (box.classList.contains('leaving')) return;
+    box.classList.add('leaving');
+    setTimeout(() => box.remove(), reduceMotion() ? 0 : 240);
+  };
+  close.addEventListener('click', dismiss);
+  let startX = null;
+  box.addEventListener('pointerdown', event => { startX = event.clientX; });
+  box.addEventListener('pointerup', event => { if (startX !== null && Math.abs(event.clientX - startX) > 56) dismiss(); startX = null; });
+  box.append(close); host.append(box);
+  while (host.children.length > 3) host.firstElementChild.remove();
+  if (timeout) setTimeout(dismiss, timeout);
+  return box;
+}
+
+/** Número que sube hasta `value` en vez de aparecer de golpe. */
+function countUp(element, value, format = String) {
+  if (reduceMotion() || value < 3) { element.textContent = format(value); return element; }
+  const start = performance.now(), duration = Math.min(900, 320 + value * 3);
+  element.textContent = format(0);
+  const tick = now => {
+    const t = Math.min(1, (now - start) / duration);
+    element.textContent = format(Math.round(value * (1 - (1 - t) ** 3)));
+    if (t < 1) requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+  return element;
+}
+
+/** Párrafo con un número animado dentro: «Se exploraron [12] modelos». */
+function countLine(before, value, after, className = 'hint', tag = 'p') {
+  const line = node(tag, undefined, className);
+  line.append(document.createTextNode(before), countUp(node('strong', undefined, 'count'), value), document.createTextNode(after));
+  return line;
+}
+
+/** Botón de acción con estado: texto → girando → ✓ o ✗ un instante. `task` dice cómo terminó. */
+async function withBusy(button, busyLabel, task) {
+  const label = button.dataset.label || (button.dataset.label = button.textContent.trim());
+  button.setAttribute('aria-busy', 'true');
+  delete button.dataset.state;
+  button.textContent = busyLabel;
+  let outcome = 'fail';
+  try { outcome = (await task()) || 'none'; }
+  finally {
+    button.removeAttribute('aria-busy');
+    button.textContent = label;
+    if (outcome !== 'none' && !reduceMotion()) {
+      button.dataset.state = outcome;
+      setTimeout(() => { if (button.dataset.state === outcome) delete button.dataset.state; }, 1100);
+    }
+  }
+}
+
+/** Veredicto grande que aparece letra por letra, sin desenfocar lo que dice al lector de pantalla. */
+function verdictElement(word, kind, detail) {
+  const verdict = node('p', undefined, `verdict ${kind}`);
+  const big = node('span', undefined, 'verdict-word');
+  big.append(node('span', word, 'sr-only'));
+  [...word].forEach((char, i) => {
+    if (char === ' ') { big.append(document.createTextNode(' ')); return; }  // la frase puede partirse entre palabras
+    const letter = node('span', char, 'ch');
+    letter.style.setProperty('--i', i); letter.setAttribute('aria-hidden', 'true');
+    big.append(letter);
+  });
+  verdict.append(big);
+  if (detail) verdict.append(typeof detail === 'string' ? node('small', detail) : detail);
+  return verdict;
+}
+
+/** Píldora que se desliza hasta la pestaña o el filtro activo. */
+function placePill(container) {
+  const pill = container?.querySelector(':scope > .pill');
+  const active = container?.querySelector(':scope > [aria-selected="true"], :scope > [aria-pressed="true"]');
+  if (!pill || !active || !active.offsetWidth) return;
+  pill.style.setProperty('--x', `${active.offsetLeft}px`);
+  pill.style.setProperty('--y', `${active.offsetTop}px`);
+  pill.style.setProperty('--w', `${active.offsetWidth}px`);
+  pill.style.setProperty('--h', `${active.offsetHeight}px`);
+  if (!container.classList.contains('has-pill')) {
+    container.classList.add('has-pill');
+    requestAnimationFrame(() => container.classList.add('pill-ready'));  // sin deslizarse desde 0 al cargar
+  }
+}
+const pillHosts = () => document.querySelectorAll('.modes, .subtabs, .filters');
+const pillObserver = new ResizeObserver(entries => entries.forEach(entry => placePill(entry.target)));
+
+// Onda desde el punto de contacto: confirma el toque en botones, teclas y pestañas.
+document.addEventListener('pointerdown', event => {
+  const target = event.target.closest('.button, .key, .mode, .subtab, .filter');
+  if (!target || target.disabled || target.getAttribute('aria-busy') === 'true' || reduceMotion()) return;
+  const box = target.getBoundingClientRect();
+  const size = Math.max(box.width, box.height) * 2.2;
+  const wave = node('span', undefined, 'ripple');
+  wave.style.cssText = `width:${size}px;height:${size}px;left:${event.clientX - box.left - size / 2}px;top:${event.clientY - box.top - size / 2}px`;
+  target.append(wave);
+  wave.addEventListener('animationend', () => wave.remove());
+});
+
 function stopStoryAudio() {
   if (storyTimer) clearTimeout(storyTimer);
   storyTimer = null;
   if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+  storyScene?.talking(false);
 }
 
 function pauseStory() {
@@ -45,16 +159,25 @@ function renderStory2D(event) {
   const box = $('story-2d'); box.replaceChildren();
   if (!storyState) return;
   const model = storyState.model;
-  if (!model) {
-    box.append(node('p', `Regla: ${event.rule}. Referencias: ${event.refs?.join(', ') || 'ninguna'}.`, 'hint'));
+  if (event.kind === 'proof' || !model) {
+    const rule = event.rule_label || event.rule;
+    box.append(node('p', `Línea ${event.line ?? event.trace_path} · ${rule}${event.refs?.length ? ` · usa ${event.refs.join(', ')}` : ''}`, 'hint'));
     if (event.context?.length) box.append(node('p', `Hipótesis abiertas: ${event.context.join(', ')}`, 'hint'));
+    return;
+  }
+  if (event.kind === 'search') {
+    // Durante la búsqueda solo existen los elementos del tamaño que se está probando.
+    const nodes = node('div', undefined, 'story-domain');
+    model.domain.slice(0, event.size).forEach(value => nodes.append(node('span', valueLabel(value), `story-node ${event.phase === 'found' ? 'true' : ''}`)));
+    if (!event.size) nodes.append(node('span', '…', 'story-node'));
+    box.append(nodes, node('p', event.size ? `D con ${plural(event.size, 'elemento', 'elementos')}` : 'Todavía sin dominio', 'hint'));
     return;
   }
   const focus = event.term_values?.length ? event.term_values :
     event.element !== null && event.element !== undefined ? [event.element] : Object.values(event.assignment || {});
   const nodes = node('div', undefined, 'story-domain');
   model.domain.forEach(value => {
-    const active = focus.some(item => sameValue(item, value));
+    const active = event.kind !== 'premise' && focus.some(item => sameValue(item, value));
     const chip = node('span', valueLabel(value), `story-node ${active ? (event.value ? 'true' : 'false') : ''}`);
     nodes.append(chip);
   });
@@ -72,20 +195,26 @@ function renderStoryStep() {
   const {events, index} = storyState;
   const event = events[index];
   const current = $('story-current'); current.replaceChildren();
-  current.append(node('span', `Paso ${index + 1} de ${events.length} · nodo ${event.trace_path}`, 'hint'));
-  current.append(node('strong', event.formula));
+  const where = event.kind === 'proof' ? `línea ${event.line}` : event.kind === 'search' ? 'búsqueda'
+    : event.kind === 'premise' ? 'premisa' : `nodo ${event.trace_path}`;
+  current.append(node('span', `Paso ${index + 1} de ${events.length} · ${where}`, 'hint'));
+  if (event.formula) current.append(node('strong', event.formula));
   current.append(node('p', event.text_es));
-  current.append(node('span', event.value === null ? 'Paso verificado' : event.value ? 'Verdadero' : 'Falso',
-    `badge ${event.value === null ? 'verified' : event.value ? 'true' : 'false'}`));
+  const badge = event.kind === 'search' ? ['Búsqueda acotada', 'verified'] : event.value === null ? ['Paso verificado', 'verified']
+    : event.value ? ['Verdadero', 'true'] : ['Falso', 'false'];
+  current.append(node('span', badge[0], `badge ${badge[1]}`));
   $('story-prev').disabled = index === 0;
   $('story-next').disabled = index === events.length - 1;
   for (const [i, item] of [...$('story-list').children].entries()) {
     if (i === index) item.setAttribute('aria-current', 'step');
     else item.removeAttribute('aria-current');
   }
+  // En una prueba, la línea que se narra se marca en la vista Fitch (solo con el paso a paso abierto).
+  document.querySelectorAll('.fitch li.current').forEach(li => li.classList.remove('current'));
+  if (event.kind === 'proof' && !$('story-section').hidden) document.querySelector(`.fitch li[data-line="${event.line}"]`)?.classList.add('current');
   renderStory2D(event);
   if (storyScene) storyScene.setEvent(event);
-  showSpan(event.span);
+  if (event.kind !== 'search' && event.kind !== 'premise') showSpan(event.span);
 }
 
 async function initStory3D() {
@@ -110,7 +239,10 @@ function showStory(story, model, host) {
   if (!story?.events?.length) return;
   if (host) {
     const open = node('button', 'Ver paso a paso', 'button secondary story-open'); open.type = 'button';
-    open.addEventListener('click', () => { $('story-section').hidden = false; $('story-section').scrollIntoView({behavior: 'smooth', block: 'start'}); initStory3D(); });
+    open.addEventListener('click', () => {
+      $('story-section').hidden = false; renderStoryStep();
+      $('story-section').scrollIntoView({behavior: reduceMotion() ? 'auto' : 'smooth', block: 'start'}); initStory3D();
+    });
     host.append(open);
   }
   storyState = {events: story.events, model, index: 0};
@@ -121,7 +253,9 @@ function showStory(story, model, host) {
   $('story-list').replaceChildren();
   for (const [i, event] of story.events.entries()) {
     const item = node('li');
-    const button = node('button', `${event.trace_path} · ${event.text_es}`, 'story-link');
+    const where = event.kind === 'proof' ? `Línea ${event.line}` : event.kind === 'search' ? 'Búsqueda'
+      : event.kind === 'premise' ? 'Premisa' : event.trace_path;
+    const button = node('button', `${where} · ${event.text_es}`, 'story-link');
     button.type = 'button';
     button.addEventListener('click', () => { pauseStory(); storyState.index = i; renderStoryStep(); });
     item.append(button); $('story-list').append(item);
@@ -148,14 +282,35 @@ function pickStoryElement(element) {
 
 function localSpanishVoice() {
   if (!('speechSynthesis' in window)) return null;
-  return window.speechSynthesis.getVoices().find(voice => voice.lang.toLowerCase().startsWith('es') && voice.localService === true) || null;
+  // Primero una voz latinoamericana (México, EE. UU., Latinoamérica); si no hay, cualquier español local.
+  const local = window.speechSynthesis.getVoices().filter(voice => voice.lang.toLowerCase().startsWith('es') && voice.localService === true);
+  return local.find(voice => /^es-(mx|us|419|gt|co|ar|cl|pe)/i.test(voice.lang)) || local[0] || null;
+}
+
+/** La casilla de voz solo se ofrece si el sistema tiene una voz local en español; si no, dice cómo instalarla. */
+function refreshVoiceOption() {
+  const box = $('story-voice'), help = $('voice-help');
+  if (!('speechSynthesis' in window)) {
+    box.checked = false; box.disabled = true;
+    help.textContent = 'Este navegador no puede leer en voz alta.'; help.hidden = false;
+    return;
+  }
+  const voice = localSpanishVoice();
+  box.disabled = !voice;
+  if (!voice) box.checked = false;
+  const windows = /Windows/.test(navigator.userAgent);
+  help.textContent = voice ? '' : windows
+    ? 'No hay voz en español en este equipo. Instálala en Configuración → Hora e idioma → Voz → Agregar voces → Español, y recarga la página.'
+    : 'No hay voz local en español en este equipo. Instala una en la configuración de voz del sistema y recarga la página.';
+  help.hidden = Boolean(voice);
 }
 
 function advanceStory() {
   if (!storyState || !storyPlaying) return;
   if (storyState.index >= storyState.events.length - 1) {   // fin del recorrido: el avatar reacciona al valor de la fórmula
     pauseStory();
-    if (storyState.events[0].value !== null) storyScene?.verdict(storyState.events[0].value);
+    const root = storyState.events.find(e => e.kind !== 'search' && e.kind !== 'premise');
+    if (root && root.value !== null) storyScene?.verdict(root.value);
     return;
   }
   storyState.index++;
@@ -171,8 +326,16 @@ function narrateCurrent() {
     const utterance = new SpeechSynthesisUtterance(event.text_es);
     utterance.lang = voice.lang; utterance.voice = voice; utterance.rate = .92;
     const index = storyState.index;
-    utterance.onend = () => { if (storyPlaying && storyState?.index === index) advanceStory(); };
-    utterance.onerror = () => { if (storyPlaying && storyState?.index === index) advanceStory(); };
+    // La boca del avatar sigue a la voz: cada palabra que empieza abre y cierra sus vocales.
+    utterance.onstart = () => storyScene?.talking(true);
+    utterance.onboundary = boundary => {
+      if (boundary.name && boundary.name !== 'word') return;
+      const word = event.text_es.slice(boundary.charIndex, boundary.charIndex + (boundary.charLength || 12)).split(/[\s,.;:]/)[0];
+      storyScene?.say(word, utterance.rate);
+    };
+    const finish = () => { storyScene?.talking(false); if (storyPlaying && storyState?.index === index) advanceStory(); };
+    utterance.onend = finish;
+    utterance.onerror = finish;
     window.speechSynthesis.speak(utterance);
     $('story-status').textContent = `Voz local: ${voice.name}.`;
     return;
@@ -186,6 +349,59 @@ function node(tag, text, className) {
   if (text !== undefined) el.textContent = text;
   if (className) el.className = className;
   return el;
+}
+
+/** Casilla con palomita que se dibuja; la etiqueta agranda el área que se puede tocar. */
+function checkBox(input) {
+  const label = node('label', undefined, 'check');
+  label.append(input);
+  label.insertAdjacentHTML('beforeend', '<svg viewBox="0 0 20 20" aria-hidden="true"><path class="tick" d="M5 10.5l3.2 3.2L15 6.5"/></svg>');
+  return label;
+}
+
+/** Interpretación legible: dominio, constantes, funciones y relaciones como tablas, no como JSON. */
+function modelElement(model, {assignment = [], json = true} = {}) {
+  const view = node('div', undefined, 'model-view');
+  const row = (name, kind, content) => {
+    const line = node('div', undefined, 'model-row');
+    const head = node('span', undefined, `model-symbol ${kind}`); head.append(node('code', name));
+    line.append(head, content); view.append(line); return line;
+  };
+  const chips = values => { const box = node('span', undefined, 'model-chips'); values.forEach(v => box.append(node('code', v, 'model-chip'))); return box; };
+  row('D', 'domain', chips(model.domain.map(valueLabel)));
+  for (const [name, value] of Object.entries(model.constants || {})) row(name, 'constant', chips([valueLabel(value)]));
+  for (const [variable, value] of assignment) row(variable, 'variable', chips([`${valueLabel(value)} (entorno)`]));
+  for (const [name, spec] of Object.entries(model.functions || {})) {
+    row(name, 'function', chips(spec.table.map(([args, out]) => `${name}(${args.map(valueLabel).join(', ')}) = ${valueLabel(out)}`)));
+  }
+  for (const [name, spec] of Object.entries(model.predicates || {})) {
+    if (spec.arity === 0) { row(name, 'predicate', chips([spec.tuples.length ? 'verdadera' : 'falsa'])); continue; }
+    if (spec.arity === 2 && model.domain.length <= 6) {
+      // Relación binaria: una matriz es más fácil de leer que la lista de pares.
+      const grid = node('table', undefined, 'model-matrix');
+      const head = node('tr'); head.append(node('th', '')); model.domain.forEach(b => head.append(node('th', valueLabel(b))));
+      grid.append(head);
+      for (const a of model.domain) {
+        const line = node('tr'); line.append(node('th', valueLabel(a)));
+        for (const b of model.domain) {
+          const inside = spec.tuples.some(([x, y]) => sameValue(x, a) && sameValue(y, b));
+          const cell = node('td', inside ? '✓' : '', inside ? 'in' : ''); cell.setAttribute('aria-label', `(${valueLabel(a)}, ${valueLabel(b)}) ${inside ? 'pertenece' : 'no pertenece'}`);
+          line.append(cell);
+        }
+        grid.append(line);
+      }
+      row(name, 'predicate', grid);
+      continue;
+    }
+    const items = spec.tuples.map(t => spec.arity === 1 ? valueLabel(t[0]) : tupleLabel(t));
+    row(name, 'predicate', items.length ? chips(items) : node('span', '∅ (vacía)', 'hint'));
+  }
+  if (json) {
+    const more = node('details', undefined, 'model-json-toggle');
+    more.append(node('summary', 'Ver JSON'), node('pre', JSON.stringify(model, null, 2), 'model-json'));
+    view.append(more);
+  }
+  return view;
 }
 
 function addSymbol(name = '', kind = 'predicate', arity = 1) {
@@ -216,6 +432,8 @@ function addSymbol(name = '', kind = 'predicate', arity = 1) {
   remove.addEventListener('click', () => { row.remove(); invalidateTables(); });
   removeCell.append(remove);
   row.dataset.kind = kind;
+  // En el teléfono la fila se vuelve tarjeta: cada campo muestra su propio rótulo.
+  nameCell.dataset.label = 'Nombre'; kindCell.dataset.label = 'Tipo'; arityCell.dataset.label = 'Aridad';
   kindSelect.addEventListener('change', () => { row.dataset.kind = kindSelect.value; arityInput.disabled = kindSelect.value === 'constant'; invalidateTables(); });
   nameInput.addEventListener('input', invalidateTables);
   arityInput.addEventListener('input', invalidateTables);
@@ -341,7 +559,9 @@ function prepare() {
         const checkbox = node('input'); checkbox.type = 'checkbox'; checkbox.setAttribute('aria-label', `${name}${tupleLabel(args)} pertenece`);
         checkbox.addEventListener('change', () => { clearStory(); refreshReady(); });
         row.append(node('td', tupleLabel(args)), node('td', undefined, 'check-cell'));
-        row.lastChild.append(checkbox); body.append(row);
+        row.lastChild.append(checkBox(checkbox)); body.append(row);
+        // Toda la fila sirve para marcar la tupla: en el teléfono es más fácil que acertar a la casilla.
+        row.addEventListener('click', event => { if (!event.target.closest('label, input')) checkbox.click(); });
       }
     }
     updateFree(); refreshReady();
@@ -388,6 +608,8 @@ function refreshReady() {
   $('evaluate').disabled = !ready || !formulaBox.value.trim();
   $('export-json').disabled = !ready;
   $('find-countermodel').disabled = !preparedSignature || !formulaBox.value.trim();
+  $('model-state').textContent = ready ? '✓' : '';
+  $('model-state').title = ready ? 'Modelo completo' : '';
 }
 
 async function api(route, payload) {
@@ -452,44 +674,66 @@ function explanationElement(data, root = false) {
 async function evaluateFormula() {
   clearStory();
   const resultBox = $('result'); resultBox.replaceChildren();
-  const run = $('evaluate'); run.setAttribute('aria-busy', 'true'); run.textContent = 'Evaluando…';
-  try {
-    const model = interpretation();
-    const assignment = {};
-    for (const select of $('assignment').querySelectorAll('select[data-variable]')) {
-      if (select.value === '') throw Error(`Asigna un valor a ${select.dataset.variable}.`);
-      assignment[select.dataset.variable] = domain[Number(select.value)];
-    }
-    const result = await api('/api/evaluate', { signature: preparedSignature, interpretation: model, formula: formulaBox.value, assignment });
-    if (result.status !== 'ok') {
-      const error = result.errors?.[0] || {message: 'Entrada inválida.'};
-      showFormulaError(error);
-      resultBox.append(node('p', error.message, 'error'));
-      return;
-    }
-    showFormulaError(null);
-    const verdict = node('p', result.value ? 'Verdadero' : 'Falso', `verdict ${result.value ? 'true' : 'false'}`);
-    verdict.append(node('small', result.explanation.summary));
-    resultBox.append(verdict);
-    resultBox.append(node('h3', 'Por qué'));
-    const tree = explanationElement(result.explanation, true);
-    const toggle = node('button', 'Desplegar todo', 'button secondary'); toggle.type = 'button';
-    toggle.addEventListener('click', () => {
-      const open = toggle.textContent === 'Desplegar todo';
-      tree.querySelectorAll('details').forEach((item, i) => { item.open = open || i === 0; });
-      toggle.textContent = open ? 'Contraer' : 'Desplegar todo';
-    });
-    if (result.explanation.children?.length) resultBox.append(toggle);
-    resultBox.append(tree);
-    showStory(result.story, result.model, resultBox);
-  } catch (exc) { resultBox.append(node('p', exc.message || 'No se pudo evaluar.', 'error')); }
-  finally { run.removeAttribute('aria-busy'); run.textContent = 'Evaluar'; }
+  await withBusy($('evaluate'), 'Evaluando…', async () => {
+    try {
+      const model = interpretation();
+      const assignment = {};
+      for (const select of $('assignment').querySelectorAll('select[data-variable]')) {
+        if (select.value === '') throw Error(`Asigna un valor a ${select.dataset.variable}.`);
+        assignment[select.dataset.variable] = domain[Number(select.value)];
+      }
+      const result = await api('/api/evaluate', { signature: preparedSignature, interpretation: model, formula: formulaBox.value, assignment });
+      if (result.status !== 'ok') {
+        const error = result.errors?.[0] || {message: 'Entrada inválida.'};
+        showFormulaError(error);
+        resultBox.append(node('p', error.message, 'error'));
+        return 'fail';
+      }
+      showFormulaError(null);
+      resultBox.append(verdictElement(result.value ? 'Verdadero' : 'Falso', result.value ? 'true' : 'false', result.explanation.summary));
+      resultBox.append(node('h3', 'Por qué'));
+      const tree = explanationElement(result.explanation, true);
+      const toggle = node('button', 'Desplegar todo', 'button secondary'); toggle.type = 'button';
+      toggle.addEventListener('click', () => {
+        const open = toggle.textContent === 'Desplegar todo';
+        tree.querySelectorAll('details').forEach((item, i) => { item.open = open || i === 0; });
+        toggle.textContent = open ? 'Contraer' : 'Desplegar todo';
+      });
+      if (result.explanation.children?.length) resultBox.append(toggle);
+      resultBox.append(tree);
+      showStory(result.story, result.model, resultBox);
+      if (phoneLayout()) resultBox.scrollIntoView({behavior: reduceMotion() ? 'auto' : 'smooth', block: 'start'});
+      return 'done';
+    } catch (exc) { resultBox.append(node('p', exc.message || 'No se pudo evaluar.', 'error')); return 'fail'; }
+  });
+}
+
+// El botón «Ejemplo» carga uno del modo en que se está.
+const PROOF_SAMPLES = [
+  {premises: '∀x (Humano(x) → Mortal(x))\nHumano(socrates)', conclusion: 'Mortal(socrates)', constants: 'socrates',
+   note: 'Ejemplo: Sócrates es mortal. Pulsa «Buscar prueba».'},
+  {premises: '∀x ∃y Ama(x, y)', conclusion: '∃y ∀x Ama(x, y)', constants: '',
+   note: 'Ejemplo: ¿cambiar el orden de ∀ y ∃ conserva la verdad? Pulsa «Buscar prueba».'},
+  {premises: '', conclusion: '((p → q) → p) → p', constants: '',
+   note: 'Ejemplo: ley de Peirce, con letras proposicionales. Pulsa «Buscar prueba».'},
+];
+let proofSample = 0;
+function loadProofSample() {
+  const sample = PROOF_SAMPLES[proofSample++ % PROOF_SAMPLES.length];
+  $('proof-premises').value = sample.premises; $('proof-conclusion').value = sample.conclusion;
+  $('proof-constants').value = sample.constants;
+  clearStory(); $('proof-result').replaceChildren(); checkProofSyntax();
+  toast(sample.note);
+}
+function loadDictionarySample() {
+  $('dict-query').value = 'duermen'; setPane($('mode-dictionary'), 'model'); searchDictionary(true);
+  toast('Ejemplo: «duermen» se encuentra por su lema, dormir.');
 }
 
 function loadSample() {
   symbolsBody.replaceChildren();
   addSymbol('a', 'constant', 0); addSymbol('P', 'predicate', 1); addSymbol('Q', 'predicate', 1);
-  $('domain').value = '[0,1]'; prepare();
+  $('domain').value = '0, 1'; prepare();
   interpretationBox.querySelector('[data-constant]').value = '0';
   for (const row of interpretationBox.querySelectorAll('tr[data-predicate]')) {
     const args = JSON.parse(row.dataset.args);
@@ -497,6 +741,8 @@ function loadSample() {
   }
   formulaBox.value = '∀x (P(x) → Q(x))'; updateFree(); refreshReady();
   $('result').replaceChildren();
+  setPane($('mode-evaluate'), 'question');
+  toast('Ejemplo cargado: D = {0, 1}, P = {0}, Q = {1}.');
 }
 
 function exportJSON() {
@@ -507,8 +753,8 @@ function exportJSON() {
     const anchor = node('a'); anchor.href = url; anchor.download = 'logos-interpretacion.json';
     document.body.append(anchor); anchor.click(); anchor.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
-    $('transfer-note').textContent = 'Interpretación exportada.';
-  } catch (exc) { $('transfer-note').textContent = exc.message; }
+    toast('Interpretación exportada.', 'success');
+  } catch (exc) { toast(exc.message, 'error'); }
 }
 
 function applyPackage(payload, model) {
@@ -520,7 +766,9 @@ function applyPackage(payload, model) {
   for (const name of payload.signature.constants) addSymbol(name, 'constant', 0);
   for (const [name, arity] of Object.entries(payload.signature.functions)) addSymbol(name, 'function', arity);
   for (const [name, arity] of Object.entries(payload.signature.predicates)) addSymbol(name, 'predicate', arity);
-  $('domain').value = JSON.stringify(model.domain);
+  $('domain').value = model.domain.map(valueLabel).join(', ');
+  // La fórmula nueva va antes de preparar: así no se consulta la vieja contra la firma nueva.
+  formulaBox.value = typeof payload.formula === 'string' ? payload.formula : '';
   prepare();
   for (const select of interpretationBox.querySelectorAll('[data-constant]')) {
     const value = model.constants[select.dataset.constant];
@@ -538,7 +786,8 @@ function applyPackage(payload, model) {
     row.querySelector('input').checked = spec.tuples.some(item => JSON.stringify(item) === row.dataset.args);
   }
   formulaBox.value = typeof payload.formula === 'string' ? payload.formula : '';
-  updateFree(); refreshReady();
+  const pending = updateFree(); refreshReady();
+  return pending;  // quien necesite el entorno de las variables libres espera a que aparezcan sus selectores
 }
 
 function batchRow(row) {
@@ -567,7 +816,6 @@ function batchRow(row) {
 }
 
 async function loadFile(file) {
-  const note = $('transfer-note'); note.textContent = '';
   try {
     if (!file) return;
     if (file.size > 500000) throw Error('El archivo pesa más de 500 kB.');
@@ -579,48 +827,58 @@ async function loadFile(file) {
     loaded.results.forEach(row => list.append(batchRow(row)));
     $('batch').hidden = loaded.results.length < 2;
     const wrong = loaded.results.filter(r => r.status !== 'ok' || r.matches === false).length;
-    note.textContent = `${file.name}: modelo cargado` + (loaded.results.length ? `, ${loaded.results.length} fórmula(s) evaluadas` : '') +
-      (wrong ? `, ${wrong} con error o distinta de lo esperado.` : '.');
-  } catch (exc) { note.textContent = `No se pudo cargar: ${exc.message}`; }
+    const count = loaded.results.length;
+    toast(`${file.name}: modelo cargado` + (count ? `, ${plural(count, 'fórmula evaluada', 'fórmulas evaluadas')}` : '') +
+      (wrong ? `; ${wrong === 1 ? 'una tiene' : `${wrong} tienen`} error o un valor distinto del esperado.` : '.'), wrong ? 'warning' : 'success', 6000);
+    setPane($('mode-evaluate'), 'question');
+  } catch (exc) { toast(`No se pudo cargar: ${exc.message}`, 'error', 7000); }
   $('import-file').value = '';
 }
+
+const SEARCH_LIMITS = {size_limit: 'Se agotó el tamaño máximo.', candidate_limit: 'Se alcanzó el límite de modelos.',
+  timeout: 'Se agotó el tiempo.', table_limit: 'La tabla supera el límite de búsqueda.'};
 
 async function searchCountermodel() {
   clearStory();
   const request = ++searchRequest;
   const box = $('countermodel-result'); box.replaceChildren();
-  const button = $('find-countermodel'); button.disabled = true;
-  box.append(node('p', 'Buscando modelos dentro de los límites…', 'hint'));
-  try {
-    const result = await api('/api/countermodel', {
-      signature: preparedSignature, formula: formulaBox.value, max_size: Number($('max-size').value)
-    });
-    if (request !== searchRequest) return;
-    box.replaceChildren();
-    if (result.status === 'invalid_input') {
-      const error = result.errors?.[0] || {message: 'Entrada inválida.'};
-      showFormulaError(error); box.append(node('p', error.message, 'error')); return;
-    }
-    showFormulaError(null);
-    if (result.status === 'unknown') {
-      const reasons = {size_limit: 'Se agotó el tamaño máximo.', candidate_limit: 'Se alcanzó el límite de modelos.',
-        timeout: 'Se agotó el tiempo.', table_limit: 'La tabla supera el límite de búsqueda.'};
-      box.append(node('p', `No se encontró un contramodelo. ${reasons[result.reason] || ''} Esto no prueba validez universal. Se exploraron ${result.explored} modelos.`, 'hint'));
-      return;
-    }
-    box.append(node('span', 'Contramodelo verificado', 'badge false'));
-    box.append(node('p', `Dominio de ${result.model.domain.length} elemento(s). Se exploraron ${result.explored} modelos.`, 'hint'));
-    const modelText = node('pre', JSON.stringify(result.model, null, 2), 'model-json');
-    box.append(modelText);
-    const load = node('button', 'Cargar este modelo en las tablas', 'button secondary'); load.type = 'button';
-    load.addEventListener('click', () => {
-      applyPackage({signature: preparedSignature, formula: formulaBox.value}, result.model);
-      $('transfer-note').textContent = 'Contramodelo cargado en las tablas.';
-    });
-    box.append(load, node('h3', '¿Por qué es falsa?'), explanationElement(result.explanation, true));
-    showStory(result.story, result.model, box);
-  } catch (exc) { if (request === searchRequest) box.replaceChildren(node('p', exc.message || 'No se pudo buscar.', 'error')); }
-  finally { if (request === searchRequest) refreshReady(); }
+  const button = $('find-countermodel');
+  box.append(node('p', 'Buscando modelos dentro de los límites…', 'hint searching'));
+  await withBusy(button, 'Buscando…', async () => {
+    try {
+      const result = await api('/api/countermodel', {
+        signature: preparedSignature, formula: formulaBox.value, max_size: Number($('max-size').value)
+      });
+      if (request !== searchRequest) return 'none';
+      box.replaceChildren();
+      if (result.status === 'invalid_input') {
+        const error = result.errors?.[0] || {message: 'Entrada inválida.'};
+        showFormulaError(error); box.append(node('p', error.message, 'error')); return 'fail';
+      }
+      showFormulaError(null);
+      if (result.status === 'unknown') {
+        box.append(countLine('No se encontró un contramodelo tras explorar ', result.explored,
+          ` ${result.explored === 1 ? 'modelo' : 'modelos'}. ${SEARCH_LIMITS[result.reason] || ''} Esto no prueba que la fórmula sea válida.`));
+        return 'none';
+      }
+      box.append(node('span', 'Contramodelo verificado', 'badge false'));
+      box.append(countLine(`Dominio de ${plural(result.model.domain.length, 'elemento', 'elementos')}. Se exploraron `,
+        result.explored, result.explored === 1 ? ' modelo.' : ' modelos.'));
+      box.append(modelElement(result.model));
+      const load = node('button', 'Cargar este modelo en las tablas', 'button secondary'); load.type = 'button';
+      load.addEventListener('click', () => {
+        applyPackage({signature: preparedSignature, formula: formulaBox.value}, result.model);
+        setPane($('mode-evaluate'), 'model');
+        toast('Contramodelo cargado en las tablas.', 'success');
+      });
+      box.append(load, node('h3', '¿Por qué es falsa?'), explanationElement(result.explanation, true));
+      showStory(result.story, result.model, box);
+      return 'done';
+    } catch (exc) {
+      if (request === searchRequest) box.replaceChildren(node('p', exc.message || 'No se pudo buscar.', 'error'));
+      return 'fail';
+    } finally { if (request === searchRequest) refreshReady(); }
+  });
 }
 
 async function showSpanishReadings() {
@@ -662,6 +920,8 @@ async function showSpanishReadings() {
         formulaBox.value = reading.formula;
         prepare();
         box.replaceChildren(node('p', `Lectura ${reading.id} elegida. Completa la interpretación para evaluarla.`, 'hint'));
+        setPane($('mode-evaluate'), 'model');
+        toast('Lectura elegida: ya están los símbolos. Completa la interpretación.', 'success');
       });
       row.append(use); box.append(row);
     }
@@ -755,8 +1015,74 @@ async function checkProofSyntax() {
     list.append(item);
   });
   button.disabled = errors > 0 || !conclusion;
-  $('prove-note').textContent = errors ? `${errors} fórmula(s) con error de sintaxis.` : !conclusion ? 'Falta la conclusión.' : 'Sintaxis correcta.';
+  $('prove-note').textContent = errors ? `${errors === 1 ? 'Una fórmula tiene' : `${errors} fórmulas tienen`} error de sintaxis.`
+    : !conclusion ? 'Falta la conclusión.'
+    : result.mode === 'propositional' ? 'Sintaxis correcta · lógica proposicional: se decide con la tabla de verdad.' : 'Sintaxis correcta.';
 }
+
+/** Derivación en notación de Fitch: una barra por caja abierta y la hipótesis subrayada. */
+function fitchElement(lines) {
+  const list = node('ol', undefined, 'fitch');
+  list.setAttribute('aria-label', 'Derivación en notación de Fitch');
+  const lastPremise = lines.filter(line => line.rule === 'premise').at(-1)?.n;
+  for (const line of lines) {
+    const item = node('li', undefined, 'fitch-line');
+    if (line.box_start) item.classList.add('box-start');
+    if (line.rule === 'hyp' || line.rule === 'flag') item.classList.add('hyp');
+    if (line.n === lastPremise) item.classList.add('last-premise');
+    item.dataset.line = line.n;
+    item.append(node('span', String(line.n), 'n'));
+    const body = node('span', undefined, 'body');
+    for (let i = 0; i < line.depth; i++) body.append(node('span', undefined, 'bar'));
+    const content = node('span', undefined, 'content');
+    if (line.flag) content.append(node('span', line.flag, 'flag'));
+    if (line.formula) content.append(node('code', line.formula, 'f'));
+    content.append(node('span', line.refs.length ? `${line.label} ${line.refs.join(', ')}` : line.label, 'why'));
+    body.append(content); item.append(body); list.append(item);
+  }
+  return list;
+}
+
+/** Premisas verdaderas y conclusión falsa: lo que hace de un modelo un contramodelo. */
+function truthList(premises, conclusion) {
+  const list = node('ul', undefined, 'truth-list');
+  premises.forEach((premise, i) => {
+    const item = node('li'); item.append(node('span', 'V', 'truth'), node('code', premise.formula), node('span', `premisa ${i + 1}`, 'hint'));
+    list.append(item);
+  });
+  const item = node('li'); item.append(node('span', 'F', 'truth false'), node('code', conclusion), node('span', 'conclusión', 'hint'));
+  list.append(item);
+  return list;
+}
+
+/** Valuación proposicional como una fila de la tabla de verdad. */
+function valuationElement(valuation) {
+  const table = node('table', undefined, 'valuation');
+  const head = node('tr'), values = node('tr');
+  for (const [letter, value] of valuation) {
+    head.append(node('th', letter));
+    values.append(node('td', value ? 'V' : 'F', value ? 'true' : 'false'));
+  }
+  table.append(head, values);
+  return table;
+}
+
+/** Lleva un contramodelo de Demostrar al modo Evaluar: símbolos, tablas, conclusión y entorno. */
+async function openInEvaluate(found) {
+  setMode('evaluate');
+  await applyPackage({signature: found.signature, formula: $('proof-conclusion').value.trim()}, found.model);
+  for (const select of $('assignment').querySelectorAll('select[data-variable]')) {
+    const pair = found.assignment.find(([name]) => name === select.dataset.variable);
+    const index = pair ? domain.findIndex(item => sameValue(item, pair[1])) : -1;
+    if (index >= 0) select.value = String(index);
+  }
+  refreshReady();
+  setPane($('mode-evaluate'), 'question');
+  toast('Contramodelo abierto en Evaluar con la conclusión: pulsa «Evaluar» para ver que es falsa.', 'success', 6000);
+}
+
+const PROOF_LIMITS = {depth: 'la profundidad', nodes: 'el número de nodos', timeout: 'el tiempo',
+  too_many_atoms: 'el número de letras (más de 12)', too_many_atoms_for_kalmar: 'el tamaño del certificado de Kalmár'};
 
 function contrastElement(contrast) {
   const box = node('div', undefined, `contrast ${contrast.verdict}`);
@@ -780,32 +1106,63 @@ function contrastElement(contrast) {
 async function proveFormula() {
   clearStory();
   const box = $('proof-result'); box.replaceChildren();
-  const button = $('prove'); button.disabled = true; button.setAttribute('aria-busy', 'true'); button.textContent = 'Buscando…';
-  try {
-    const result = await api('/api/proof', proofInput());
-    box.replaceChildren();
-    if (result.status === 'invalid_input') {
-      box.append(node('p', result.errors?.[0]?.message || 'Entrada inválida.', 'error')); return;
-    }
-    if (result.status === 'unknown') {
-      const invalid = result.contrast?.engine_b.status === 'saturated';
-      const verdict = node('p', invalid ? 'No se sigue' : 'Sin prueba', `verdict ${invalid ? 'false' : 'neutral'}`);
-      verdict.append(node('small', invalid
-        ? 'La resolución saturó sin contradicción: existe un modelo de las premisas donde la conclusión falla.'
-        : `No se encontró prueba dentro de los límites (${result.reason || 'límite'}). Eso no la hace falsa.`));
-      box.append(verdict);
+  const button = $('prove');
+  await withBusy(button, 'Buscando…', async () => {
+    try {
+      const result = await api('/api/proof', proofInput());
+      box.replaceChildren();
+      if (result.status === 'invalid_input') {
+        box.append(node('p', result.errors?.[0]?.message || 'Entrada inválida.', 'error')); return 'fail';
+      }
+      const logic = node('span', result.mode === 'propositional' ? 'Lógica proposicional' : 'Primer orden', 'chip logic');
+      if (result.status === 'proved') {
+        const how = result.method === 'kalmar' ? 'construidas con el lema de Kalmár' : 'de deducción natural';
+        box.append(verdictElement('Demostrada', 'true', countLine('', result.fitch.length,
+          ` ${result.fitch.length === 1 ? 'línea' : 'líneas'} ${how}, aceptadas por el verificador independiente.`, '', 'small')));
+        const head = node('div', undefined, 'result-head'); head.append(node('h3', 'Derivación'), logic);
+        box.append(head, fitchElement(result.fitch));
+        if (result.contrast) box.append(contrastElement(result.contrast));
+        showStory(result.story, null, box);
+        return 'done';
+      }
+      if (result.status === 'refuted' && result.mode === 'propositional') {
+        box.append(verdictElement('No se sigue', 'false', 'Esta valuación hace verdaderas las premisas y falsa la conclusión; la tabla de verdad lo confirma.'));
+        const head = node('div', undefined, 'result-head'); head.append(node('h3', 'Valuación que lo refuta'), logic);
+        box.append(head, valuationElement(result.valuation), truthList(result.premises, result.conclusion.formula));
+        if (result.contrast) box.append(contrastElement(result.contrast));
+        return 'done';
+      }
+      if (result.status === 'refuted') {
+        const found = result.countermodel;
+        box.append(verdictElement('No se sigue', 'false', countLine('Contramodelo verificado tras revisar ', found.explored,
+          ` ${found.explored === 1 ? 'interpretación' : 'interpretaciones'}: las premisas son verdaderas y la conclusión, falsa.`, '', 'small')));
+        const head = node('div', undefined, 'result-head'); head.append(node('h3', 'Contramodelo'), logic);
+        box.append(head, modelElement(found.model, {assignment: found.assignment}), truthList(found.premises, found.explanation.formula));
+        const open = node('button', 'Abrir en Evaluar', 'button secondary'); open.type = 'button';
+        open.addEventListener('click', () => openInEvaluate(found));
+        box.append(open);
+        if (!found.loadable) {
+          open.disabled = true;
+          box.append(node('p', 'Este contramodelo tiene una relación vacía o una letra proposicional, y el modo Evaluar exige relaciones con al menos una tupla.', 'hint'));
+        }
+        box.append(node('h3', '¿Por qué falla la conclusión?'), explanationElement(found.explanation, true));
+        if (result.contrast) box.append(contrastElement(result.contrast));
+        showStory(found.story, found.model, box);
+        return 'done';
+      }
+      const saturated = result.contrast?.engine_b.status === 'saturated';
+      const limit = PROOF_LIMITS[result.reason] || 'los límites';
+      const detail = saturated
+        ? 'La resolución saturó sin contradicción, así que existe un modelo de las premisas donde la conclusión falla. No apareció entre los de 1 a 3 elementos: puede necesitar más, o ser infinito.'
+        : result.reason === 'too_many_atoms_for_kalmar'
+          ? 'La tabla de verdad no tiene ninguna fila con las premisas verdaderas y la conclusión falsa, así que la consecuencia vale; pero con más de 6 letras no se construye el certificado de Kalmár y la búsqueda no halló uno más corto.'
+          : `No se encontró prueba dentro de ${limit}${result.search ? ', ni un contramodelo de hasta 3 elementos' : ''}. Eso no decide la consecuencia.`;
+      box.append(verdictElement(saturated ? 'No se sigue' : 'Sin prueba', saturated ? 'false' : 'neutral', detail));
       if (result.contrast) box.append(contrastElement(result.contrast));
-      return;
-    }
-    const verdict = node('p', 'Demostrada', 'verdict true');
-    verdict.append(node('small', `${result.certificate.steps.length} pasos de deducción natural, aceptados por el verificador independiente.`));
-    box.append(verdict, node('h3', 'Derivación'));
-    box.append(node('pre', result.certificate.steps.map(step =>
-      `${String(step.id).padStart(2)}. ${step.formula}   (${step.rule}${step.refs.length ? ` ${step.refs.join(', ')}` : ''})`).join('\n'), 'model-json'));
-    if (result.contrast) box.append(contrastElement(result.contrast));
-    showStory(result.story, null, box);
-  } catch (exc) { box.replaceChildren(node('p', exc.message || 'No se pudo buscar la prueba.', 'error')); }
-  finally { button.removeAttribute('aria-busy'); button.textContent = 'Buscar prueba'; checkProofSyntax(); }
+      return 'none';
+    } catch (exc) { box.replaceChildren(node('p', exc.message || 'No se pudo buscar la prueba.', 'error')); return 'fail'; }
+    finally { checkProofSyntax(); }
+  });
 }
 
 // --- diccionario ---
@@ -846,9 +1203,15 @@ async function searchDictionary(reset) {
   if (!result.total) { const row = node('tr'); const cell = node('td', 'No está en el diccionario. Añádela a la derecha.', 'hint'); cell.colSpan = 5; row.append(cell); body.append(row); }
   dictState.offset += result.entries.length;
   $('dict-more').hidden = dictState.offset >= result.total;
-  const c = result.counts;
-  $('dict-counts').textContent = `${c.total} palabras: ${c.by_category.N} sustantivos, ${c.by_category.ADJ} adjetivos, ${c.by_category.V} verbos y ${c.by_category.NP} nombres. ${c.auto} se deducen solas (diminutivos y participios) y ${c.user} las añadiste tú.`;
-  if (reset && $('dict-query').value.trim()) $('dict-note').textContent = `${result.total} coincidencia(s).`;
+  const c = result.counts, counts = $('dict-counts');
+  if (counts.dataset.total !== String(c.total)) {  // el total sube al entrar; después solo cambia el texto
+    counts.dataset.total = c.total;
+    counts.replaceChildren(countUp(node('strong', undefined, 'count'), c.total),
+      document.createTextNode(` palabras: ${c.by_category.N} sustantivos, ${c.by_category.ADJ} adjetivos, ${c.by_category.V} verbos y ${c.by_category.NP} nombres. ` +
+        (c.auto ? `${c.auto} se deducen solas (diminutivos y participios). ` : '') +
+        (c.user ? `${plural(c.user, 'añadida', 'añadidas')} por ti.` : 'Ninguna añadida por ti todavía.')));
+  }
+  if (reset && $('dict-query').value.trim()) $('dict-note').textContent = `${plural(result.total, 'coincidencia', 'coincidencias')}.`;
   else if (reset) $('dict-note').textContent = '';
 }
 
@@ -898,6 +1261,7 @@ async function dictPreview() {
 async function dictConsult() {
   const word = $('dict-word').value.trim();
   const note = $('dict-proposal'); $('dict-form').hidden = true;
+  setPane($('mode-dictionary'), 'question');
   if (!word) { note.textContent = 'Escribe una palabra.'; return; }
   const result = await api('/api/lexicon/suggest', {word});
   if (result.status !== 'ok') { note.textContent = result.errors?.[0]?.message || 'Palabra inválida.'; return; }
@@ -913,11 +1277,15 @@ async function dictConsult() {
 }
 
 async function dictSave() {
-  const result = await api('/api/lexicon/add', dictFields());
-  if (result.status !== 'ok') { $('dict-error').textContent = result.errors?.[0]?.message || 'No se pudo guardar.'; $('dict-error').hidden = false; return; }
-  $('dict-form').hidden = true; $('dict-word').value = ''; $('dict-synonym').value = ''; $('dict-sense').value = '';
-  $('dict-proposal').textContent = `«${result.entry.lemma}» guardada. Ya puedes usarla en una frase.`;
-  $('dict-query').value = result.entry.lemma; searchDictionary(true);
+  await withBusy($('dict-save'), 'Guardando…', async () => {
+    const result = await api('/api/lexicon/add', dictFields());
+    if (result.status !== 'ok') { $('dict-error').textContent = result.errors?.[0]?.message || 'No se pudo guardar.'; $('dict-error').hidden = false; return 'fail'; }
+    $('dict-form').hidden = true; $('dict-word').value = ''; $('dict-synonym').value = ''; $('dict-sense').value = '';
+    $('dict-proposal').textContent = `«${result.entry.lemma}» guardada. Ya puedes usarla en una frase.`;
+    toast(`«${result.entry.lemma}» quedó en tu diccionario.`, 'success');
+    $('dict-query').value = result.entry.lemma; searchDictionary(true);
+    return 'done';
+  });
 }
 
 function openDictionaryWith(word) { setMode('dictionary'); $('dict-word').value = word; dictConsult(); }
@@ -926,10 +1294,15 @@ for (const [value, label] of [['', 'Todas'], ['N', 'Sustantivos'], ['ADJ', 'Adje
   const chip = node('button', label, 'filter'); chip.type = 'button'; chip.setAttribute('aria-pressed', String(value === ''));
   chip.addEventListener('click', () => {
     dictState.category = value;
-    for (const other of $('dict-filters').children) other.setAttribute('aria-pressed', String(other === chip));
+    for (const other of $('dict-filters').querySelectorAll('.filter')) other.setAttribute('aria-pressed', String(other === chip));
+    placePill($('dict-filters'));
     searchDictionary(true);
   });
   $('dict-filters').append(chip);
+}
+{
+  const pill = node('span', undefined, 'pill'); pill.setAttribute('aria-hidden', 'true');
+  $('dict-filters').prepend(pill);
 }
 let dictTimer = null;
 $('dict-query').addEventListener('input', () => { clearTimeout(dictTimer); dictTimer = setTimeout(() => searchDictionary(true), 180); });
@@ -943,6 +1316,7 @@ $('dict-save').addEventListener('click', dictSave);
 // --- modos ---
 const MODES = ['evaluate', 'prove', 'dictionary'];
 function setMode(mode) {
+  const changed = document.body.dataset.mode !== mode;
   document.body.dataset.mode = mode;
   for (const name of MODES) {
     const active = name === mode;
@@ -950,10 +1324,37 @@ function setMode(mode) {
     $(`tab-${name}`).setAttribute('aria-selected', String(active));
     $(`tab-${name}`).tabIndex = active ? 0 : -1;
   }
+  placePill(document.querySelector('.modes'));
+  pillHosts().forEach(placePill);
   clearStory(); $('story-section').hidden = true;
   if (mode === 'prove') checkProofSyntax();
   if (mode === 'dictionary') searchDictionary(true);
+  if (changed && phoneLayout()) window.scrollTo({top: 0, behavior: 'auto'});
 }
+
+/** Teléfono: cada modo de dos paneles se recorre en dos pestañas («1 · Modelo», «2 · Fórmula»). */
+function setPane(workspace, pane) {
+  workspace.dataset.pane = pane;
+  for (const tab of workspace.querySelectorAll(':scope > .subtabs .subtab')) {
+    const active = tab.id.endsWith(pane);
+    tab.setAttribute('aria-selected', String(active));
+    tab.tabIndex = active ? 0 : -1;
+  }
+  placePill(workspace.querySelector(':scope > .subtabs'));
+}
+for (const workspace of [$('mode-evaluate'), $('mode-dictionary')]) {
+  const tabs = [...workspace.querySelectorAll(':scope > .subtabs .subtab')];
+  tabs.forEach(tab => tab.addEventListener('click', () => {
+    setPane(workspace, tab.id.endsWith('question') ? 'question' : 'model');
+    if (phoneLayout()) workspace.scrollIntoView({behavior: 'auto', block: 'start'});
+  }));
+  workspace.querySelector(':scope > .subtabs').addEventListener('keydown', event => {
+    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+    const next = workspace.dataset.pane === 'model' ? 'question' : 'model';
+    setPane(workspace, next); tabs.find(tab => tab.id.endsWith(next)).focus();
+  });
+}
+$('go-question').addEventListener('click', () => { setPane($('mode-evaluate'), 'question'); $('mode-evaluate').scrollIntoView({block: 'start'}); });
 for (const name of MODES) $(`tab-${name}`).addEventListener('click', () => setMode(name));
 document.querySelector('.modes').addEventListener('keydown', event => {
   if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
@@ -961,12 +1362,15 @@ document.querySelector('.modes').addEventListener('keydown', event => {
   const next = MODES[(at + (event.key === 'ArrowRight' ? 1 : MODES.length - 1)) % MODES.length];
   setMode(next); $(`tab-${next}`).focus();
 });
-$('story-close').addEventListener('click', () => { pauseStory(); $('story-section').hidden = true; });
+$('story-close').addEventListener('click', () => {
+  pauseStory(); $('story-section').hidden = true;
+  document.querySelectorAll('.fitch li.current').forEach(li => li.classList.remove('current'));
+});
 
 $('add-symbol').addEventListener('click', () => { addSymbol(); invalidateTables(); });
 $('prepare').addEventListener('click', prepare);
 $('domain').addEventListener('input', invalidateTables);
-$('sample').addEventListener('click', loadSample);
+$('sample').addEventListener('click', () => ({evaluate: loadSample, prove: loadProofSample, dictionary: loadDictionarySample})[document.body.dataset.mode]());
 $('evaluate').addEventListener('click', evaluateFormula);
 $('export-json').addEventListener('click', exportJSON);
 $('import-json').addEventListener('click', () => $('import-file').click());
@@ -1028,6 +1432,52 @@ buildKeyboard($('symbols-keyboard'), () => formulaBox);
 let proofField = $('proof-premises');
 for (const id of ['proof-premises', 'proof-conclusion']) $(id).addEventListener('focus', () => { proofField = $(id); });
 buildKeyboard($('proof-keyboard'), () => proofField);
+
+/** Teléfono: mientras se escribe una fórmula, el teclado lógico queda pegado encima del teclado del sistema. */
+function floatKeyboard(keyboard, fields) {
+  const narrow = window.matchMedia('(max-width: 720px)');
+  const touch = {get matches() { return narrow.matches && (matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0); }};
+  let active = null;
+  const place = () => {
+    if (!active) return;
+    const view = window.visualViewport;
+    const covered = view ? window.innerHeight - (view.height + view.offsetTop) : 0;
+    keyboard.style.setProperty('--kb-bottom', `${Math.max(0, Math.round(covered))}px`);
+  };
+  for (const field of fields) {
+    field.addEventListener('focus', () => {
+      if (!touch.matches) return;
+      active = field; keyboard.classList.add('floating'); document.body.classList.add('keyboard-open'); place();
+    });
+    field.addEventListener('blur', () => setTimeout(() => {
+      if (fields.includes(document.activeElement)) return;
+      active = null; keyboard.classList.remove('floating'); document.body.classList.remove('keyboard-open');
+    }, 120));
+  }
+  window.visualViewport?.addEventListener('resize', place);
+  window.visualViewport?.addEventListener('scroll', place);
+}
+floatKeyboard($('symbols-keyboard'), [formulaBox]);
+floatKeyboard($('proof-keyboard'), [$('proof-premises'), $('proof-conclusion')]);
+
+// Paso a paso: en el teléfono se cambia de paso deslizando sobre la escena.
+{
+  let start = null;
+  const stage = document.querySelector('.story-stage');
+  stage.addEventListener('pointerdown', event => { start = {x: event.clientX, y: event.clientY}; });
+  stage.addEventListener('pointerup', event => {
+    if (!start || !storyState) return;
+    const dx = event.clientX - start.x, dy = event.clientY - start.y;
+    start = null;
+    if (Math.abs(dx) < 56 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    $(dx < 0 ? 'story-next' : 'story-prev').click();
+  });
+}
+
+if ('speechSynthesis' in window) window.speechSynthesis.addEventListener?.('voiceschanged', refreshVoiceOption);
+refreshVoiceOption();
+pillHosts().forEach(host => { pillObserver.observe(host); placePill(host); });
+document.fonts?.ready.then(() => pillHosts().forEach(placePill));
 addSymbol('P', 'predicate', 1);
 prepare();
 $('story-pause').disabled = true;
