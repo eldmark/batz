@@ -141,3 +141,14 @@ Deben estar implementados, probados y justificados; elegir **dos o tres**, no to
 - **Primera tanda desde las conversaciones del cerebro** (vía búsqueda por palabra clave, solo texto de clase de lógica): 67 candidatas, 57 aceptadas tras revisión; 11 descartadas por ser formas conjugadas que ya cubre otro lema.
 - Diccionario: unas 2300 entradas. Etiquetador reentrenado: 96.4 % en palabras nuevas.
 - **Pendiente**: revisión humana de los sinónimos y de las glosas de sentido; el léxico completo sigue siendo generado.
+
+## 11. Ampliación del diccionario y predicados automáticos (2026-11-16)
+
+- **Léxico base ampliado a unas 6200 entradas** (de 2300): sustantivos de objetos, lugares, cuerpo, comida, instituciones, abstractos y vocabulario de matemática, lógica y computación; adjetivos y gentilicios (con su forma de sustantivo); unos 1900 verbos (regulares con su uso, con cambio de raíz e irregulares); y nombres propios de personas, lugares, matemáticos y filósofos. Todo lo generó el asistente; **no hay revisión humana** y no se encontró ningún diccionario de español en la máquina para contrastarlo.
+- **Predicados automáticos** (`lexicon._derived`, no se guardan en ningún archivo, unas 2700 entradas):
+  - **Diminutivos**: `perrito` comparte el símbolo `Perro`, porque un perrito es un perro (ortografía: `taza → tacita`, `amigo → amiguito`; se omiten `gimnasio`, `mosquito`, etc.).
+  - **Participios como adjetivos**: `leído`, `escrito`, `abierto`… con símbolo propio (`Leido`), porque «está leído» no es lo mismo que «leyó». Regulares por regla e irregulares por tabla.
+  - Una forma que el diccionario ya conoce con esa categoría no se duplica, para no crear ambigüedad nueva.
+- **Conjugación**: el acento de `evaluar → evalúa`, `enviar → envía`, `situar → sitúa` se resuelve por regla; `bullir → bulló` y `tañer → tañó` también. Corregidos a mano `decaer`, `bendecir`, `maldecir`, `freír`, `colegir` y `gruñir`.
+- **Etiquetador** reentrenado con el diccionario ampliado: 96.4 % en palabras nuevas.
+- **Límites conocidos**: palabras con plural irregular no se detectan solas (`mamut → mamuts`, no `mamutes`; se corrige con `pl=`); verbos que comparten forma (`sientan` de `sentir` y de `sentar`) dan dos lecturas; los diminutivos no distinguen palabras abstractas.

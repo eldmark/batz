@@ -102,17 +102,17 @@ class UserWords(unittest.TestCase):
         lexicon.reload()
 
     def test_add_use_and_remove(self):
-        before = translate_spanish("Todos los unicornios galopan")
+        before = translate_spanish("Todos los tlacuaches barritan")
         self.assertEqual(len(before.assumptions), 2)
-        handle_api("/api/lexicon/add", {"lemma": "unicornio", "category": "N", "feature": "M"})
-        handle_api("/api/lexicon/add", {"lemma": "galopar", "category": "V", "feature": "I"})
-        after = translate_spanish("Todos los unicornios galopan")
+        handle_api("/api/lexicon/add", {"lemma": "tlacuache", "category": "N", "feature": "M"})
+        handle_api("/api/lexicon/add", {"lemma": "barritar", "category": "V", "feature": "I"})
+        after = translate_spanish("Todos los tlacuaches barritan")
         self.assertEqual(after.assumptions, ())
-        self.assertEqual(after.readings[0].text, "∀x (Unicornio(x) → Galopar(x))")
-        found = handle_api("/api/lexicon/search", {"query": "galop"})
-        self.assertEqual([(e["lemma"], e["source"]) for e in found["entries"]], [("galopar", "usuario")])
-        self.assertTrue(handle_api("/api/lexicon/remove", {"lemma": "galopar", "category": "V"})["removed"])
-        self.assertEqual([a["word"] for a in translate_spanish("Todos los unicornios galopan").assumptions], ["galopan"])
+        self.assertEqual(after.readings[0].text, "∀x (Tlacuache(x) → Barritar(x))")
+        found = handle_api("/api/lexicon/search", {"query": "barrit"})
+        self.assertEqual([(e["lemma"], e["source"]) for e in found["entries"]], [("barritar", "usuario")])
+        self.assertTrue(handle_api("/api/lexicon/remove", {"lemma": "barritar", "category": "V"})["removed"])
+        self.assertEqual([a["word"] for a in translate_spanish("Todos los tlacuaches barritan").assumptions], ["barritan"])
 
     def test_irregular_user_verb(self):
         handle_api("/api/lexicon/add", {"lemma": "caber", "category": "V", "feature": "I",
@@ -132,8 +132,8 @@ class UserWords(unittest.TestCase):
     def test_suggest_uses_the_model_only_for_unknown_words(self):
         known = handle_api("/api/lexicon/suggest", {"word": "duermen"})
         self.assertEqual((known["found"][0]["lemma"], known["proposal"]), ("dormir", None))
-        unknown = handle_api("/api/lexicon/suggest", {"word": "galopan"})
-        self.assertEqual((unknown["found"], unknown["proposal"]["category"], unknown["proposal"]["lemma"]), ([], "V", "galopar"))
+        unknown = handle_api("/api/lexicon/suggest", {"word": "barritan"})
+        self.assertEqual((unknown["found"], unknown["proposal"]["category"], unknown["proposal"]["lemma"]), ([], "V", "barritar"))
 
 
 if __name__ == "__main__":

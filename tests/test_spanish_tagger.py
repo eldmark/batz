@@ -29,9 +29,9 @@ class Tagger(unittest.TestCase):
                 self.assertEqual(tagger.guess_predicate(word, tag), symbol)
 
     def test_unknown_words_are_proposed_and_reported(self):
-        result = translate_spanish("Todos los unicornios galopan")       # ninguna de las dos está en el diccionario
-        self.assertEqual([r.text for r in result.readings], ["∀x (Unicornio(x) → Galopar(x))"])
-        self.assertEqual([(a["word"], a["tag"]) for a in result.assumptions], [("unicornios", "N_MP"), ("galopan", "VI_P")])
+        result = translate_spanish("Todos los tlacuaches barritan")       # ninguna de las dos está en el diccionario
+        self.assertEqual([r.text for r in result.readings], ["∀x (Tlacuache(x) → Barritar(x))"])
+        self.assertEqual([(a["word"], a["tag"]) for a in result.assumptions], [("tlacuaches", "N_MP"), ("barritan", "VI_P")])
         for a in result.assumptions:
             self.assertTrue(0 < a["probability"] <= 1)
         reading = result.readings[0]
@@ -44,16 +44,16 @@ class Tagger(unittest.TestCase):
         self.assertEqual(len(result.readings), 2)
 
     def test_grammar_still_rejects_nonsense_with_unknown_words(self):
-        for phrase in ("Unicornios los todos galopan", "Todos los unicornios galopa", "Zzz qqq www"):
+        for phrase in ("Tlacuaches los todos barritan", "Todos los tlacuaches barrita", "Zzz qqq www"):
             with self.subTest(phrase=phrase):
                 with self.assertRaises(LogosError):
                     translate_spanish(phrase)
 
     def test_singular_and_plural_share_the_predicate(self):
-        a = translate_spanish("Algún unicornio galopa").readings[0].text
-        b = translate_spanish("Todos los unicornios galopan").readings[0].text
-        self.assertIn("Unicornio(x)", a); self.assertIn("Galopar(x)", a)
-        self.assertIn("Unicornio(x)", b); self.assertIn("Galopar(x)", b)
+        a = translate_spanish("Algún tlacuache barrita").readings[0].text
+        b = translate_spanish("Todos los tlacuaches barritan").readings[0].text
+        self.assertIn("Tlacuache(x)", a); self.assertIn("Barritar(x)", a)
+        self.assertIn("Tlacuache(x)", b); self.assertIn("Barritar(x)", b)
 
     def test_class_phrases(self):
         rows = [l.split("\t") for l in (ROOT / "docs/specs/espanol/frases_clase.tsv").read_text(encoding="utf-8").splitlines()

@@ -69,15 +69,15 @@ class Senses(unittest.TestCase):
         self.assertEqual(len(translate_spanish("Todos los estudiantes leen un libro").readings), 2)   # solo el alcance
 
     def test_user_can_add_a_sense(self):
-        handle_api("/api/lexicon/add", {"lemma": "pila", "category": "N", "feature": "F", "extra": "sentido=bateria"})
-        handle_api("/api/lexicon/add", {"lemma": "pila", "category": "N", "feature": "F", "extra": "sentido=montón"})
+        handle_api("/api/lexicon/add", {"lemma": "zampoña", "category": "N", "feature": "F", "extra": "sentido=herramienta"})
+        handle_api("/api/lexicon/add", {"lemma": "zampoña", "category": "N", "feature": "F", "extra": "sentido=crustáceo"})
         try:
-            self.assertEqual({r.text for r in translate_spanish("Toda pila es grande").readings},
-                             {"∀x (Pila_bateria(x) → Grande(x))", "∀x (Pila_monton(x) → Grande(x))"})
+            self.assertEqual({r.text for r in translate_spanish("Toda zampoña es grande").readings},
+                             {"∀x (Zampoña_herramienta(x) → Grande(x))", "∀x (Zampoña_crustaceo(x) → Grande(x))"})
             with self.assertRaises(LogosError):        # el mismo sentido dos veces no se admite
-                handle_api("/api/lexicon/add", {"lemma": "pila", "category": "N", "feature": "F", "extra": "sentido=bateria"})
+                handle_api("/api/lexicon/add", {"lemma": "zampoña", "category": "N", "feature": "F", "extra": "sentido=herramienta"})
         finally:
-            lexicon.remove("pila", "N")
+            lexicon.remove("zampoña", "N")
 
 
 class Queue(unittest.TestCase):

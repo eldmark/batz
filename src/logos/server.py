@@ -248,6 +248,7 @@ def main(argv=None):
         server = ThreadingHTTPServer((args.host, args.port), Handler)
     except OSError:  # puerto ocupado: usar uno libre en vez de fallar en la demo
         server = ThreadingHTTPServer((args.host, 0), Handler)
+    lexicon.warm_up()          # la primera frase o búsqueda no debe pagar la carga del diccionario
     url = f"http://127.0.0.1:{server.server_port}/"
     print(f"LOGOS disponible en {url}  (Ctrl+C para salir)", flush=True)
     if not args.no_browser:

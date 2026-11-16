@@ -818,6 +818,7 @@ function dictEntryRow(entry) {
   const row = node('tr');
   const word = node('td'); word.append(node('code', entry.lemma));
   if (entry.source === 'usuario') word.append(node('span', 'tuya', 'chip'));
+  if (entry.source === 'auto') word.append(node('span', 'automática', 'chip'));
   const kind = node('td', undefined); kind.append(node('span', entry.category_label, `kind ${({N: 'predicate', ADJ: 'constant', V: 'function', NP: 'name'})[entry.category]}`));
   if (entry.feature_label) kind.append(node('span', entry.feature_label, 'hint'));
   if (entry.gloss) word.append(node('span', entry.gloss, 'hint gloss'));
@@ -846,7 +847,7 @@ async function searchDictionary(reset) {
   dictState.offset += result.entries.length;
   $('dict-more').hidden = dictState.offset >= result.total;
   const c = result.counts;
-  $('dict-counts').textContent = `${c.total} palabras: ${c.by_category.N} sustantivos, ${c.by_category.ADJ} adjetivos, ${c.by_category.V} verbos y ${c.by_category.NP} nombres. ${c.user} añadidas por ti.`;
+  $('dict-counts').textContent = `${c.total} palabras: ${c.by_category.N} sustantivos, ${c.by_category.ADJ} adjetivos, ${c.by_category.V} verbos y ${c.by_category.NP} nombres. ${c.auto} se deducen solas (diminutivos y participios) y ${c.user} las añadiste tú.`;
   if (reset && $('dict-query').value.trim()) $('dict-note').textContent = `${result.total} coincidencia(s).`;
   else if (reset) $('dict-note').textContent = '';
 }

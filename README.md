@@ -49,7 +49,7 @@ Un archivo `.logos` describe un modelo y sus fórmulas en texto plano; el format
 
 ## Diccionario
 
-El tercer modo de la interfaz muestra el diccionario del español (`src/logos/lexicon.tsv`, unos 2300 lemas con sus formas) y permite añadir palabras; las tuyas se guardan en `datos/lexico_usuario.tsv`. Con Docker esa carpeta es un volumen, así que no se pierden al reconstruir.
+El tercer modo de la interfaz muestra el diccionario del español (`src/logos/lexicon.tsv`, unos 6200 entradas más 2700 deducidas por reglas con sus formas) y permite añadir palabras; las tuyas se guardan en `datos/lexico_usuario.tsv`. Con Docker esa carpeta es un volumen, así que no se pierden al reconstruir.
 
 Para ampliarlo en lote: `PYTHONPATH=src python3 scripts/lexicon_queue.py mine texto.txt` (cola de candidatas), `next` (propuestas del modelo), `accept` (añade las revisadas). Ver `docs/plans/PLAN_MM3032.md` §10.
 

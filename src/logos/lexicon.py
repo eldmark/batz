@@ -51,6 +51,10 @@ class Entry:
     @property
     def gloss(self):
         opts = self.options()
+        if opts.get("dim"):
+            return "diminutivo de " + opts["dim"]
+        if opts.get("part"):
+            return "participio de " + opts["part"]
         if opts.get("sin"):
             return "sinónimo de " + opts["sin"].replace("_", ", sentido ")
         return opts.get("sentido", "")
@@ -127,6 +131,11 @@ def _change(stem, change, preterite=False):
     return stem if i < 0 else stem[:i] + new + stem[i + 1:]
 
 
+# Verbos en -iar que acentúan la i (los demás, como cambiar o estudiar, no).
+STRESSED_IAR = frozenset("""enviar guiar confiar fiar variar criar liar vaciar espiar ampliar resfriar enfriar fotografiar
+desafiar rociar expiar aliar contrariar estriar aviar ansiar autografiar cartografiar desvariar enviudar""".split()) - {"enviudar"}
+
+
 def conjugate(inf, opts=None):
     """(él presente, ellos presente, él subjuntivo, ellos subjuntivo, él pasado, ellos pasado)."""
     opts = opts or {}
@@ -138,6 +147,11 @@ def conjugate(inf, opts=None):
     if len(inf) < 3 or plain(inf[-2:]) not in ("ar", "er", "ir"):
         raise LogosError("semantic", "invalid_lexicon", f"«{inf}» no es un infinitivo (-ar, -er, -ir)")
     stem, cls = inf[:-2], plain(inf[-2:])
+    if cls == "ar" and (inf in STRESSED_IAR or (stem.endswith("u") and not stem.endswith(("gu", "qu")))):
+        # El acento cae en la i/u de la raíz: enviar → envía, evaluar → evalúa (pero cambiar → cambia).
+        accented = stem[:-1] + ("í" if stem.endswith("i") else "ú")
+        sub = accented
+        return (accented + "a", accented + "an", sub + "e", sub + "en", stem + "ó", stem + "aron")
     change = opts.get("cambio")
     present = _change(stem, change) if change else stem
     past = _change(stem, change, preterite=True) if change and cls == "ir" else stem
@@ -156,6 +170,8 @@ def conjugate(inf, opts=None):
         return (stem + "ye", stem + "yen", stem + "ya", stem + "yan", stem + "yó", stem + "yeron")
     if stem[-1:] in ("e", "a", "o") and cls == "er":                  # leer → leyó
         return (stem + "e", stem + "en", stem + "a", stem + "an", stem + "yó", stem + "yeron")
+    if stem.endswith(("ñ", "ll")):                                      # bullir → bulló, tañer → tañó
+        return (present + "e", present + "en", sub + "a", sub + "an", past + "ó", past + "eron")
     return (present + "e", present + "en", sub + "a", sub + "an", past + "ió", past + "ieron")
 
 
@@ -175,9 +191,71 @@ def _read(path, source):
     return entries
 
 
+IRREGULAR_PARTICIPLES = {
+    "abrir": "abierto", "cubrir": "cubierto", "descubrir": "descubierto", "decir": "dicho", "predecir": "predicho",
+    "contradecir": "contradicho", "escribir": "escrito", "describir": "descrito", "inscribir": "inscrito",
+    "transcribir": "transcrito", "hacer": "hecho", "deshacer": "deshecho", "rehacer": "rehecho", "satisfacer": "satisfecho",
+    "morir": "muerto", "poner": "puesto", "componer": "compuesto", "proponer": "propuesto", "suponer": "supuesto",
+    "imponer": "impuesto", "exponer": "expuesto", "oponer": "opuesto", "reponer": "repuesto", "resolver": "resuelto",
+    "disolver": "disuelto", "volver": "vuelto", "devolver": "devuelto", "envolver": "envuelto", "romper": "roto",
+    "ver": "visto", "prever": "previsto", "freír": "frito", "imprimir": "impreso", "proveer": "provisto",
+}
+NO_DIMINUTIVE = frozenset("""día mano mapa planeta problema idioma sistema tema programa clima poema drama diploma cometa pijama
+tranvía foto moto radio disco""".split())
+
+
+def _derived(base):
+    """Entradas que se deducen de las demás por reglas: diminutivos y participios. No se guardan en ningún archivo.
+
+    - Diminutivo (`perro` → `perrito`): comparte el símbolo de su palabra, porque un perrito es un perro.
+    - Participio (`leer` → `leído`): adjetivo con símbolo propio (`Leido`); no es lo mismo «leyó» que «está leído».
+    Se omite toda forma que el diccionario ya conoce con esa categoría, para no crear ambigüedad nueva.
+    """
+    known = {}
+    for e in base:
+        try:
+            for tag, values in e.forms().items():
+                known.setdefault(tag.split("_")[0], set()).update(values)
+        except LogosError:
+            continue
+    adj, noun = known.get("Adj", set()), known.get("N", set())
+    out = []
+    for e in base:
+        opts = e.options()
+        if e.category == "N" and e.feature in ("M", "F") and not opts.get("sin") and not opts.get("sentido"):
+            w = e.lemma.casefold()
+            if (w in NO_DIMINUTIVE or len(w) < 3 or not w.endswith(("o", "a")) or (w.endswith("o") != (e.feature == "M"))
+                    or w[-2] in VOWELS or w.endswith(("ito", "ita", "illo", "illa"))):
+                continue          # gimnasio y mosquito no hacen «gimnasiito» ni «mosquitito»
+            stem = w[:-1]
+            stem = stem[:-1] + "qu" if stem.endswith("c") else stem + "u" if stem.endswith("g") else stem[:-1] + "c" if stem.endswith("z") else stem
+            dim = stem + ("ito" if e.feature == "M" else "ita")
+            if dim not in noun and plural(dim) not in noun and all(ch.isalpha() for ch in dim):
+                out.append(Entry(dim, "N", e.feature, f"sin={e.lemma.casefold()};dim={e.lemma.casefold()}", "auto"))
+                noun.add(dim); noun.add(plural(dim))
+        elif e.category == "V" and e.feature in ("T", "IT") and not opts.get("formas") or e.category == "V" and e.feature in ("T", "IT") and e.lemma in IRREGULAR_PARTICIPLES:
+            inf = e.lemma.casefold()
+            part = IRREGULAR_PARTICIPLES.get(inf)
+            if part is None:
+                stem, cls = inf[:-2], plain(inf[-2:])
+                if cls == "ar":
+                    part = stem + "ado"
+                elif cls in ("er", "ir"):
+                    part = stem + ("ído" if stem[-1:] in "aeo" and not stem.endswith(("gu", "qu")) else "ido")
+                else:
+                    continue
+            forms = {part, part[:-1] + "a", plural(part), plural(part[:-1] + "a")}
+            if forms & adj or not all(ch.isalpha() for ch in part):
+                continue
+            out.append(Entry(part, "ADJ", "-", f"part={inf}", "auto"))
+            adj |= forms
+    return out
+
+
 @lru_cache(maxsize=1)
 def entries():
-    return tuple(_read(BASE, "base") + _read(user_path(), "usuario"))
+    base = _read(BASE, "base") + _read(user_path(), "usuario")
+    return tuple(base + _derived(base))
 
 
 @lru_cache(maxsize=1)
@@ -214,40 +292,49 @@ def senses(kind, form):
     return tuple(_tables()[1].get((kind, form), ()))
 
 
+@lru_cache(maxsize=1)
+def _index():
+    """Para buscar sin recalcular: por entrada, sus formas ya normalizadas; y forma → entradas."""
+    rows, by_form = [], {}
+    for e in entries():
+        try:
+            forms = {f for values in e.forms().values() for f in values}
+        except LogosError:
+            forms = set()
+        words = {e.lemma.casefold(), e.options().get("sin", ""), *forms} - {""}
+        rows.append((e, tuple(sorted(plain(w) for w in words))))
+        for w in {e.lemma.casefold(), *forms}:
+            by_form.setdefault(w, []).append(e)
+    return rows, by_form
+
+
+def warm_up():
+    """Construye de antemano todo lo que tarda la primera vez (el servidor lo llama al arrancar)."""
+    from . import spanish_cyk
+    _tables(); _index(); spanish_cyk.grammar(); spanish_cyk._automaton()
+
+
 def reload():
-    entries.cache_clear(); _tables.cache_clear()
+    entries.cache_clear(); _tables.cache_clear(); _index.cache_clear()
     from . import spanish_cyk
     spanish_cyk.grammar.cache_clear(); spanish_cyk._automaton.cache_clear()
 
 
 def find(word):
     """Entradas cuyo lema o alguna forma coincide con la palabra."""
-    w = word.casefold().strip()
-    out = []
-    for e in entries():
-        try:
-            if e.lemma.casefold() == w or any(w in values for values in e.forms().values()):
-                out.append(e)
-        except LogosError:
-            continue
-    return out
+    return list(_index()[1].get(word.casefold().strip(), ()))
 
 
 def search(query="", category="", source="", limit=60, offset=0):
     q = plain(query.casefold().strip())
     hits = []
-    for e in entries():
+    for e, haystack in _index()[0]:
         if category and e.category != category:
             continue
         if source and e.source != source:
             continue
-        if q:
-            try:
-                haystack = [e.lemma.casefold(), e.options().get("sin", ""), *(f for values in e.forms().values() for f in values)]
-            except LogosError:
-                haystack = [e.lemma.casefold()]
-            if not any(plain(h).startswith(q) for h in haystack):
-                continue
+        if q and not any(h.startswith(q) for h in haystack):
+            continue
         hits.append(e)
     hits.sort(key=lambda e: (plain(e.lemma.casefold()), e.category))
     return len(hits), hits[offset:offset + limit]
@@ -255,11 +342,12 @@ def search(query="", category="", source="", limit=60, offset=0):
 
 def counts():
     out = {c: 0 for c in CATEGORIES}
-    user = 0
+    user = auto = 0
     for e in entries():
         out[e.category] += 1
         user += e.source == "usuario"
-    return {"total": len(entries()), "user": user, "by_category": out}
+        auto += e.source == "auto"
+    return {"total": len(entries()), "user": user, "auto": auto, "by_category": out}
 
 
 def _validate(lemma, category, feature, extra):
@@ -304,6 +392,7 @@ def add(lemma, category, feature, extra=""):
     except OSError as exc:
         raise LogosError("semantic", "invalid_lexicon", f"no se pudo guardar en {path}: {exc.strerror}")
     reload()
+    warm_up()
     return entry
 
 
@@ -318,4 +407,5 @@ def remove(lemma, category):
         return False
     path.write_text("\n".join(kept) + "\n", encoding="utf-8")
     reload()
+    warm_up()
     return True
