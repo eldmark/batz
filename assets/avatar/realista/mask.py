@@ -33,10 +33,12 @@ alpha = cv2.GaussianBlur(mask, (0, 0), 7)
 # boca cerrada: el hueco con los dientes se pinta del color del borde del labio, más oscuro
 INNER = [78, 191, 80, 81, 82, 13, 312, 311, 310, 415, 308, 324, 318, 402, 317, 14, 87, 178, 88, 95]
 mouth = np.zeros((H, W), np.uint8); cv2.fillPoly(mouth, [P[INNER].astype(np.int32)], 255)
+gap = np.linalg.norm(P[13] - P[14]) / np.linalg.norm(P[61] - P[291])
+if gap < .06: mouth[:] = 0          # boca cerrada: nada que rellenar
 ring = cv2.dilate(mouth, np.ones((9, 9), np.uint8)) & ~cv2.dilate(mouth, np.ones((3, 3), np.uint8))
-lip = np.median(img[ring > 0], 0) * .78
+lip = np.median(img[ring > 0], 0) * .78 if mouth.any() else np.zeros(3)
 m = cv2.GaussianBlur(cv2.dilate(mouth, np.ones((5, 5), np.uint8)), (0, 0), 2.5)[..., None] / 255.
-img = (img * (1 - m) + lip * m).astype(np.uint8)
+if mouth.any(): img = (img * (1 - m) + lip * m).astype(np.uint8)
 rgba = np.dstack([img, alpha]); cv2.imwrite('foto_rgba.png', rgba)
 # piel: mediana de mejillas y frente
 def patch(i, r=14): x, y = P[i].astype(int); return img[y - r:y + r, x - r:x + r].reshape(-1, 3)

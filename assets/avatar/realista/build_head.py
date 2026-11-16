@@ -47,6 +47,17 @@ def photo_px(X): return tps_eval(model, X[:, [0, 2]])
 head = V[:, 2] > ZCUT - .02
 pix = np.zeros((nV, 2)); pix[head] = photo_px(V[head])
 
+def load(path):
+    im = bpy.data.images.load(path); w, h = im.size; a = np.empty(w * h * im.channels, np.float32); im.pixels.foreach_get(a)
+    a = a.reshape(h, w, im.channels)[::-1]; return a
+def sample(img, px, py):
+    h, w = img.shape[:2]; x = np.clip(px, 0, w - 1.001); y = np.clip(py, 0, h - 1.001)
+    x0, y0 = x.astype(int), y.astype(int); fx, fy = (x - x0)[..., None], (y - y0)[..., None]
+    I = img if img.ndim == 3 else img[..., None]
+    v = (I[y0, x0] * (1 - fx) * (1 - fy) + I[y0, x0 + 1] * fx * (1 - fy) + I[y0 + 1, x0] * (1 - fx) * fy + I[y0 + 1, x0 + 1] * fx * fy)
+    inside = ((px >= 0) & (px < w - 1) & (py >= 0) & (py < h - 1))[..., None]
+    return v * inside
+
 # ── 3. campo del cuero cabelludo, suavizado sobre la malla ──
 hl = np.array(fi['hairline'])
 def hair_y_at(px): return np.interp(px, hl[:, 0], hl[:, 1], left=np.nan, right=np.nan)
@@ -58,7 +69,36 @@ f_front = np.where(np.isnan(hy), 0, smooth01((hy + 6 - pix[:, 1]) / 14))
 f_geo = smooth01((V[:, 2] - geo_line) / .006)
 wgeo = smooth01((th - 62) / 18)
 field = np.where(np.isnan(hy), f_geo, f_front * (1 - wgeo) + f_geo * wgeo)
-field = np.maximum(field, smooth01((V[:, 2] - (brow + .06)) / .01))
+import os
+SIDE = {}
+if os.path.exists(D + 'side_maps.json'):
+    SM0 = json.load(open(D + 'side_maps.json'))
+    def side_px(name, sx, yy, zz):
+        m = SM0[name]; em, ep = np.array(m['ear_mesh']), np.array(m['ear_photo'])
+        g = np.exp(-((yy - em[0]) ** 2 + (zz - em[1]) ** 2) / .032 ** 2)
+        yy = yy + (ep[0] - em[0]) * g; zz = zz + (ep[1] - em[1]) * g
+        cc = (yy - m['off']) / m['s']; rr = m['r_sel'] + (m['z_sel'] - zz) / m['s']
+        if sx < 0: cc = SIDE[name][0].shape[1] - 1 - cc
+        return cc, rr
+    for name in ('side_px', 'side_nx'):
+        SIDE[name] = (load(D + name + '.png')[..., :3], load(D + name + '_fg.png')[..., 0])
+    f_side = np.zeros(nV)
+    for name, sx in (('side_px', 1), ('side_nx', -1)):
+        m_ = (np.sign(V[:, 0]) == sx) & head
+        cc, rr = side_px(name, sx, V[m_, 1], V[m_, 2])
+        im_s, fg_s = SIDE[name]
+        px_ = sample(im_s, cc, rr); fgv = sample(fg_s, cc, rr)[..., 0]
+        r_, g_, b_ = px_[:, 0], px_[:, 1], px_[:, 2]; lum_s = px_.mean(-1)
+        skinness = smooth01((r_ - b_ - .07) / .06) * smooth01((lum_s - .28) / .1)
+        blueness = smooth01((b_ - r_ - .02) / .04)
+        low = smooth01((V[m_, 2] - (nose - .065)) / .015)          # nada de pelo por debajo de la nuca
+        f_side[m_] = (1 - skinness) * (1 - blueness) * smooth01((fgv - .5) / .3) * low
+    # de frente manda la foto de frente; hacia los lados y atrás, los perfiles
+    wside = smooth01((th - 55) / 25)
+    field = np.where(np.isnan(hy), f_side, f_front) * (1 - wside) + f_side * wside
+    field = np.maximum(field, smooth01((th - 95) / 15) * smooth01((V[:, 2] - (brow - .008)) / .01))   # coronilla y nuca alta
+
+field = np.maximum(field, smooth01((V[:, 2] - (brow + .075)) / .01))
 field[~head | is_eye] = 0
 nb = [[] for _ in range(nV)]
 for e in me.edges:
@@ -67,7 +107,7 @@ idx = np.nonzero(head & ~is_eye)[0]
 deg = max(len(nb[i]) for i in idx)
 NB = np.array([nb[i] + [nb[i][0]] * (deg - len(nb[i])) for i in idx]); CNT = np.array([len(nb[i]) for i in idx])
 MK = np.arange(deg)[None] < CNT[:, None]
-for _ in range(6): field[idx] = (field[NB] * MK).sum(1) / CNT * .5 + field[idx] * .5
+for _ in range(14): field[idx] = (field[NB] * MK).sum(1) / CNT * .5 + field[idx] * .5
 scalp = field > .5
 
 # ── 4. pelo: cáscara desde el cuero cabelludo ──
@@ -126,7 +166,7 @@ field = np.r_[field, np.array([field[orig[v]] for v in new_verts])]
 from mathutils.bvhtree import BVHTree
 _bm = bmesh.new(); _bm.from_mesh(me); _tree = BVHTree.FromBMesh(_bm); _bm.free()
 mc = (B[13] + B[14]) / 2
-box = (np.abs(V[:, 0] - mc[0]) < .036) & (np.abs(V[:, 2] - mc[2]) < .022) & ~is_hair & ~is_eye
+box = (np.abs(V[:, 0] - mc[0]) < .036) & (np.abs(V[:, 2] - mc[2]) < .022) & (V[:, 1] < mc[1] + .055) & ~is_hair & ~is_eye
 is_mouth = np.zeros(nV, bool)
 for i in np.nonzero(box)[0]:
     hit = _tree.ray_cast(Vector((V[i, 0], -1.0, V[i, 2])), Vector((0, 1, 0)))     # superficie visible de frente
@@ -189,26 +229,16 @@ def bake(socket):
     target.image = img
     bpy.ops.object.bake(type='EMIT', use_clear=True)
     a = np.empty(RES * RES * 4, np.float32); img.pixels.foreach_get(a); return a.reshape(RES, RES, 4)
-p_m1 = bake(a1.outputs['Color']); p_uv = bake(cmb.outputs[0]); p_pos = bake(geo.outputs['Position']); p_m2 = bake(a2.outputs['Color'])
+p_nrm = bake(geo.outputs['Normal']); p_m1 = bake(a1.outputs['Color']); p_uv = bake(cmb.outputs[0]); p_pos = bake(geo.outputs['Position']); p_m2 = bake(a2.outputs['Color'])
 cov = p_pos[..., 2] > 1.0
 print('cobertura', cov.mean())
 
 # ── 8. composición en numpy ──
-def load(path):
-    im = bpy.data.images.load(path); w, h = im.size; a = np.empty(w * h * im.channels, np.float32); im.pixels.foreach_get(a)
-    a = a.reshape(h, w, im.channels)[::-1]; return a
 photo = load(D + 'foto_rgba.png'); person = load(D + 'foto_person.png')[..., 0]
-def sample(img, px, py):
-    h, w = img.shape[:2]; x = np.clip(px, 0, w - 1.001); y = np.clip(py, 0, h - 1.001)
-    x0, y0 = x.astype(int), y.astype(int); fx, fy = (x - x0)[..., None], (y - y0)[..., None]
-    I = img if img.ndim == 3 else img[..., None]
-    v = (I[y0, x0] * (1 - fx) * (1 - fy) + I[y0, x0 + 1] * fx * (1 - fy) + I[y0 + 1, x0] * (1 - fx) * fy + I[y0 + 1, x0 + 1] * fx * fy)
-    inside = ((px >= 0) & (px < w - 1) & (py >= 0) & (py < h - 1))[..., None]
-    return v * inside
 u, v, fr = p_uv[..., 0], p_uv[..., 1], p_uv[..., 2]
 px, py = u * W, (1 - v) * H
 ph = sample(photo, px, py); per = sample(person, px, py)[..., 0]
-GAIN = 1.33
+GAIN = float(fi.get('gain', 1.05))
 phc = np.clip(ph[..., :3] * GAIN, 0, 1); a_face = ph[..., 3]
 skin = np.array(fi['skin_srgb']) * 1.1; hairc = np.array(fi['hair_srgb']) * .95
 field_t, eye_t, hair_t = p_m2[..., 0], p_m2[..., 1] > .5, p_m2[..., 2] > .5
@@ -227,7 +257,7 @@ base = skin[None, None] * np.ones_like(phc)
 s = smooth01((field_t - .35) / .3)[..., None]
 col = base * (1 - s) + hair_flat * s
 # cara de la foto
-af = (a_face * fr)[..., None]
+af = (a_face * fr * (1 - hair_t * smooth01((field_t - .45) / .15)))[..., None]
 col = col * (1 - af) + phc * af
 # pelo de la foto, de frente y dentro de la silueta, por encima del nacimiento
 hyt = hair_y_at(px.ravel()).reshape(px.shape)
@@ -235,6 +265,41 @@ above = np.nan_to_num(smooth01((hyt + 2 - py) / 10) * smooth01((py - (hyt - 120)
 lum = phc.mean(-1)
 ah = (fr * per * above * smooth01((.42 - lum) / .12))[..., None]
 col = col * (1 - ah) + phc * ah
+# ── perfiles: los costados (orejas, patillas, pelo, cuello) con las fotos de lado ──
+import os
+if os.path.exists(D + 'side_maps.json'):
+    SM = json.load(open(D + 'side_maps.json')); NRMt = p_nrm[..., :3]
+    in_head = cov & (P3[..., 2] > ZCUT + .005) & ~eye_t & ~(p_m1[..., 0] > .5)
+    face_skin = np.median(phc[(a_face > .95) & (fr > .9) & ~eye_t], 0)
+    side_hair = []
+    for name, sx in (('side_px', 1), ('side_nx', -1)):
+        m = SM[name]; img_s = load(D + name + '.png')[..., :3]; fg = load(D + name + '_fg.png')[..., 0]
+        Hs, Ws = img_s.shape[:2]
+        ws = smooth01((sx * NRMt[..., 0] - .2) / .4) * in_head * (sx * P3[..., 0] > 0)
+        yy, zz = P3[..., 1].copy(), P3[..., 2].copy()
+        em, ep = np.array(m['ear_mesh']), np.array(m['ear_photo'])
+        g = np.exp(-((yy - em[0]) ** 2 + (zz - em[1]) ** 2) / .032 ** 2)
+        yy += (ep[0] - em[0]) * g; zz += (ep[1] - em[1]) * g
+        cc = (yy - m['off']) / m['s']; rr = m['r_sel'] + (m['z_sel'] - zz) / m['s']
+        if sx < 0: cc = Ws - 1 - cc                       # la foto de −x se espejó al medir
+        sp = sample(img_s, cc, rr); fgm = sample(fg, cc, rr)[..., 0]
+        blue = smooth01(((sp[..., 2] - sp[..., 0]) - .06) / .05)   # la camisa azul no entra
+        # color del perfil igualado al de la cara de frente (mejilla bajo el ojo)
+        cheek = (ws > .8) & (fgm > .9) & (np.abs(P3[..., 2] - (nose + .01)) < .012) & (P3[..., 1] < (B[234, 1] + B[454, 1]) / 2 - .015)
+        ratio = face_skin / np.maximum(np.median(sp[cheek], 0), 1e-3) if cheek.sum() > 50 else np.ones(3)
+        ratio = np.clip(ratio, .7, 1.4)
+        spc = np.clip(sp * ratio, 0, 1)
+        wsf = (ws * smooth01((fgm - .5) / .4) * (1 - blue) * (1 - .85 * af[..., 0]) * smooth01((P3[..., 2] - (chin - .045)) / .03))[..., None]
+        col = col * (1 - wsf) + spc * wsf
+        hl_px = (ws > .7) & (fgm > .9) & (P3[..., 2] > brow + .03) & (spc.mean(-1) < .35)
+        if hl_px.sum() > 50: side_hair.append(np.median(spc[hl_px], 0))
+        print(name, 'ajuste de color', np.round(ratio, 2), 'texeles', int((wsf[..., 0] > .5).sum()))
+    if side_hair:                                            # la nuca y la coronilla con el color del pelo de los perfiles
+        hc2 = np.mean(side_hair, 0)
+        back = cov & (field_t > .5)
+        mix_b = (back * (1 - np.clip(sum([smooth01((sx * NRMt[..., 0] - .2) / .4) for sx in (1, -1)]), 0, 1)) * (1 - ah[..., 0]) * (1 - af[..., 0]))[..., None]
+        flat2 = hc2[None, None] * (1 + .10 * streak[..., None])
+        col = col * (1 - mix_b) + flat2 * mix_b
 # ojos procedurales
 EC = {}
 Vn = V
