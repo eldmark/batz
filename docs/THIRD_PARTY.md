@@ -31,7 +31,7 @@ JetBrains Mono NL se eligió para las fórmulas porque el archivo completo conti
 El avatar está en `src/logos/web/avatar/logos.glb`, con su fuente editable en `assets/avatar/logos-avatar.blend`.
 
 - **Malla:** el cuerpo y los ojos parten de [Human Base Meshes](https://download.blender.org/demo/asset-bundles/human-base-meshes/) de Blender Studio (v1.4.1, CC0, dominio público), deformados en Blender para que la cabeza tome la forma de una cara real.
-- **Textura de la cara:** es una foto proyectada de un integrante del equipo, usada con su permiso.
+- **Textura de la cabeza:** sale de fotos de frente y de perfil de un integrante del equipo, usadas con su permiso.
 - **Pelo, ropa y ojos:** son del proyecto.
 - **Puntos de la cara:** se detectaron con el modelo Face Landmarker de MediaPipe (Apache 2.0), que se usa solo al construir el avatar y no se distribuye.
 - **Esqueleto y animaciones:** son propios: 17 huesos y siete animaciones (`Idle`, `Explica`, `Senala`, `Piensa`, `Verdadero`, `Falso` y `Saluda`).

@@ -8,7 +8,8 @@ El avatar de la vista 3D (`src/logos/web/avatar/logos.glb`) se arma en Blender 5
 |---|---|
 | `human_base_meshes_bundle.blend` | [Human Base Meshes](https://download.blender.org/demo/asset-bundles/human-base-meshes/) de Blender Studio, v1.4.1, CC0. Se usa el cuerpo masculino realista con sus ojos. |
 | `face_landmarker.task` | Modelo Face Landmarker de MediaPipe (Apache 2.0). |
-| `foto.png` | Foto de frente de la persona, con buena luz y sin gorra. |
+| `foto.png` | Foto de frente de la persona, con la boca cerrada, luz pareja y fondo liso. |
+| `side_px.png`, `side_nx.png` | Perfiles: la cámara del lado +x (la cara mira a la izquierda de la imagen) y del lado −x (la cara mira a la derecha), con el mismo fondo y la misma luz. |
 | `rig_src.blend` | `assets/avatar/logos-avatar.blend` del commit 283b739: esqueleto de 17 huesos y siete animaciones. |
 
 ## Pasos
@@ -19,9 +20,10 @@ Se ejecutan en este orden, todos con el mismo directorio de trabajo `D/`:
 blender -b human_base_meshes_bundle.blend --python prep_base.py -- D/   # base a 1,78 m + render frontal
 python lm.py D/base_front.png D/base_lm.json                             # 478 puntos sobre la base
 python lm.py D/foto.png D/foto_lm.json                                   # 478 puntos sobre la foto
-python mask.py && python seg.py                                          # máscara de la cara, silueta, colores
+python mask.py && python seg.py && python profile.py                     # máscara, silueta, colores, perfiles
 blender -b D/base.blend --python fit.py -- D/                            # la cabeza toma la forma de la cara
-blender -b D/fit.blend --python build_head.py -- D/                      # textura, pelo y ojos
+blender -b D/fit.blend --python profile_fit.py -- D/                     # la línea media toma la del perfil
+blender -b D/fit.blend --python build_head.py -- D/                      # textura (frente + perfiles), pelo, ojos
 blender -b rig_src.blend --python build_body.py -- D/ out.blend out.glb  # esqueleto, ropa, boca, GLB
 ```
 
@@ -36,10 +38,22 @@ blender -b rig_src.blend --python build_body.py -- D/ out.blend out.glb  # esque
   - Descarta los puntos cuyos rayos caen en fosas o cuencas.
   - Aplana los labios sin tocar el interior de la boca.
   - Angosta las aletas de la nariz.
+- **`profile.py`**: saca la silueta de cada perfil (el fondo liso se separa por diferencia de color). Espeja el perfil de −x.
+- **`profile_fit.py`**:
+  - Escala cada perfil con la distancia entre el entrecejo y el borde inferior del mentón.
+  - Corrige la profundidad de la línea media: frente, nariz, labios y mentón, con un tope de 8 mm.
+  - Guarda el mapeo (y, z) → píxel de cada perfil.
+  - El centro de la oreja en cada foto se anota a mano en `EARS`. La oreja de la malla no se mueve; la textura se deforma alrededor de ella para que calce.
 - **`build_head.py`**:
   - Proyecta la foto con una interpolación de placas delgadas que cierra la boca.
   - Arma el pelo como una cáscara sobre el cuero cabelludo. Su borde queda bajo la piel, así que la línea del pelo la dibuja la textura.
-  - Hornea pasadas flotantes con Cycles y compone la textura en numpy: foto aclarada, piel tomada de la propia cara, pelo de la foto cerca de la frente, ojos procedurales con el iris donde está en la foto e interior de la boca oscuro.
+  - La línea del pelo sale de la foto de frente. En costados y nuca sale de los perfiles: es pelo lo que está dentro de la silueta y no es piel ni camisa.
+  - Hornea pasadas flotantes con Cycles (incluida una de normales) y compone la textura en numpy:
+    - **Cara:** la foto de frente.
+    - **Costados:** los perfiles, con el color igualado al de la mejilla de frente; se usan en orejas, patillas, pelo y cuello.
+    - **Piel lisa:** el tono se toma de la propia cara.
+    - **Ojos:** procedurales, con el iris donde está en la foto.
+    - **Boca:** el interior va oscuro.
 - **`build_body.py`**:
   - Mueve los huesos del esqueleto a las articulaciones medidas en la malla y pesa con calor. La cabeza queda rígida sobre el hueso `head`.
   - Arma la ropa como copias suavizadas de la piel, que heredan los pesos: camiseta azul marino de manga corta con dos botones, pantalón caqui y zapatos. Borra la piel tapada.
