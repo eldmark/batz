@@ -102,6 +102,14 @@ if os.path.exists(D + 'side_maps.json'):
     wside = smooth01((th - 55) / 25)
     field = np.where(np.isnan(hy), f_side, f_front) * (1 - wside) + f_side * wside
     field = np.maximum(field, smooth01((th - 95) / 15) * smooth01((V[:, 2] - (brow - .008)) / .01))   # coronilla y nuca alta
+    # unión con el pelo que ve la foto de frente (los lados de la cabeza se ven de frente)
+    fpx = photo_px(V[head]); im_f = load(D + 'foto.png')[..., :3]; fg_f = load(D + 'foto_fg.png')[..., 0]
+    pxf = sample(im_f, fpx[:, 0], fpx[:, 1]); fgf = sample(fg_f, fpx[:, 0], fpx[:, 1])[..., 0]
+    skin_f = smooth01((pxf[:, 0] - pxf[:, 2] - .07) / .06) * smooth01((pxf.mean(-1) - .28) / .1)
+    above_brow = smooth01((V[head, 2] - (brow + .008)) / .01)
+    nfront = smooth01((-NRM[head, 1] + .15) / .3) * smooth01((95 - th[head]) / 15)       # visible de frente
+    f_fr = (1 - skin_f) * smooth01((fgf - .5) / .3) * above_brow * nfront
+    field[head] = np.maximum(field[head], f_fr)
 
 field = np.maximum(field, smooth01((V[:, 2] - (brow + .075)) / .01))
 field[~head | is_eye] = 0
@@ -328,7 +336,7 @@ af = (a_face * fr * (1 - hair_t * smooth01((field_t - .45) / .15)))[..., None]
 col = col * (1 - af) + phc * af
 # pelo de la foto, de frente y dentro de la silueta, por encima del nacimiento
 hyt = hair_y_at(px.ravel()).reshape(px.shape)
-above = np.nan_to_num(smooth01((hyt + 2 - py) / 10) * smooth01((py - (hyt - 120)) / 40), nan=0)
+above = np.nan_to_num(smooth01((hyt + 2 - py) / 10), nan=0) + np.isnan(hyt) * (py < np.nanmin(hyt) + 40)
 lum = phc.mean(-1)
 ah = (fr * per * above * smooth01((.42 - lum) / .12))[..., None]
 col = col * (1 - ah) + phc * ah
@@ -390,7 +398,9 @@ for sgn, (C, rad, S) in EC.items():
     ir = iris_c * fib * (.7 + .5 * smooth01(d / .0056))[:, None] * (1 - .6 * smooth01((d - .0045) / .0011))[:, None]
     pupil = np.array([.03, .025, .025])
     c = np.where((d < .0022)[:, None], pupil, np.where((d < .0056)[:, None], ir, sclera))
-    col[m] = c
+    # de frente se ven tus ojos de la foto; el procedural solo queda para lo que la foto no ve
+    use_ph = (fr[m] > .5)[:, None] * smooth01((a_face[m] - .5) / .3)[:, None]
+    col[m] = c * (1 - use_ph) + phc[m] * use_ph
 mo = (p_m1[..., 0] > .5)
 col[mo] = np.array([.16, .07, .07])
 hd = (hair_t * smooth01((field_t - .5) / .2))[..., None] * .6     # la cáscara tira al color del pelo de frente
@@ -410,7 +420,7 @@ def textured(name, rough):
     b.inputs['Roughness'].default_value = rough; return m
 piel = bpy.data.materials.new('Piel'); piel.use_nodes = True
 pb = piel.node_tree.nodes['Principled BSDF']; pb.inputs['Base Color'].default_value = (*srgb2lin(skin), 1); pb.inputs['Roughness'].default_value = .55
-for m in (piel, textured('Cara', .55), textured('Pelo', .5), textured('Ojos', .12)): me.materials.append(m)
+for m in (piel, textured('Cara', .55), textured('Pelo', .5), textured('Ojos', .3)): me.materials.append(m)
 fi_eye = np.array([all(is_eye[i] for i in p.vertices) for p in me.polygons])
 fi_hair = np.array([all(is_hair[i] for i in p.vertices) for p in me.polygons])
 mi = np.where(fi_eye, 3, np.where(fi_hair, 2, np.where(headfaces, 1, 0)))
