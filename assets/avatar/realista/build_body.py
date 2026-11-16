@@ -132,7 +132,7 @@ def mat(name, hexs, rough, double=True):
     m.use_backface_culling = not double
     if m.name not in [x.name for x in me.materials]: me.materials.append(m)
     return [x.name for x in me.materials].index(m.name)
-M_SHIRT = mat('Camisa', '#1f2a46', .85); M_PANTS = mat('Pantalon', '#9c8763', .9); M_SHOE = mat('Zapato', '#2e211b', .5)
+M_SHIRT = mat('Camisa', '#1f2a46', .85); M_PANTS = mat('Pantalon', '#3d4047', .92); M_SHOE = mat('Zapato', '#2e211b', .5)   # pantalón gris carbón: el caqui se confundía con la piel
 M_BTN = mat('Boton', '#151b2c', .4, False)
 
 COVERED = np.zeros(len(V), bool)
@@ -212,6 +212,56 @@ for _ in range(6):
     new = {v: v.co * .5 + sum((e.other_vert(v).co for e in v.link_edges), Vector()) / len(v.link_edges) * .5 for v in torso if v not in sb}
     for v, c in new.items(): v.co = c
 pv, pf, pb = garment(PANTS, M_PANTS, lambda p: .008 + .005 * smooth01((.6 - p.z) / .4), 40, 'pantalón')
+# pantalón holgado de corte recto: cada pierna es un tubo redondo que cae derecho (no marca muslo, rodilla,
+# pantorrilla ni entrepierna); arriba de la entrepierna se funde con la forma de la cadera
+def loosen_pants(verts):
+    zc = float(J['thigh.L'][0][2]) - .12                         # altura de la entrepierna
+    def r_prof(zz): return np.interp(zz, [.1, .45, .7, zc], [.064, .07, .08, .088])
+    def gsmooth(a, sig):
+        k = np.exp(-np.arange(-3 * sig, 3 * sig + 1) ** 2 / (2 * sig * sig)); k /= k.sum()
+        pad = np.pad(a, ((3 * sig, 3 * sig),) + ((0, 0),) * (a.ndim - 1), mode='edge')
+        return np.stack([np.convolve(pad[:, j], k, 'valid') for j in range(a.shape[1])], 1) if a.ndim > 1 else np.convolve(pad, k, 'valid')
+    for sx in (1, -1):
+        vs = [v for v in verts if sx * v.co.x > 0 and v.co.z < zc + .08]
+        sl = {}
+        for v in vs: sl.setdefault(int(v.co.z / .01), []).append(v)
+        keys = sorted(sl)
+        if len(keys) < 5: continue
+        C, Rraw = [], []
+        for k in keys:
+            P = np.array([v.co[:2] for v in sl[k]]); c = (P.min(0) + P.max(0)) / 2
+            C.append(c); Rraw.append(np.linalg.norm(P - c, axis=1).max())
+        C, Rraw = np.array(C), np.array(Rraw); zk = np.array(keys) * .01 + .005
+        Cs = gsmooth(C, 3)
+        R = np.maximum(gsmooth(Rraw, 5), np.maximum(Rraw + .003, r_prof(zk)))
+        R = np.maximum(gsmooth(R, 2), Rraw + .003)
+        for k, c, r, zz in zip(keys, Cs, R, zk):
+            w = float(smooth01((zc + .03 - zz) / .06))           # 1 en las piernas; en la cadera manda su propia forma
+            for v in sl[k]:
+                d = Vector((v.co.x - c[0], v.co.y - c[1], 0))
+                if d.length < 1e-6: continue
+                d.normalize()
+                nx, ny = c[0] + d.x * r, c[1] + d.y * r
+                if sx * nx < .006: nx = sx * .006                  # no cruzar a la otra pierna (entrepierna)
+                v.co.x = v.co.x + (nx - v.co.x) * w; v.co.y = v.co.y + (ny - v.co.y) * w
+    # frente de la entrepierna: no sobresale del frente de los muslos (la piel de abajo ya se borra, nada la atraviesa)
+    zs_ = np.arange(zc - .04, zc + .09, .01)
+    for z0 in zs_:
+        band = [v for v in verts if abs(v.co.z - z0) < .006]
+        thigh = [v.co.y for v in band if .07 < abs(v.co.x) < .13]
+        if not thigh: continue
+        y_cap = min(thigh) + .006
+        for v in band:
+            if abs(v.co.x) < .075 and v.co.y < y_cap and v.normal.y < 0:
+                k = float(smooth01((.075 - abs(v.co.x)) / .03)) * float(smooth01((zc + .1 - v.co.z) / .03))
+                v.co.y = v.co.y + (y_cap - v.co.y) * k
+    vs_set = set(verts)                                           # alisar un poco las costuras de las rebanadas
+    for _ in range(3):
+        new = {v: v.co * .6 + sum((e.other_vert(v).co for e in v.link_edges), Vector()) / len(v.link_edges) * .4
+               for v in verts if all(e.other_vert(v) in vs_set for e in v.link_edges)}
+        for v, c in new.items(): v.co = c
+    print('pantalón holgado: entrepierna a', round(zc, 3))
+loosen_pants(pv)
 fv, ff, fb = garment(SHOES, M_SHOE, lambda p: .007, 8, 'zapatos')
 
 # cuello redondo con ribete: banda que sube del borde del escote y abraza el cuello

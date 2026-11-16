@@ -64,7 +64,8 @@ blender -b rig_src.blend --python build_body.py -- D/ out.blend out.glb  # esque
 - **`build_body.py`**:
   - Mueve los huesos del esqueleto a las articulaciones medidas en la malla y pesa con calor. La cabeza queda rígida sobre el hueso `head` y es un 5 % más grande respecto al cuerpo.
   - Cerca del cuello, la parte de arriba del hombro la mueve el pecho y no el brazo. El esqueleto no tiene clavícula, y sin esto el escote se rompe al levantar los brazos.
-  - Arma la ropa como copias suavizadas de la piel: camiseta azul marino de manga recta hasta medio brazo, pantalón caqui y zapatos. Cada vértice de ropa toma los pesos de la piel que tiene justo debajo.
+  - Arma la ropa como copias suavizadas de la piel: camiseta azul marino de manga recta hasta medio brazo, pantalón gris carbón y zapatos. Cada vértice de ropa toma los pesos de la piel que tiene justo debajo.
+  - El pantalón es de corte recto: cada pierna es un tubo redondo que cae derecho (radio de unos 9 cm arriba a 6,4 cm en la bota), así no marca muslo, rodilla ni entrepierna. En la cadera conserva su forma, y el frente de la entrepierna no sobresale del de los muslos.
   - Borra la piel tapada; la que queda bajo los bordes se mete 4 mm.
   - La camiseta cuelga como tela: bajo el pecho cae recta y la cintura casi no se angosta, así no marca busto ni cintura de reloj de arena.
   - Los bordes de la ropa se alisan con Taubin (no encoge el aro, así el escote no se aplana en cuello de bote).
