@@ -62,7 +62,7 @@ blender -b rig_src.blend --python build_body.py -- D/ out.blend out.glb  # esque
     - **Boca:** el interior va oscuro.
 - **`build_body.py`**:
   - Mueve los huesos del esqueleto a las articulaciones medidas en la malla y pesa con calor. La cabeza queda rígida sobre el hueso `head`.
-  - Arma la ropa como copias suavizadas de la piel, que heredan los pesos: camiseta azul marino de manga corta con cuello redondo y dos botones, pantalón caqui y zapatos. Borra la piel tapada.
+  - Arma la ropa como copias suavizadas de la piel, que heredan los pesos: polo azul marino de manga corta con cuello, tapeta de dos botones y hombros cuadrados, pantalón caqui y zapatos. Borra la piel tapada.
   - La camiseta cuelga como tela: bajo el pecho cae recta y la cintura casi no se angosta, así no marca busto ni cintura de reloj de arena.
   - Crea las formas `Boca_abierta` (mandíbula que gira) y `Boca_redonda`, y exporta.
 

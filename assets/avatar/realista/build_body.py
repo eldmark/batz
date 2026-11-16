@@ -169,11 +169,12 @@ def garment(sel, mat_i, offset_fn, smooth_iter, name):
     return nv, nf, bnd
 
 def shirt_off(p):
-    hem = smooth01((1.06 - p.z) / .15); loose = .007 + .013 * hem
+    hem = smooth01((1.06 - p.z) / .15); loose = .008 + .005 * hem          # ruedo recto, sin forma de A
     sl = 0.0
     for s, sx in (('L', 1), ('R', -1)):
-        if p.x * sx > .17: t = along(f'upper_arm.{s}', np.array(p[:])); sl = max(sl, smooth01((t - .1) / .4))
-    return loose + .006 * sl
+        if p.x * sx > .15: t = along(f'upper_arm.{s}', np.array(p[:])); sl = max(sl, smooth01((t + .1) / .5))
+    shoulder = smooth01((abs(p.x) - .1) / .06) * smooth01((p.z - 1.3) / .08)   # hombro cuadrado: la tela no se pega al deltoides
+    return loose + .010 * sl + .007 * shoulder
 sv, sf, sb = garment(SHIRT, M_SHIRT, shirt_off, 30, 'camisa')
 # la tela cuelga: bajo el pecho no se mete hacia el cuerpo y la cintura no se angosta (torso de hombre, no reloj de arena)
 def drape(verts, axis, sign, bins_axis, sel, slope):
@@ -212,6 +213,27 @@ for zb in (1.405, 1.37):
         v[dl].clear(); v[dl][chest_i] = 1.0
     for f in {f for v in r['verts'] for f in v.link_faces}: f.material_index = M_BTN; f.smooth = True
 
+# cuello de polo: banda alrededor del cuello que sube y se dobla hacia afuera, abierta al frente
+ring = V[(np.abs(V[:, 2] - 1.48) < .006) & (np.hypot(V[:, 0], V[:, 1] + .01) < .09)]
+ncx, ncy = ring[:, 0].mean(), ring[:, 1].mean()
+ra, rb = (ring[:, 0].max() - ring[:, 0].min()) / 2, (ring[:, 1].max() - ring[:, 1].min()) / 2
+neck_i = body.vertex_groups['neck'].index
+N_ = 48; rows = []
+prof = [(.024, -.004), (.014, .02), (.017, .029), (.031, .013)]        # (holgura, altura): sube, se dobla y cae hacia afuera
+for k, (off, dz) in enumerate(prof):
+    row = []
+    for j in range(N_ + 1):
+        th_ = math.radians(14 + (360 - 28) * j / N_)                   # 0° = frente (−y): hueco de la tapeta
+        ex, ey = math.sin(th_), -math.cos(th_)
+        back = (1 - math.cos(th_)) / 2
+        zb = 1.455 + .034 * math.sqrt(back)
+        v = bm.verts.new((ncx + ex * (ra + off), ncy + ey * (rb + off), zb + dz))
+        v[dl].clear(); v[dl][chest_i] = .5; v[dl][neck_i] = .5
+        row.append(v)
+    rows.append(row)
+for a_, b_ in zip(rows, rows[1:]):
+    for j in range(N_):
+        f = bm.faces.new((a_[j], a_[j + 1], b_[j + 1], b_[j])); f.material_index = M_SHIRT; f.smooth = True
 # piel tapada por la ropa: fuera (se deja un anillo bajo los bordes)
 cov = COVERED.copy()
 core = cov.copy()
