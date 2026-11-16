@@ -4,6 +4,7 @@ import bpy, bmesh, json, sys, math, numpy as np
 from mathutils import Vector
 from mathutils.bvhtree import BVHTree
 argv = sys.argv[sys.argv.index('--') + 1:]
+BLINK_UP = 46
 D, OUT_BLEND, OUT_GLB = argv[0], argv[1], argv[2]
 hi = json.load(open(D + 'head_info.json'))
 def smooth01(t): t = np.clip(t, 0, 1); return t * t * (3 - 2 * t)
@@ -81,6 +82,18 @@ for b in bones:
     for i in blend:
         if Wt[b][i] > 1e-4: g.add([int(i)], float(Wt[b][i]), 'REPLACE')
         else: g.remove([int(i)])
+# hombros: cerca del cuello la parte de arriba del hombro la mueve el pecho, no el brazo
+# (sin clavícula, al levantar los brazos el escote se estiraba hacia arriba y asomaba piel)
+fneck = smooth01((.16 - np.abs(V[:, 0])) / .05) * smooth01((V[:, 2] - 1.36) / .04) * (1 - fix)
+for s_ in 'LR':
+    take = Wt[f'upper_arm.{s_}'] * fneck; Wt[f'upper_arm.{s_}'] -= take; Wt['chest'] += take
+idx_m = np.nonzero(fneck > 0)[0]
+for b in bones:
+    g = body.vertex_groups[b]
+    for i in idx_m:
+        if Wt[b][i] > 1e-4: g.add([int(i)], float(Wt[b][i]), 'REPLACE')
+        else: g.remove([int(i)])
+print('hombros: vértices con peso movido al pecho', len(idx_m))
 
 # cabeza 5 % más grande respecto al cuerpo (escala por el peso del hueso «head», alrededor de la base del cráneo)
 piv = np.array(J['head'][0], float)
@@ -158,12 +171,14 @@ def garment(sel, mat_i, offset_fn, smooth_iter, name):
             if s < off: v.co = v.co + n * (off - s)
     relax(smooth_iter); push(1.6); push(1.6)
     relax(smooth_iter // 2); push(1.0); push(1.0)
-    for _ in range(40):                      # bordes (escote, mangas, ruedo) sin dientes de sierra
+    def loop_step(lam):
         new = {}
         for v in bnd:
             nbs = [e.other_vert(v).co for e in v.link_edges if e.is_boundary]
-            if len(nbs) == 2: new[v] = v.co * .4 + (nbs[0] + nbs[1]) * .3
+            if len(nbs) == 2: new[v] = v.co + ((nbs[0] + nbs[1]) * .5 - v.co) * lam
         for v, c in new.items(): v.co = c
+    for _ in range(30):                      # bordes sin dientes de sierra; Taubin: no encoge el aro (el escote no se aplana)
+        loop_step(.5); loop_step(-.53)
     push(.8)
     print(name, len(nv), 'vértices')
     return nv, nf, bnd
@@ -199,18 +214,67 @@ for _ in range(6):
 pv, pf, pb = garment(PANTS, M_PANTS, lambda p: .008 + .005 * smooth01((.6 - p.z) / .4), 40, 'pantalón')
 fv, ff, fb = garment(SHOES, M_SHOE, lambda p: .007, 8, 'zapatos')
 
-# botones de la tapeta
+# cuello redondo con ribete: banda que sube del borde del escote y abraza el cuello
 dl = bm.verts.layers.deform.verify()
-chest_i = body.vertex_groups['chest'].index
-for zb in (1.405, 1.37):
-    hit = tree.ray_cast(Vector((0, -.5, zb)), Vector((0, 1, 0)))
-    if hit[0] is None: continue
-    c = hit[0] + Vector((0, -.019, 0))
-    r = bmesh.ops.create_uvsphere(bm, u_segments=10, v_segments=6, radius=.0045)
-    for v in r['verts']:
-        v.co = Vector((v.co.x, v.co.y * .4, v.co.z)) + c
-        v[dl].clear(); v[dl][chest_i] = 1.0
-    for f in {f for v in r['verts'] for f in v.link_faces}: f.material_index = M_BTN; f.smooth = True
+sv_set = set(sv)
+bedges = [e for e in bm.edges if e.is_boundary and e.verts[0] in sv_set and e.verts[1] in sv_set]
+adj = {}
+for e in bedges:
+    a_, b_ = e.verts; adj.setdefault(a_, []).append(b_); adj.setdefault(b_, []).append(a_)
+loops, seen = [], set()
+for st in adj:
+    if st in seen: continue
+    lp = [st]; seen.add(st); prev, cur = None, st
+    while True:
+        nx = [w for w in adj[cur] if w is not prev and w not in seen]
+        if not nx: break
+        prev, cur = cur, nx[0]; lp.append(cur); seen.add(cur)
+    loops.append(lp)
+neck_loop = max(loops, key=lambda lp: np.mean([v.co.z for v in lp]))
+print('escote: lazos', len(loops), 'vértices', len(neck_loop), 'z media', round(float(np.mean([v.co.z for v in neck_loop])), 3),
+      'z min/max', round(min(v.co.z for v in neck_loop), 3), round(max(v.co.z for v in neck_loop), 3))
+ringv = V[(np.abs(V[:, 2] - 1.49) < .006) & (np.hypot(V[:, 0], V[:, 1] + .01) < .1)]
+ncx, ncy = float(ringv[:, 0].mean()), float(ringv[:, 1].mean())
+M_RIB = mat('Cuello', '#19223b', .9)
+bone_names = list(Wt.keys())
+gi_of = {bn: body.vertex_groups[bn].index for bn in bone_names}
+def skin_weights(pt):
+    loc, nrm, fi, dist = tree.find_nearest(pt)
+    vs = me.polygons[fi].vertices
+    return {bn: float(np.mean([Wt[bn][i] for i in vs])) for bn in bone_names}
+def set_w(v, wd):
+    v[dl].clear(); tot_ = sum(wd.values()) or 1.0
+    for bn, w in wd.items():
+        if w > 1e-3: v[dl][gi_of[bn]] = w / tot_
+# cada vértice de ropa toma los pesos de la piel que tiene justo debajo (tras alisar y colgar la tela,
+# el vértice de origen puede quedar a 1–2 cm y se movería distinto: asomaba piel al levantar los brazos)
+def transfer_weights(verts):
+    for v in verts:
+        loc, nrm, fi, dist = tree.find_nearest(v.co)
+        vs = list(me.polygons[fi].vertices)
+        dd = np.linalg.norm(V[vs] - np.array(loc[:]), axis=1); wv = 1 / (dd + 1e-5); wv /= wv.sum()
+        set_w(v, {bn: float(sum(Wt[bn][i] * w for i, w in zip(vs, wv))) for bn in bone_names})
+for grp in (sv, pv, fv): transfer_weights(grp)
+up = Vector((0, 0, 1)); rows = []
+for bv in neck_loop:
+    rh = Vector((bv.co.x - ncx, bv.co.y - ncy, 0)); rh = rh.normalized() if rh.length > 1e-6 else Vector((0, -1, 0))
+    zt = bv.co.z + .015
+    hit = tree.ray_cast(Vector((ncx, ncy, zt)), rh, .2)
+    top = (hit[0] + rh * .0035) if hit[0] is not None else (bv.co + up * .012 - rh * .008)
+    wb = {bn: bv[dl].get(gi_of[bn], 0.0) for bn in bone_names}
+    wt_ = skin_weights(top)
+    row = [bv]
+    for p_, t_ in ((bv.co + (top - bv.co) * .5 + rh * .0025, .5), (top, 1.), (top + up * .003 - rh * .003, 1.)):
+        nv_ = bm.verts.new(p_); set_w(nv_, {bn: wb[bn] * (1 - t_) + wt_[bn] * t_ for bn in bone_names}); row.append(nv_)
+    rows.append(row)
+closed = any(e.other_vert(neck_loop[0]) is neck_loop[-1] for e in neck_loop[0].link_edges)
+band = []
+for i in range(len(rows) if closed else len(rows) - 1):
+    ra_, rb_ = rows[i], rows[(i + 1) % len(rows)]
+    for k in range(3):
+        f = bm.faces.new((ra_[k], rb_[k], rb_[k + 1], ra_[k + 1])); f.material_index = M_RIB; f.smooth = True; band.append(f)
+bmesh.ops.recalc_face_normals(bm, faces=band)
+print('ribete: caras', len(band), 'cerrado', closed)
 
 # piel tapada por la ropa: fuera (se deja un anillo bajo los bordes)
 cov = COVERED.copy()
@@ -222,7 +286,10 @@ for _ in range(7):
         if not cov[a] or not cov[b]: grow[a] = grow[b] = False
     core = grow
 nskin = len(V)
-bm.verts.index_update()
+bm.verts.index_update(); bm.verts.ensure_lookup_table(); bm.normal_update()
+# la piel que queda bajo los bordes de la ropa se mete 4 mm: al levantar los brazos ya no atraviesa la tela
+for i in np.nonzero(cov & ~core)[0]:
+    bv_ = bm.verts[int(i)]; bv_.co -= bv_.normal * .004
 dead = [f for f in bm.faces if all(v.index < nskin and core[v.index] for v in f.verts)]
 bmesh.ops.delete(bm, geom=dead, context='FACES')
 bm.to_mesh(me); bm.free(); me.update()
@@ -255,6 +322,34 @@ for v in me.vertices:
     if d < 1 and p.y < mc.y + .02:                 # redonda: comisuras al centro, labios adelante
         ww = (1 - d) ** 1.1
         rnd.data[v.index].co = p + Vector((-(p.x - mc.x) * .28 * ww, -.004 * ww, 0))
+# parpadeo: los párpados giran alrededor del centro del ojo (no atraviesan el globo). El ángulo sale de los
+# bordes de los párpados medidos en la foto (MediaPipe 159/145 y 386/374), llevados a la cabeza ya escalada.
+blk = body.shape_key_add(name='Parpadeo', from_mix=False)
+Vc = np.array([v.co[:] for v in me.vertices]); is_eye = gm('EYES'); is_hair = gm('HAIR'); nsk = len(Vc)
+LM = np.array(json.load(open(D + 'fit_lm.json'))['B'])
+LMh = piv + (LM - piv) * 1.05
+for sx in (1, -1):
+    em_ = np.nonzero(is_eye & (np.sign(Vc[:, 0]) == sx))[0]
+    C = Vc[em_].mean(0); R = float(np.linalg.norm(Vc[em_] - C, axis=1).max())
+    up_i, lo_i = min(((159, 145), (386, 374)), key=lambda pr: abs(LMh[pr[0], 0] - C[0]))
+    ang_of = lambda q: math.atan2(q[2] - C[2], -(q[1] - C[1]))            # 0 = de frente, + = hacia arriba
+    total = ang_of(LMh[up_i]) - ang_of(LMh[lo_i]) + math.radians(11)       # cerrar del todo, con traslape
+    a_up, a_lo = .88 * total, .12 * total
+    near = np.nonzero((np.linalg.norm(Vc - C, axis=1) < R + .016) & ~is_eye & ~is_hair)[0]
+    zc_margin = C[2]
+    for i in near:
+        p = Vc[i] - C; d = float(np.linalg.norm(p))
+        if p[1] > R * .45: continue                                        # solo la parte delantera
+        lat = float(smooth01((R * 1.2 - abs(p[0])) / (R * .55)))           # en las comisuras casi no se mueve
+        on_lid = float(smooth01((R + .0115 - d) / .007))                   # sobre el globo = párpado; el pliegue se queda
+        if p[2] >= 0:
+            ang = a_up * on_lid * lat * float(smooth01((p[2] + .001) / .002))
+        else:
+            ang = -a_lo * float(smooth01((R + .007 - d) / .005)) * lat
+        if abs(ang) < 1e-5: continue
+        ca, sa = math.cos(ang), math.sin(ang)
+        blk.data[i].co = Vector((C[0] + p[0], C[1] + p[1] * ca - p[2] * sa, C[2] + p[1] * sa + p[2] * ca))
+    print('parpadeo ojo', sx, 'radio', round(R, 4), 'cierre (grados)', round(math.degrees(total), 1), 'vértices', len(near))
 for k in me.shape_keys.key_blocks: k.value = 0.0
 body.active_shape_key_index = 0
 

@@ -58,12 +58,17 @@ blender -b rig_src.blend --python build_body.py -- D/ out.blend out.glb  # esque
     - **Cara:** la foto de frente.
     - **Costados:** los perfiles, con el color igualado al de la mejilla de frente; se usan en orejas, patillas, pelo y cuello.
     - **Piel lisa:** el tono se toma de la propia cara.
-    - **Ojos:** procedurales, con el iris donde está en la foto.
+    - **Ojos:** los de la foto de frente; el iris procedural solo cubre lo que la foto no ve.
     - **Boca:** el interior va oscuro.
+    - **Tono:** al final se baja un 22 % la saturación de la piel (más blanca, sin el rojo saturado).
 - **`build_body.py`**:
-  - Mueve los huesos del esqueleto a las articulaciones medidas en la malla y pesa con calor. La cabeza queda rígida sobre el hueso `head`.
-  - Arma la ropa como copias suavizadas de la piel, que heredan los pesos: camiseta azul marino de cuello redondo, dos botones y mangas rectas hasta medio brazo, pantalón caqui y zapatos. Borra la piel tapada.
+  - Mueve los huesos del esqueleto a las articulaciones medidas en la malla y pesa con calor. La cabeza queda rígida sobre el hueso `head` y es un 5 % más grande respecto al cuerpo.
+  - Cerca del cuello, la parte de arriba del hombro la mueve el pecho y no el brazo. El esqueleto no tiene clavícula, y sin esto el escote se rompe al levantar los brazos.
+  - Arma la ropa como copias suavizadas de la piel: camiseta azul marino de manga recta hasta medio brazo, pantalón caqui y zapatos. Cada vértice de ropa toma los pesos de la piel que tiene justo debajo.
+  - Borra la piel tapada; la que queda bajo los bordes se mete 4 mm.
   - La camiseta cuelga como tela: bajo el pecho cae recta y la cintura casi no se angosta, así no marca busto ni cintura de reloj de arena.
-  - Crea las formas `Boca_abierta` (mandíbula que gira) y `Boca_redonda`, y exporta.
+  - Los bordes de la ropa se alisan con Taubin (no encoge el aro, así el escote no se aplana en cuello de bote).
+  - El cuello redondo lleva un ribete: una banda más oscura que sube del borde del escote y abraza el cuello.
+  - Crea las formas `Boca_abierta` (mandíbula que gira), `Boca_redonda` y `Parpadeo`, y exporta. En `Parpadeo` los párpados giran alrededor del centro del ojo, con el ángulo medido en los bordes de los párpados de la foto.
 
 `shots.py` tiene la cámara y las luces de los renders de control.

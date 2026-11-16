@@ -37,7 +37,7 @@ export function createStoryScene(container, model, options = {}) {
   scene.add(new THREE.HemisphereLight(0xffffff, 0x1b3a30, 2.4));
   const key = new THREE.DirectionalLight(0xffffff, 2.6); key.position.set(2.5, 6, 7); scene.add(key);
   // relleno cálido desde el frente: sin él, la piel del avatar toma el verde del suelo y se ve más morena
-  const fill = new THREE.DirectionalLight(0xfff1e6, 1.2); fill.position.set(-3, 2.5, 9); scene.add(fill);
+  const fill = new THREE.DirectionalLight(0xfff4ec, .9); fill.position.set(-3, 2.5, 9); scene.add(fill);
 
   // ── dominio: un arco a la derecha del avatar ──
   const stage = new THREE.Group(); scene.add(stage);
@@ -101,7 +101,7 @@ export function createStoryScene(container, model, options = {}) {
     avatar.add(gltf.scene);
     gltf.scene.traverse(object => {
       const names = object.morphTargetDictionary;
-      if (object.isMesh && names && 'Boca_abierta' in names) mouths.push({mesh: object, open: names.Boca_abierta, round: names.Boca_redonda});
+      if (object.isMesh && names && 'Boca_abierta' in names) mouths.push({mesh: object, open: names.Boca_abierta, round: names.Boca_redonda, blink: names.Parpadeo});
     });
     head = gltf.scene.getObjectByName('head');
     mixer = new THREE.AnimationMixer(gltf.scene);
@@ -147,6 +147,25 @@ export function createStoryScene(container, model, options = {}) {
   timer.connect(document);  // con la pestaña oculta no acumula tiempo
   let frame;
 
+  // Parpadeo: morph target «Parpadeo», cada 2–6 s al azar (a veces doble); cierra en 70 ms y abre en 110 ms.
+  let nextBlink = 1.5 + Math.random() * 2, blinkStart = -1;
+  function blinkLevel(phase) {
+    if (phase < .07) return phase / .07;
+    if (phase < .12) return 1;
+    return Math.max(0, 1 - (phase - .12) / .11);
+  }
+  function animateBlink(t) {
+    if (reduceMotion) return;
+    if (blinkStart < 0 && t >= nextBlink) blinkStart = t;
+    let level = 0;
+    if (blinkStart >= 0) {
+      const phase = t - blinkStart;
+      level = blinkLevel(phase);
+      if (phase >= .23) { blinkStart = -1; nextBlink = t + (Math.random() < .15 ? .18 : 2 + Math.random() * 4); }
+    }
+    for (const {mesh, blink} of mouths) if (blink !== undefined) mesh.morphTargetInfluences[blink] = level;
+  }
+
   function animateMouth(t, dt) {
     while (visemes.length && visemes[0].at + HOLD < t) visemes.shift();
     const viseme = visemes.find(v => v.at <= t);
@@ -162,6 +181,7 @@ export function createStoryScene(container, model, options = {}) {
       mesh.morphTargetInfluences[i] = mouthOpen;
       if (j !== undefined) mesh.morphTargetInfluences[j] = mouthRound;
     }
+    animateBlink(t);
     if (!mouths.length && head && !reduceMotion) {      // respaldo: asiente con cada sílaba
       head.rotation.x -= nod;
       nod = (mouthOpen + mouthRound) * .1;
@@ -240,7 +260,9 @@ export function createStoryScene(container, model, options = {}) {
         strength: vowel === 'a' ? 1 : vowel === 'i' || vowel === 'e' ? .55 : .85}));
     },
     /** Morph targets de boca encontrados en el modelo (para pruebas y para el respaldo). */
-    mouthTargets() { return mouths.map(m => ({open: m.open, round: m.round})); },
+    mouthTargets() { return mouths.map(m => ({open: m.open, round: m.round, blink: m.blink})); },
+    /** Cuánto están cerrados los párpados ahora mismo (0 a 1). */
+    blinkLevel() { return mouths.find(m => m.blink !== undefined)?.mesh.morphTargetInfluences[mouths.find(m => m.blink !== undefined).blink] ?? 0; },
     /** Cuánto está abierta y redondeada la boca ahora mismo (0 a 1). */
     mouthLevel() { return {open: mouthOpen, round: mouthRound}; },
     dispose() {

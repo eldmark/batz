@@ -36,6 +36,7 @@ El avatar está en `src/logos/web/avatar/logos.glb`, con su fuente editable en `
 - **Puntos de la cara:** se detectaron con el modelo Face Landmarker de MediaPipe (Apache 2.0), que se usa solo al construir el avatar y no se distribuye.
 - **Esqueleto y animaciones:** son propios: 17 huesos y siete animaciones (`Idle`, `Explica`, `Senala`, `Piensa`, `Verdadero`, `Falso` y `Saluda`).
 - **Boca:** tiene dos formas (morph targets): `Boca_abierta`, una mandíbula que gira, y `Boca_redonda`. La narración las mueve con cada palabra.
+- **Parpadeo:** un tercer morph target, `Parpadeo`. La vista 3D parpadea cada 2 a 6 segundos al azar, salvo con «reducir movimiento».
 
 El proceso completo está en `assets/avatar/realista/README.md`.
 
