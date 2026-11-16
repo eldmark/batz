@@ -24,7 +24,7 @@ def umeyama(src, dst):
     Uu, S, Vt = np.linalg.svd(b.T @ a / len(src)); d = np.sign(np.linalg.det(Uu @ Vt))
     E = np.diag([1, 1, d]); R = Uu @ E @ Vt; s = np.trace(np.diag(S) @ E) / a.var(0).sum()
     return s, R, md - s * R @ ms
-s, R, t = umeyama(U[use], B[use])
+s, R, t = umeyama(U[use], B[use]); SIM = {'s': float(s), 'R': R.tolist(), 't': t.tolist()}
 T = (s * (R @ U.T)).T + t
 print('escala', s, 'error medio antes', np.linalg.norm(T[use] - B[use], axis=1).mean())
 Dsp = T - B
@@ -121,7 +121,7 @@ V3[:, 0] *= 1 - .17 * wn
 V3[:, 1] += .002 * wn * (np.abs(V3[:, 0]) > .008)          # aletas un poco hacia atrás
 body.data.vertices.foreach_set('co', V3.ravel()); body.data.update()
 Bf[:, 0] *= 1 - .17 * np.clip(1 - np.sqrt((Bf[:, 0] / .028) ** 2 + ((Bf[:, 2] - cz_n) / .026) ** 2), 0, 1) ** .7 * (Bf[:, 1] < tip[1] + .045)
-json.dump({'B': Bf.tolist(), 'ok': ok.tolist()}, open(D + 'fit_lm.json', 'w'))
+json.dump({'B': Bf.tolist(), 'ok': ok.tolist(), 'sim': SIM}, open(D + 'fit_lm.json', 'w'))
 bpy.ops.wm.save_as_mainfile(filepath=D + 'fit.blend')
 exec(open(D + 'shots.py').read())
 z = cam['cz']

@@ -95,7 +95,7 @@ legs = sum(Wt[f'{b}.{s}'] for b in ('thigh', 'shin') for s in 'LR')
 feet = Wt['foot.L'] + Wt['foot.R']
 t_arm = np.maximum(along('upper_arm.L', V) * (x > 0), along('upper_arm.R', V) * (x < 0))
 rad = np.hypot(x / 1.0, (y + .012) / 1.12)
-neck_hole = (z > 1.385) & (rad < .071 + .012 * front * np.exp(-(x / .03) ** 2) * smooth01((1.47 - z) / .06) * 0) | (z > 1.385) & (np.abs(x) < .016) & (y < -.03) & (z > 1.395)
+neck_hole = (rad < .072) & (z > 1.44 + .022 * smooth01((y + .01) / .06))   # cuello redondo de hombre
 SHIRT = (z > .86) & ~neck_hole & (z < 1.56) & (arm_lo < .35) & ~rigid_head & (Wt['head'] < .4) & ((arm_up < .5) | (t_arm < .52))
 PANTS = (z < .975) & (z > .1) & (arm_lo < .3) & (arm_up < .3) & (torso_w + legs > .5)
 SHOES = (z < .115) & (legs + feet > .5)
@@ -169,6 +169,27 @@ def shirt_off(p):
         if p.x * sx > .17: t = along(f'upper_arm.{s}', np.array(p[:])); sl = max(sl, smooth01((t - .1) / .4))
     return loose + .006 * sl
 sv, sf, sb = garment(SHIRT, M_SHIRT, shirt_off, 30, 'camisa')
+# la tela cuelga: bajo el pecho no se mete hacia el cuerpo y la cintura no se angosta (torso de hombre, no reloj de arena)
+def drape(verts, axis, sign, bins_axis, sel, slope):
+    cols = {}
+    for v in verts:
+        if sel(v): cols.setdefault(round(v.co[bins_axis] / .012), []).append(v)
+    for vs in cols.values():
+        vs.sort(key=lambda v: -v.co.z)
+        env, zprev = None, None
+        for v in vs:
+            val = sign * v.co[axis]
+            if env is not None:
+                lim = env - slope * (zprev - v.co.z)
+                if val < lim: v.co[axis] = sign * lim; val = lim
+            env = val if env is None else max(val, env - slope * (zprev - v.co.z)); zprev = v.co.z
+torso = [v for v in sv if v.co.z < 1.36 and v.co.z > .86 and abs(v.co.x) < .2]
+drape(torso, 1, -1, 0, lambda v: v.normal.y < -.35, .22)                  # frente: cae desde el pecho
+for sx in (1, -1):
+    drape(torso, 0, sx, 1, lambda v, sx=sx: sx * v.normal.x > .45 and sx * v.co.x > .08, .12)   # costados: casi rectos
+for _ in range(6):
+    new = {v: v.co * .5 + sum((e.other_vert(v).co for e in v.link_edges), Vector()) / len(v.link_edges) * .5 for v in torso if v not in sb}
+    for v, c in new.items(): v.co = c
 pv, pf, pb = garment(PANTS, M_PANTS, lambda p: .008 + .005 * smooth01((.6 - p.z) / .4), 40, 'pantalón')
 fv, ff, fb = garment(SHOES, M_SHOE, lambda p: .007, 8, 'zapatos')
 

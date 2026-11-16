@@ -39,6 +39,15 @@ ring = cv2.dilate(mouth, np.ones((9, 9), np.uint8)) & ~cv2.dilate(mouth, np.ones
 lip = np.median(img[ring > 0], 0) * .78 if mouth.any() else np.zeros(3)
 m = cv2.GaussianBlur(cv2.dilate(mouth, np.ones((5, 5), np.uint8)), (0, 0), 2.5)[..., None] / 255.
 if mouth.any(): img = (img * (1 - m) + lip * m).astype(np.uint8)
+# bigote: se aclara hacia el tono de las mejillas (se nota menos la sombra bajo la nariz)
+lip_top = [61, 185, 40, 39, 37, 0, 267, 269, 270, 409, 291]
+poly_m = np.vstack([P[[98, 2, 327]], P[lip_top[::-1]]]).astype(np.int32)
+mm = np.zeros((H, W), np.uint8); cv2.fillPoly(mm, [cv2.convexHull(poly_m)], 255)
+mm = cv2.GaussianBlur(cv2.dilate(mm, np.ones((3, 3), np.uint8)), (0, 0), 3)[..., None] / 255. * .45
+def _patch(i, r=8): x, y = P[i].astype(int); return img[y - r:y + r, x - r:x + r].reshape(-1, 3)
+cheek_c = np.median(np.vstack([_patch(i) for i in (205, 425, 50, 280)]), 0)
+# mantener la textura: se suma la diferencia de brillo, no se pinta encima
+img = np.clip(img + (cheek_c - cv2.GaussianBlur(img, (0, 0), 4)) * mm, 0, 255).astype(np.uint8)
 rgba = np.dstack([img, alpha]); cv2.imwrite('foto_rgba.png', rgba)
 # piel: mediana de mejillas y frente
 def patch(i, r=14): x, y = P[i].astype(int); return img[y - r:y + r, x - r:x + r].reshape(-1, 3)
