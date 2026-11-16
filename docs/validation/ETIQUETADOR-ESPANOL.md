@@ -8,9 +8,9 @@ La gramática del español controlado tiene un léxico cerrado. Cuando una frase
 
 ## Modelo y datos
 
-- Regresión logística multinomial, 18 etiquetas, 2172 rasgos (terminaciones de 1 a 4 letras, mayúscula, tilde, longitud y las palabras funcionales vecinas).
+- Regresión logística multinomial, 18 etiquetas, 2640 rasgos (terminaciones de 1 a 4 letras, mayúscula, tilde, longitud y las palabras funcionales vecinas).
 - Entrenada por descenso de gradiente por lotes (64) sobre la entropía cruzada, con penalización L2 y tasa de aprendizaje decreciente.
-- 26496 ejemplos de entrenamiento, generados con plantillas a partir de 1551 lemas. Las etiquetas son correctas por construcción.
+- 26408 ejemplos de entrenamiento, generados con plantillas a partir de 2372 lemas. Las etiquetas son correctas por construcción.
 - **Partición por lema** (70 % / 15 % / 15 %): validación y prueba solo contienen palabras que el modelo nunca vio.
 - Las conversaciones de clase no se usaron para entrenar: casi no contienen frases en lenguaje natural. Sirven de prueba final (abajo).
 
@@ -18,31 +18,31 @@ La gramática del español controlado tiene un léxico cerrado. Cuando una frase
 
 | Tasa de aprendizaje | L2 | Mejor época | Exactitud en validación | Exactitud en la última época |
 |---|---|---|---|---|
-| 0.1 | 0.0 | 14 | 0.968 | 0.968 |
-| 0.1 | 0.0001 | 14 | 0.968 | 0.968 |
-| 0.1 | 0.001 | 12 | 0.968 | 0.968 |
-| 0.5 | 0.0 | 11 | 0.969 | 0.968 |
-| 0.5 | 0.0001 | 11 | 0.969 | 0.968 |
-| 0.5 | 0.001 | 5 | 0.969 | 0.967 |
-| 2.0 | 0.0 | 6 | 0.971 **← elegido** | 0.968 |
-| 2.0 | 0.0001 | 11 | 0.971 | 0.969 |
-| 2.0 | 0.001 | 4 | 0.968 | 0.965 |
+| 0.1 | 0.0 | 14 | 0.972 | 0.972 |
+| 0.1 | 0.0001 | 14 | 0.972 | 0.972 |
+| 0.1 | 0.001 | 14 | 0.972 | 0.972 |
+| 0.5 | 0.0 | 14 | 0.977 | 0.977 |
+| 0.5 | 0.0001 | 10 | 0.977 | 0.976 |
+| 0.5 | 0.001 | 14 | 0.974 | 0.974 |
+| 2.0 | 0.0 | 14 | 0.979 **← elegido** | 0.979 |
+| 2.0 | 0.0001 | 10 | 0.978 | 0.977 |
+| 2.0 | 0.001 | 10 | 0.975 | 0.975 |
 
 ## Resultado en palabras nunca vistas
 
-- Exactitud con etiqueta completa (categoría, género y número): **97.1%** sobre 4461 palabras.
-- Exactitud de la categoría gruesa (sustantivo / adjetivo / verbo con objeto / verbo sin objeto / nombre): **99.8%**.
+- Exactitud con etiqueta completa (categoría, género y número): **96.4%** sobre 4427 palabras.
+- Exactitud de la categoría gruesa (sustantivo / adjetivo / verbo con objeto / verbo sin objeto / nombre): **99.9%**.
 
 Confusiones más frecuentes (real → propuesta):
 
-- NProp_F → NProp_M: 36
-- Adj_MS → Adj_FS: 16
-- N_FP → N_MP: 16
-- NProp_M → NProp_F: 8
-- Adj_FP → Adj_MP: 7
-- N_MP → N_FP: 7
-- Adj_FS → VI_S: 6
-- N_FS → N_MS: 6
+- NProp_F → NProp_M: 45
+- N_FP → N_MP: 24
+- N_MP → N_FP: 23
+- NProp_M → NProp_F: 20
+- Adj_MP → Adj_FP: 14
+- N_FS → N_MS: 9
+- Adj_MS → Adj_FS: 9
+- N_MS → N_FS: 3
 
 La gramática corrige parte de estos errores: una etiqueta que no concuerda con el resto de la frase no produce ningún árbol, y por eso se prueban las dos más probables.
 

@@ -38,8 +38,22 @@ class Entry:
 
     @property
     def symbol(self):
-        base = plain(self.lemma.casefold())
-        return base if self.category == "NP" else base.capitalize()
+        """Símbolo lógico: el lema sin tildes. Un sinónimo usa el de su palabra principal
+        (`sin=perro` → `Perro`); una palabra con varios sentidos lleva el suyo (`Banco_asiento`)."""
+        opts = self.options()
+        base = plain((opts.get("sin") or self.lemma).casefold())
+        if self.category != "NP":
+            base = base[:1].upper() + base[1:]
+        if opts.get("sentido") and not opts.get("sin"):
+            base += "_" + plain(opts["sentido"].casefold())
+        return base
+
+    @property
+    def gloss(self):
+        opts = self.options()
+        if opts.get("sin"):
+            return "sinónimo de " + opts["sin"].replace("_", ", sentido ")
+        return opts.get("sentido", "")
 
     def options(self):
         out = {}
@@ -82,7 +96,7 @@ class Entry:
         feature = GENDERS.get(self.feature) if self.category in ("N", "NP") else USES.get(self.feature, "")
         return {"lemma": self.lemma, "category": self.category, "category_label": CATEGORIES[self.category],
                 "feature": self.feature, "feature_label": feature or "", "extra": self.extra,
-                "symbol": self.symbol, "forms": flat, "source": self.source}
+                "symbol": self.symbol, "gloss": self.gloss, "forms": flat, "source": self.source}
 
 
 # --- flexión ----------------------------------------------------------------
@@ -168,7 +182,7 @@ def entries():
 
 @lru_cache(maxsize=1)
 def _tables():
-    """(etiqueta → formas, (clase semántica, forma) → símbolo)."""
+    """(etiqueta → formas, (clase semántica, forma) → [(símbolo, glosa)] sin repetir símbolo)."""
     by_tag, symbols = {}, {}
     for e in entries():
         try:
@@ -179,7 +193,9 @@ def _tables():
         for tag, values in forms.items():
             for form in values:
                 by_tag.setdefault(tag, set()).add(form)
-                symbols.setdefault((kind, form), e.symbol)
+                known = symbols.setdefault((kind, form), [])
+                if all(s != e.symbol for s, _ in known):
+                    known.append((e.symbol, e.gloss or e.lemma))
     return by_tag, symbols
 
 
@@ -189,7 +205,13 @@ def grammar_forms():
 
 def symbol(kind, form):
     """Símbolo lógico de una forma (`kind`: N, Adj o V), o None si no está en el diccionario."""
-    return _tables()[1].get((kind, form))
+    found = _tables()[1].get((kind, form))
+    return found[0][0] if found else None
+
+
+def senses(kind, form):
+    """Todos los símbolos que puede tener una forma: más de uno si la palabra tiene varios sentidos."""
+    return tuple(_tables()[1].get((kind, form), ()))
 
 
 def reload():
@@ -221,7 +243,7 @@ def search(query="", category="", source="", limit=60, offset=0):
             continue
         if q:
             try:
-                haystack = [e.lemma.casefold(), *(f for values in e.forms().values() for f in values)]
+                haystack = [e.lemma.casefold(), e.options().get("sin", ""), *(f for values in e.forms().values() for f in values)]
             except LogosError:
                 haystack = [e.lemma.casefold()]
             if not any(plain(h).startswith(q) for h in haystack):
@@ -254,6 +276,10 @@ def _validate(lemma, category, feature, extra):
     if "\t" in extra or "\n" in extra or len(extra) > 200:
         raise LogosError("semantic", "invalid_lexicon", "datos extra inválidos")
     entry = Entry(lemma if category == "NP" else lemma.casefold(), category, feature, extra, "usuario")
+    for key in ("sin", "sentido"):
+        value = entry.options().get(key, "")
+        if value and not all(ch.isalpha() or ch == "_" for ch in value):
+            raise LogosError("semantic", "invalid_lexicon", f"«{key}» debe ser una palabra")
     for values in entry.forms().values():      # lanza si no se puede flexionar
         for form in values:
             if not form or not all(ch.isalpha() for ch in form):
@@ -264,8 +290,8 @@ def _validate(lemma, category, feature, extra):
 def add(lemma, category, feature, extra=""):
     """Guarda una palabra del usuario y recarga la gramática. Devuelve la entrada."""
     entry = _validate(lemma, category, feature, extra)
-    key = (entry.lemma.casefold(), entry.category, entry.feature)
-    if any((e.lemma.casefold(), e.category, e.feature) == key for e in entries()):
+    key = (entry.lemma.casefold(), entry.category, entry.feature, entry.symbol)   # otro sentido sí es otra entrada
+    if any((e.lemma.casefold(), e.category, e.feature, e.symbol) == key for e in entries()):
         raise LogosError("semantic", "duplicate_lexicon", f"«{entry.lemma}» ya está en el diccionario con esa categoría")
     path = user_path()
     try:

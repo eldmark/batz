@@ -820,6 +820,7 @@ function dictEntryRow(entry) {
   if (entry.source === 'usuario') word.append(node('span', 'tuya', 'chip'));
   const kind = node('td', undefined); kind.append(node('span', entry.category_label, `kind ${({N: 'predicate', ADJ: 'constant', V: 'function', NP: 'name'})[entry.category]}`));
   if (entry.feature_label) kind.append(node('span', entry.feature_label, 'hint'));
+  if (entry.gloss) word.append(node('span', entry.gloss, 'hint gloss'));
   const remove = node('td');
   if (entry.source === 'usuario') {
     const button = node('button', 'Quitar', 'button secondary small'); button.type = 'button';
@@ -856,6 +857,10 @@ function dictFields() {
   let extra = '';
   if ($('dict-category').value === 'V' && forms.some(Boolean)) extra = `formas=${forms.join(',')}`;
   else if (plural) extra = `pl=${plural}`;
+  // significado: sinónimo de otra palabra (comparte su símbolo) o un sentido propio (símbolo aparte)
+  const synonym = $('dict-synonym').value.trim().toLowerCase(), sense = $('dict-sense').value.trim().toLowerCase();
+  const meaning = synonym ? `sin=${synonym}` : sense ? `sentido=${sense}` : '';
+  if (meaning) extra = extra ? `${extra};${meaning}` : meaning;
   return {lemma: $('dict-lemma').value.trim(), category: $('dict-category').value, feature: $('dict-feature').value, extra};
 }
 
@@ -909,7 +914,7 @@ async function dictConsult() {
 async function dictSave() {
   const result = await api('/api/lexicon/add', dictFields());
   if (result.status !== 'ok') { $('dict-error').textContent = result.errors?.[0]?.message || 'No se pudo guardar.'; $('dict-error').hidden = false; return; }
-  $('dict-form').hidden = true; $('dict-word').value = '';
+  $('dict-form').hidden = true; $('dict-word').value = ''; $('dict-synonym').value = ''; $('dict-sense').value = '';
   $('dict-proposal').textContent = `«${result.entry.lemma}» guardada. Ya puedes usarla en una frase.`;
   $('dict-query').value = result.entry.lemma; searchDictionary(true);
 }
@@ -931,7 +936,7 @@ $('dict-more').addEventListener('click', () => searchDictionary(false));
 $('dict-check').addEventListener('click', dictConsult);
 $('dict-word').addEventListener('keydown', event => { if (event.key === 'Enter') dictConsult(); });
 $('dict-category').addEventListener('change', () => { dictSetCategory($('dict-category').value); dictPreview(); });
-for (const id of ['dict-lemma', 'dict-feature']) $(id).addEventListener('input', dictPreview);
+for (const id of ['dict-lemma', 'dict-feature', 'dict-synonym', 'dict-sense']) $(id).addEventListener('input', dictPreview);
 $('dict-save').addEventListener('click', dictSave);
 
 // --- modos ---

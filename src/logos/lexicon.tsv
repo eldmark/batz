@@ -38,7 +38,6 @@ reptil	N	M
 insecto	N	M	
 león	N	M	
 tigre	N	M	
-ratón	N	M	
 elefante	N	M	
 mono	N	M	
 lobo	N	M	
@@ -92,7 +91,6 @@ siglo	N	M
 minuto	N	M	
 segundo	N	M	
 momento	N	M	
-tiempo	N	M	
 lugar	N	M	
 mundo	N	M	
 cielo	N	M	
@@ -106,7 +104,6 @@ barrio	N	M
 parque	N	M	
 mercado	N	M	
 hospital	N	M	
-banco	N	M	
 teatro	N	M	
 museo	N	M	
 cine	N	M	
@@ -189,7 +186,6 @@ periódico	N	M
 cuento	N	M	
 poema	N	M	
 dibujo	N	M	
-cuadro	N	M	
 retrato	N	M	
 color	N	M	
 sonido	N	M	
@@ -304,7 +300,6 @@ marinero	N	M
 piloto	N	M	
 capitán	N	M	
 estudiante	N	C	
-gato	N	M	
 libro	N	M	
 profesor	N	M	
 griego	N	M	
@@ -344,7 +339,6 @@ silla	N	F
 flor	N	F	
 ciudad	N	F	
 universidad	N	F	
-clase	N	F	
 vaca	N	F	
 gallina	N	F	
 oveja	N	F	
@@ -358,10 +352,8 @@ hormiga	N	F
 manzana	N	F	
 naranja	N	F	
 fruta	N	F	
-planta	N	F	
 piedra	N	F	
 montaña	N	F	
-estrella	N	F	
 luna	N	F	
 madre	N	F	
 hija	N	F	
@@ -388,7 +380,6 @@ relación	N	F
 proposición	N	F	
 escuela	N	F	
 iglesia	N	F	
-tienda	N	F	
 calle	N	F	
 plaza	N	F	
 playa	N	F	
@@ -403,10 +394,8 @@ computadora	N	F
 bicicleta	N	F	
 guitarra	N	F	
 pintura	N	F	
-carta	N	F	
 revista	N	F	
 moneda	N	F	
-llave	N	F	
 botella	N	F	
 camisa	N	F	
 actriz	N	F	
@@ -436,7 +425,6 @@ sangre	N	F
 piel	N	F	
 cara	N	F	
 boca	N	F	
-lengua	N	F	
 oreja	N	F	
 cabeza	N	F	
 espalda	N	F	
@@ -487,7 +475,6 @@ palabra	N	F
 letra	N	F	
 sílaba	N	F	
 página	N	F	
-hoja	N	F	
 línea	N	F	
 figura	N	F	
 imagen	N	F	pl=imágenes
@@ -1503,3 +1490,813 @@ Atenea	NP	F
 Venus	NP	F	
 Ariadna	NP	F	
 águila	N	F	
+# --- sinónimos: comparten el símbolo de su palabra principal (sin=) ---
+can	N	M	sin=perro
+chucho	N	M	sin=perro
+gato	N	M	
+minino	N	M	sin=gato
+felino	N	M	sin=gato
+corcel	N	M	sin=caballo
+potro	N	M	sin=caballo
+varón	N	M	sin=hombre
+señor	N	M	sin=hombre
+dama	N	F	sin=mujer
+señora	N	F	sin=mujer
+chico	N	M	sin=niño
+muchacho	N	M	sin=niño
+chaval	N	M	sin=niño
+nene	N	M	sin=niño
+chica	N	F	sin=niña
+muchacha	N	F	sin=niña
+nena	N	F	sin=niña
+discípulo	N	M	sin=alumno
+aprendiz	N	C	sin=alumno
+docente	N	C	sin=maestro
+educador	N	M	sin=maestro
+instructor	N	M	sin=maestro
+educadora	N	F	sin=maestra
+galeno	N	M	sin=médico
+pensador	N	M	sin=filósofo
+bestia	N	F	sin=animal
+criatura	N	F	sin=animal
+ave	N	F	sin=pájaro
+pescado	N	M	sin=pez
+cifra	N	F	sin=número
+dígito	N	M	sin=número
+colección	N	F	sin=conjunto
+grupo	N	M	sin=conjunto
+estado	N	M	sin=país
+monarca	N	C	sin=rey
+soberano	N	M	sin=rey
+letrado	N	M	sin=abogado
+jurista	N	C	sin=abogado
+compositor	N	M	sin=músico
+vate	N	M	sin=poeta
+astro	N	M	sin=planeta
+arroyo	N	M	sin=río
+automóvil	N	M	sin=coche
+auto	N	M	sin=coche
+vehículo	N	M	sin=coche
+compañero	N	M	sin=amigo
+camarada	N	C	sin=amigo
+papá	N	M	sin=padre
+progenitor	N	M	sin=padre
+mamá	N	F	sin=madre
+progenitora	N	F	sin=madre
+patrón	N	M	sin=jefe
+superior	N	M	sin=jefe
+militar	N	C	sin=soldado
+guerrero	N	M	sin=soldado
+labrador	N	M	sin=campesino
+agricultor	N	M	sin=campesino
+autor	N	M	sin=escritor
+novelista	N	C	sin=escritor
+intérprete	N	C	sin=actor
+chofer	N	M	sin=conductor
+cuestión	N	F	sin=problema
+dificultad	N	F	sin=problema
+ferrocarril	N	M	sin=tren
+aeroplano	N	M	sin=avión
+nave	N	F	sin=barco
+navío	N	M	sin=barco
+buque	N	M	sin=barco
+construcción	N	F	sin=edificio
+inmueble	N	M	sin=edificio
+sendero	N	M	sin=camino
+senda	N	F	sin=camino
+ruta	N	F	sin=camino
+vía	N	F	sin=camino
+huerto	N	M	sin=jardín
+océano	N	M	sin=mar
+laguna	N	F	sin=lago
+jornada	N	F	sin=día
+instante	N	M	sin=momento
+sitio	N	M	sin=lugar
+paraje	N	M	sin=lugar
+firmamento	N	M	sin=cielo
+aire	N	M	sin=viento
+lumbre	N	F	sin=fuego
+llama	N	F	sin=fuego
+poblado	N	M	sin=pueblo
+villa	N	F	sin=pueblo
+clínica	N	F	sin=hospital
+sanatorio	N	M	sin=hospital
+alcoba	N	F	sin=cuarto
+dormitorio	N	M	sin=cuarto
+tejado	N	M	sin=techo
+tapia	N	F	sin=muro
+corredor	N	M	sin=pasillo
+libreta	N	F	sin=cuaderno
+pupitre	N	M	sin=escritorio
+computador	N	M	sin=ordenador
+móvil	N	M	sin=teléfono
+celular	N	M	sin=teléfono
+pelota	N	F	sin=balón
+obsequio	N	M	sin=regalo
+presente	N	M	sin=regalo
+galardón	N	M	sin=premio
+plata	N	F	sin=dinero
+efectivo	N	M	sin=dinero
+costo	N	M	sin=precio
+valor	N	M	sin=precio
+labor	N	F	sin=trabajo
+faena	N	F	sin=trabajo
+ocupación	N	F	sin=empleo
+puesto	N	M	sin=empleo
+profesión	N	F	sin=oficio
+comercio	N	M	sin=negocio
+procedimiento	N	M	sin=método
+técnica	N	F	sin=método
+muestra	N	F	sin=ejemplo
+caso	N	M	sin=ejemplo
+fallo	N	M	sin=error
+equivocación	N	F	sin=error
+falta	N	F	sin=error
+noción	N	F	sin=concepto
+emblema	N	M	sin=símbolo
+señal	N	F	sin=signo
+cosa	N	F	sin=objeto
+ente	N	M	sin=objeto
+relato	N	M	sin=cuento
+narración	N	F	sin=cuento
+verso	N	M	sin=poema
+lienzo	N	M	sin=cuadro
+matiz	N	M	sin=color
+tono	N	M	sin=color
+estruendo	N	M	sin=ruido
+aroma	N	M	sin=olor
+fragancia	N	F	sin=olor
+sustento	N	M	sin=alimento
+torta	N	F	sin=pastel
+golosina	N	F	sin=dulce
+caramelo	N	M	sin=dulce
+calzado	N	M	sin=zapato
+gabán	N	M	sin=abrigo
+chaqueta	N	F	sin=abrigo
+traje	N	M	sin=vestido
+sortija	N	F	sin=anillo
+temor	N	M	sin=miedo
+pavor	N	M	sin=miedo
+terror	N	M	sin=miedo
+pánico	N	M	sin=miedo
+pena	N	F	sin=dolor
+sufrimiento	N	M	sin=dolor
+cariño	N	M	sin=amor
+afecto	N	M	sin=amor
+rencor	N	M	sin=odio
+anhelo	N	M	sin=deseo
+ansia	N	F	sin=deseo
+riesgo	N	M	sin=peligro
+amenaza	N	F	sin=peligro
+delito	N	M	sin=crimen
+bandido	N	M	sin=ladrón
+ratero	N	M	sin=ladrón
+caco	N	M	sin=ladrón
+magistrado	N	M	sin=juez
+preso	N	M	sin=prisionero
+reo	N	M	sin=prisionero
+cautivo	N	M	sin=prisionero
+adversario	N	M	sin=enemigo
+rival	N	C	sin=enemigo
+contrincante	N	C	sin=enemigo
+coloso	N	M	sin=gigante
+hechicero	N	M	sin=mago
+brujo	N	M	sin=mago
+espectro	N	M	sin=fantasma
+aparición	N	F	sin=fantasma
+engendro	N	M	sin=monstruo
+diablo	N	M	sin=demonio
+deidad	N	F	sin=dios
+clérigo	N	M	sin=sacerdote
+siervo	N	M	sin=esclavo
+criado	N	M	sin=sirviente
+invitado	N	M	sin=huésped
+forastero	N	M	sin=extranjero
+investigador	N	M	sin=científico
+sabio	N	M	sin=científico
+ovejero	N	M	sin=pastor
+navegante	N	C	sin=marinero
+aviador	N	M	sin=piloto
+vivienda	N	F	sin=casa
+hogar	N	M	sin=casa
+morada	N	F	sin=casa
+domicilio	N	M	sin=casa
+asiento	N	M	sin=silla
+urbe	N	F	sin=ciudad
+metrópoli	N	F	sin=ciudad
+facultad	N	F	sin=universidad
+culebra	N	F	sin=serpiente
+víbora	N	F	sin=serpiente
+peñasco	N	M	sin=piedra
+monte	N	M	sin=montaña
+cerro	N	M	sin=montaña
+lucero	N	M	sin=estrella
+interrogante	N	F	sin=pregunta
+contestación	N	F	sin=respuesta
+réplica	N	F	sin=respuesta
+expresión	N	F	sin=fórmula
+enunciado	N	M	sin=proposición
+afirmación	N	F	sin=proposición
+templo	N	M	sin=iglesia
+almacén	N	M	sin=tienda
+avenida	N	F	sin=calle
+borrasca	N	F	sin=tormenta
+tempestad	N	F	sin=tormenta
+deber	N	M	sin=tarea
+aparato	N	M	sin=máquina
+artefacto	N	M	sin=máquina
+bici	N	F	sin=bicicleta
+óleo	N	M	sin=pintura
+misiva	N	F	sin=carta
+epístola	N	F	sin=carta
+existencia	N	F	sin=vida
+fallecimiento	N	M	sin=muerte
+defunción	N	F	sin=muerte
+dolencia	N	F	sin=enfermedad
+mal	N	M	sin=enfermedad
+remedio	N	M	sin=medicina
+fármaco	N	M	sin=medicina
+lesión	N	F	sin=herida
+rostro	N	M	sin=cara
+semblante	N	M	sin=cara
+testa	N	F	sin=cabeza
+dorso	N	M	sin=espalda
+intelecto	N	M	sin=mente
+certidumbre	N	F	sin=certeza
+parecer	N	M	sin=opinión
+juicio	N	M	sin=opinión
+evidencia	N	F	sin=prueba
+precepto	N	M	sin=regla
+requisito	N	M	sin=condición
+motivo	N	M	sin=causa
+efecto	N	M	sin=consecuencia
+atributo	N	M	sin=propiedad
+característica	N	F	sin=propiedad
+rasgo	N	M	sin=cualidad
+virtud	N	F	sin=cualidad
+adición	N	F	sin=suma
+sustracción	N	F	sin=resta
+vocablo	N	M	sin=palabra
+silueta	N	F	sin=figura
+baile	N	M	sin=danza
+festejo	N	M	sin=fiesta
+celebración	N	F	sin=fiesta
+enlace	N	M	sin=boda
+casamiento	N	M	sin=boda
+junta	N	F	sin=reunión
+asamblea	N	F	sin=reunión
+charla	N	F	sin=conversación
+diálogo	N	M	sin=conversación
+debate	N	M	sin=discusión
+riña	N	F	sin=pelea
+disputa	N	F	sin=pelea
+combate	N	M	sin=batalla
+contienda	N	F	sin=batalla
+triunfo	N	M	sin=victoria
+fracaso	N	M	sin=derrota
+mito	N	M	sin=leyenda
+saber	N	M	sin=ciencia
+compañía	N	F	sin=empresa
+firma	N	F	sin=empresa
+despacho	N	M	sin=oficina
+beneficio	N	M	sin=ganancia
+fortuna	N	F	sin=riqueza
+miseria	N	F	sin=pobreza
+trago	N	M	sin=bebida
+lecho	N	M	sin=cama
+cobija	N	F	sin=manta
+frazada	N	F	sin=manta
+farol	N	M	sin=lámpara
+tapete	N	M	sin=alfombra
+comarca	N	F	sin=región
+territorio	N	M	sin=región
+límite	N	M	sin=frontera
+autopista	N	F	sin=carretera
+caverna	N	F	sin=cueva
+gruta	N	F	sin=cueva
+jungla	N	F	sin=selva
+loma	N	F	sin=colina
+litoral	N	M	sin=costa
+onda	N	F	sin=ola
+aguacero	N	M	sin=lluvia
+chubasco	N	M	sin=lluvia
+neblina	N	F	sin=niebla
+bruma	N	F	sin=niebla
+hechicera	N	F	sin=bruja
+cónyuge	N	C	sin=esposa
+prometida	N	F	sin=novia
+benévolo	ADJ	-	sin=bueno
+perverso	ADJ	-	sin=malo
+ruin	ADJ	-	sin=malo
+albo	ADJ	-	sin=blanco
+chico	ADJ	-	sin=pequeño
+menudo	ADJ	-	sin=pequeño
+minúsculo	ADJ	-	sin=pequeño
+extenso	ADJ	-	sin=largo
+prolongado	ADJ	-	sin=largo
+breve	ADJ	-	sin=corto
+reciente	ADJ	-	sin=nuevo
+novedoso	ADJ	-	sin=nuevo
+añejo	ADJ	-	sin=viejo
+vetusto	ADJ	-	sin=viejo
+lindo	ADJ	-	sin=bonito
+bello	ADJ	-	sin=bonito
+precioso	ADJ	-	sin=bonito
+guapo	ADJ	-	sin=bonito
+horrible	ADJ	-	sin=feo
+espantoso	ADJ	-	sin=feo
+adinerado	ADJ	-	sin=rico
+acaudalado	ADJ	-	sin=rico
+pudiente	ADJ	-	sin=rico
+docto	ADJ	-	sin=sabio
+erudito	ADJ	-	sin=sabio
+culto	ADJ	-	sin=sabio
+astuto	ADJ	-	sin=listo
+sagaz	ADJ	-	sin=listo
+honrado	ADJ	-	sin=honesto
+íntegro	ADJ	-	sin=honesto
+recto	ADJ	-	sin=honesto
+raudo	ADJ	-	sin=rápido
+pausado	ADJ	-	sin=lento
+calmoso	ADJ	-	sin=lento
+saludable	ADJ	-	sin=sano
+doliente	ADJ	-	sin=enfermo
+indispuesto	ADJ	-	sin=enfermo
+dichoso	ADJ	-	sin=contento
+satisfecho	ADJ	-	sin=contento
+agotado	ADJ	-	sin=cansado
+fatigado	ADJ	-	sin=cansado
+exhausto	ADJ	-	sin=cansado
+célebre	ADJ	-	sin=famoso
+ilustre	ADJ	-	sin=famoso
+renombrado	ADJ	-	sin=famoso
+riesgoso	ADJ	-	sin=peligroso
+arriesgado	ADJ	-	sin=peligroso
+espléndido	ADJ	-	sin=generoso
+desprendido	ADJ	-	sin=generoso
+aplicado	ADJ	-	sin=estudioso
+sereno	ADJ	-	sin=tranquilo
+calmado	ADJ	-	sin=tranquilo
+apacible	ADJ	-	sin=tranquilo
+agradable	ADJ	-	sin=simpático
+cordial	ADJ	-	sin=simpático
+arcaico	ADJ	-	sin=antiguo
+remoto	ADJ	-	sin=antiguo
+actual	ADJ	-	sin=moderno
+contemporáneo	ADJ	-	sin=moderno
+aseado	ADJ	-	sin=limpio
+pulcro	ADJ	-	sin=limpio
+mugriento	ADJ	-	sin=sucio
+costoso	ADJ	-	sin=caro
+económico	ADJ	-	sin=barato
+obeso	ADJ	-	sin=gordo
+esbelto	ADJ	-	sin=flaco
+sombrío	ADJ	-	sin=oscuro
+tenebroso	ADJ	-	sin=oscuro
+luminoso	ADJ	-	sin=claro
+nítido	ADJ	-	sin=claro
+erróneo	ADJ	-	sin=falso
+equivocado	ADJ	-	sin=falso
+verídico	ADJ	-	sin=cierto
+preciso	ADJ	-	sin=exacto
+limitado	ADJ	-	sin=finito
+ilimitado	ADJ	-	sin=infinito
+hueco	ADJ	-	sin=vacío
+impecable	ADJ	-	sin=perfecto
+intachable	ADJ	-	sin=perfecto
+formal	ADJ	-	sin=serio
+vergonzoso	ADJ	-	sin=tímido
+retraído	ADJ	-	sin=tímido
+perecedero	ADJ	-	sin=mortal
+afligido	ADJ	-	sin=triste
+apenado	ADJ	-	sin=triste
+melancólico	ADJ	-	sin=triste
+inmenso	ADJ	-	sin=grande
+vasto	ADJ	-	sin=grande
+amplio	ADJ	-	sin=grande
+robusto	ADJ	-	sin=fuerte
+vigoroso	ADJ	-	sin=fuerte
+recio	ADJ	-	sin=fuerte
+potente	ADJ	-	sin=fuerte
+endeble	ADJ	-	sin=débil
+flojo	ADJ	-	sin=débil
+valeroso	ADJ	-	sin=valiente
+intrépido	ADJ	-	sin=valiente
+osado	ADJ	-	sin=valiente
+bravo	ADJ	-	sin=valiente
+gentil	ADJ	-	sin=amable
+cortés	ADJ	-	sin=amable
+autónomo	ADJ	-	sin=libre
+competente	ADJ	-	sin=capaz
+apto	ADJ	-	sin=capaz
+despiadado	ADJ	-	sin=cruel
+inhumano	ADJ	-	sin=cruel
+arduo	ADJ	-	sin=difícil
+provechoso	ADJ	-	sin=útil
+práctico	ADJ	-	sin=útil
+diestro	ADJ	-	sin=hábil
+mañoso	ADJ	-	sin=hábil
+habitual	ADJ	-	sin=normal
+corriente	ADJ	-	sin=normal
+usual	ADJ	-	sin=normal
+singular	ADJ	-	sin=especial
+semejante	ADJ	-	sin=igual
+fundamental	ADJ	-	sin=principal
+primordial	ADJ	-	sin=principal
+esencial	ADJ	-	sin=principal
+relevante	ADJ	-	sin=importante
+trascendente	ADJ	-	sin=importante
+sensato	ADJ	-	sin=prudente
+cauto	ADJ	-	sin=prudente
+elevado	ADJ	-	sin=alto
+colorado	ADJ	-	sin=rojo
+encarnado	ADJ	-	sin=rojo
+auténtico	ADJ	-	sin=verdadero
+factible	ADJ	-	sin=posible
+viable	ADJ	-	sin=posible
+irrealizable	ADJ	-	sin=imposible
+indispensable	ADJ	-	sin=necesario
+imprescindible	ADJ	-	sin=necesario
+bastante	ADJ	-	sin=suficiente
+diverso	ADJ	-	sin=diferente
+exclusivo	ADJ	-	sin=único
+global	ADJ	-	sin=universal
+intrincado	ADJ	-	sin=complejo
+acertado	ADJ	-	sin=correcto
+errado	ADJ	-	sin=incorrecto
+equitativo	ADJ	-	sin=justo
+imparcial	ADJ	-	sin=justo
+lícito	ADJ	-	sin=legal
+ilícito	ADJ	-	sin=ilegal
+insólito	ADJ	-	sin=raro
+inusual	ADJ	-	sin=raro
+ignorado	ADJ	-	sin=desconocido
+incógnito	ADJ	-	sin=desconocido
+estimado	ADJ	-	sin=querido
+mozo	ADJ	-	sin=joven
+viviente	ADJ	-	sin=vivo
+difunto	ADJ	-	sin=muerto
+fallecido	ADJ	-	sin=muerto
+inmóvil	ADJ	-	sin=quieto
+intranquilo	ADJ	-	sin=inquieto
+jovial	ADJ	-	sin=alegre
+risueño	ADJ	-	sin=alegre
+enfadado	ADJ	-	sin=enojado
+molesto	ADJ	-	sin=enojado
+airado	ADJ	-	sin=furioso
+colérico	ADJ	-	sin=furioso
+atemorizado	ADJ	-	sin=asustado
+espantado	ADJ	-	sin=asustado
+asombrado	ADJ	-	sin=sorprendido
+atónito	ADJ	-	sin=sorprendido
+atareado	ADJ	-	sin=ocupado
+tedioso	ADJ	-	sin=aburrido
+entretenido	ADJ	-	sin=divertido
+cómico	ADJ	-	sin=gracioso
+chistoso	ADJ	-	sin=gracioso
+desagradable	ADJ	-	sin=antipático
+descortés	ADJ	-	sin=grosero
+maleducado	ADJ	-	sin=grosero
+franco	ADJ	-	sin=sincero
+veraz	ADJ	-	sin=sincero
+embustero	ADJ	-	sin=mentiroso
+laborioso	ADJ	-	sin=trabajador
+diligente	ADJ	-	sin=trabajador
+holgazán	ADJ	-	sin=perezoso
+vago	ADJ	-	sin=perezoso
+charlatán	ADJ	-	sin=hablador
+locuaz	ADJ	-	sin=hablador
+reservado	ADJ	-	sin=callado
+soberbio	ADJ	-	sin=orgulloso
+altivo	ADJ	-	sin=orgulloso
+modesto	ADJ	-	sin=humilde
+miedoso	ADJ	-	sin=cobarde
+temeroso	ADJ	-	sin=cobarde
+necesitado	ADJ	-	sin=pobre
+repleto	ADJ	-	sin=lleno
+colmado	ADJ	-	sin=lleno
+cálido	ADJ	-	sin=caliente
+ardiente	ADJ	-	sin=caliente
+helado	ADJ	-	sin=frío
+gélido	ADJ	-	sin=frío
+mojado	ADJ	-	sin=húmedo
+árido	ADJ	-	sin=seco
+rígido	ADJ	-	sin=duro
+firme	ADJ	-	sin=duro
+mullido	ADJ	-	sin=blando
+terso	ADJ	-	sin=suave
+rugoso	ADJ	-	sin=áspero
+llano	ADJ	-	sin=plano
+angosto	ADJ	-	sin=estrecho
+fino	ADJ	-	sin=delgado
+liviano	ADJ	-	sin=ligero
+hondo	ADJ	-	sin=profundo
+distante	ADJ	-	sin=lejano
+apartado	ADJ	-	sin=lejano
+vecino	ADJ	-	sin=cercano
+final	ADJ	-	sin=último
+inicial	ADJ	-	sin=primero
+gigantesco	ADJ	-	sin=gigante
+colosal	ADJ	-	sin=gigante
+manso	ADJ	-	sin=doméstico
+danzar	V	I	sin=bailar
+laborar	V	I	sin=trabajar
+sollozar	V	I	sin=llorar
+reposar	V	I	sin=descansar
+resplandecer	V	I	sin=brillar
+relucir	V	I	sin=brillar
+chillar	V	I	sin=gritar
+vocear	V	I	sin=gritar
+habitar	V	I	sin=vivir
+residir	V	I	sin=vivir
+padecer	V	I	sin=sufrir
+fallecer	V	I	sin=morir
+perecer	V	I	sin=morir
+retornar	V	I	sin=volver
+progresar	V	I	sin=avanzar
+arribar	V	I	sin=llegar
+ingresar	V	I	sin=entrar
+estimar	V	T	sin=respetar
+venerar	V	T	sin=respetar
+honrar	V	T	sin=respetar
+apreciar	V	T	sin=admirar
+detestar	V	T	sin=odiar
+aborrecer	V	T	sin=odiar
+auxiliar	V	T	sin=ayudar
+socorrer	V	T	sin=ayudar
+asistir	V	T	sin=ayudar
+instruir	V	T	sin=enseñar
+contemplar	V	T	sin=mirar
+adquirir	V	T	cambio=ie;sin=comprar
+atender	V	T	cambio=ie;sin=cuidar
+pegar	V	T	sin=golpear
+convidar	V	T	sin=invitar
+emplear	V	T	sin=usar
+utilizar	V	T	sin=usar
+requerir	V	T	cambio=ie;sin=necesitar
+precisar	V	T	sin=necesitar
+quebrar	V	T	cambio=ie;sin=romper
+destapar	V	T	sin=abrir
+tapar	V	T	sin=cubrir
+narrar	V	T	sin=describir
+debatir	V	T	sin=discutir
+ovacionar	V	T	sin=aplaudir
+inspeccionar	V	T	sin=examinar
+revisar	V	T	sin=examinar
+escoltar	V	T	sin=acompañar
+recompensar	V	T	sin=premiar
+sancionar	V	T	sin=castigar
+disculpar	V	T	sin=perdonar
+absolver	V	T	cambio=ue;sin=perdonar
+nutrir	V	T	sin=alimentar
+trasladar	V	T	sin=transportar
+remedar	V	T	sin=imitar
+indagar	V	T	sin=buscar
+censurar	V	T	sin=criticar
+agredir	V	T	sin=atacar
+asaltar	V	T	sin=atacar
+dejar	V	T	sin=abandonar
+admitir	V	T	sin=aceptar
+rehusar	V	T	sin=rechazar
+denegar	V	T	cambio=ie;sin=rechazar
+culpar	V	T	sin=acusar
+idolatrar	V	T	sin=adorar
+respaldar	V	T	sin=apoyar
+componer	V	T	sin=arreglar
+capturar	V	T	sin=atrapar
+apresar	V	T	sin=atrapar
+modificar	V	T	sin=cambiar
+alterar	V	T	sin=cambiar
+transformar	V	T	sin=cambiar
+festejar	V	T	sin=celebrar
+terminar	V	T	sin=completar
+acabar	V	T	sin=completar
+finalizar	V	T	sin=completar
+dominar	V	T	sin=conquistar
+edificar	V	T	sin=construir
+erigir	V	T	sin=construir
+generar	V	T	sin=crear
+atravesar	V	T	cambio=ie;sin=cruzar
+sembrar	V	T	cambio=ie;sin=cultivar
+perjudicar	V	T	sin=dañar
+lastimar	V	T	sin=dañar
+adornar	V	T	sin=decorar
+hallar	V	T	sin=descubrir
+arruinar	V	T	sin=destruir
+demoler	V	T	cambio=ue;sin=destruir
+derribar	V	T	sin=destruir
+guiar	V	T	sin=dirigir
+suprimir	V	T	sin=eliminar
+quitar	V	T	sin=eliminar
+burlar	V	T	sin=engañar
+timar	V	T	sin=engañar
+estafar	V	T	sin=engañar
+mandar	V	T	sin=enviar
+remitir	V	T	sin=enviar
+ocultar	V	T	sin=esconder
+eludir	V	T	sin=evitar
+esquivar	V	T	sin=evitar
+aclarar	V	T	sin=explicar
+elaborar	V	T	sin=fabricar
+establecer	V	T	sin=fundar
+conservar	V	T	sin=guardar
+almacenar	V	T	sin=guardar
+desconocer	V	T	sin=ignorar
+alumbrar	V	T	sin=iluminar
+agraviar	V	T	sin=insultar
+idear	V	T	sin=inventar
+asear	V	T	sin=limpiar
+colmar	V	T	sin=llenar
+portar	V	T	sin=llevar
+asesinar	V	T	sin=matar
+combinar	V	T	sin=mezclar
+desplazar	V	T	sin=mover
+designar	V	T	sin=nombrar
+disponer	V	T	sin=ordenar
+abonar	V	T	sin=pagar
+alistar	V	T	sin=preparar
+exhibir	V	T	sin=presentar
+vedar	V	T	sin=prohibir
+impedir	V	T	cambio=i;sin=prohibir
+amparar	V	T	sin=proteger
+resguardar	V	T	sin=proteger
+divulgar	V	T	sin=publicar
+difundir	V	T	sin=publicar
+incendiar	V	T	sin=quemar
+obsequiar	V	T	sin=regalar
+donar	V	T	sin=regalar
+restaurar	V	T	sin=reparar
+liberar	V	T	sin=rescatar
+solucionar	V	T	sin=resolver
+hurtar	V	T	sin=robar
+sustraer	V	T	sin=robar
+escoger	V	T	sin=seleccionar
+indicar	V	T	sin=señalar
+aguantar	V	T	sin=soportar
+reemplazar	V	T	sin=sustituir
+palpar	V	T	sin=tocar
+coger	V	T	sin=tomar
+agarrar	V	T	sin=tomar
+juntar	V	T	sin=unir
+enlazar	V	T	sin=unir
+custodiar	V	T	sin=vigilar
+comprobar	V	T	cambio=ue;sin=verificar
+constatar	V	T	sin=verificar
+rebatir	V	T	sin=refutar
+asegurar	V	T	sin=afirmar
+inferir	V	T	cambio=ie;sin=deducir
+concluir	V	T	sin=deducir
+platicar	V	IT	sin=hablar
+conversar	V	IT	sin=hablar
+charlar	V	IT	sin=hablar
+entonar	V	IT	sin=cantar
+almorzar	V	IT	cambio=ue;sin=comer
+cenar	V	IT	sin=comer
+devorar	V	T	sin=comer
+redactar	V	IT	sin=escribir
+anotar	V	T	sin=escribir
+repasar	V	IT	sin=estudiar
+aguardar	V	IT	sin=esperar
+descender	V	IT	cambio=ie;sin=bajar
+ascender	V	IT	cambio=ie;sin=subir
+trepar	V	IT	sin=subir
+guisar	V	IT	sin=cocinar
+manejar	V	IT	sin=conducir
+pilotar	V	IT	sin=conducir
+trazar	V	T	sin=dibujar
+desear	V	T	sin=querer
+anhelar	V	T	sin=querer
+poseer	V	T	sin=tener
+solicitar	V	T	sin=pedir
+rogar	V	T	cambio=ue;sin=pedir
+expresar	V	T	sin=decir
+declarar	V	T	sin=decir
+manifestar	V	T	cambio=ie;sin=decir
+realizar	V	T	sin=hacer
+efectuar	V	T	sin=hacer
+ejecutar	V	T	sin=hacer
+colocar	V	T	sin=poner
+situar	V	T	sin=poner
+ubicar	V	T	sin=poner
+acudir	V	I	sin=venir
+divisar	V	T	sin=ver
+avistar	V	T	sin=ver
+entregar	V	T	sin=dar
+otorgar	V	T	sin=dar
+conceder	V	T	sin=dar
+acercar	V	T	sin=traer
+# --- palabras con varios sentidos: un símbolo por sentido (sentido=) ---
+banco	N	M	sentido=asiento
+banco	N	M	sentido=entidad
+planta	N	F	sentido=vegetal
+planta	N	F	sentido=piso
+carta	N	F	sentido=mensaje
+carta	N	F	sentido=naipe
+hoja	N	F	sentido=papel
+hoja	N	F	sentido=follaje
+ratón	N	M	sentido=animal
+ratón	N	M	sentido=dispositivo
+estrella	N	F	sentido=astro
+estrella	N	F	sentido=celebridad
+cuadro	N	M	sentido=pintura
+cuadro	N	M	sentido=figura
+copa	N	F	sentido=vaso
+copa	N	F	sentido=trofeo
+muñeca	N	F	sentido=juguete
+muñeca	N	F	sentido=articulación
+sierra	N	F	sentido=herramienta
+sierra	N	F	sentido=montaña
+cola	N	F	sentido=fila
+cola	N	F	sentido=rabo
+bolsa	N	F	sentido=saco
+bolsa	N	F	sentido=mercado
+capital	N	F	sentido=ciudad
+capital	N	F	sentido=dinero
+lengua	N	F	sentido=órgano
+lengua	N	F	sentido=idioma
+mango	N	M	sentido=fruta
+mango	N	M	sentido=asa
+pluma	N	F	sentido=ave
+pluma	N	F	sentido=escritura
+red	N	F	sentido=malla
+red	N	F	sentido=internet
+tienda	N	F	sentido=comercio
+tienda	N	F	sentido=campaña
+vela	N	F	sentido=cera
+vela	N	F	sentido=barco
+falda	N	F	sentido=prenda
+falda	N	F	sentido=ladera
+nota	N	F	sentido=apunte
+nota	N	F	sentido=calificación
+clase	N	F	sentido=lección
+clase	N	F	sentido=categoría
+tiempo	N	M	sentido=clima
+tiempo	N	M	sentido=duración
+llave	N	F	sentido=cerradura
+llave	N	F	sentido=grifo
+radio	N	M	sentido=segmento
+radio	N	M	sentido=elemento
+cabo	N	M	sentido=militar
+cabo	N	M	sentido=cuerda
+cura	N	M	sentido=sacerdote
+cura	N	M	sentido=remedio
+pico	N	M	sentido=ave
+pico	N	M	sentido=montaña
+frente	N	F	sentido=cabeza
+frente	N	F	sentido=batalla
+derecho	ADJ	-	sentido=recto
+derecho	ADJ	-	sentido=diestro
+# --- añadidas desde la cola (scripts/lexicon_queue.py) ---
+tabla	N	F	
+deducción	N	F	
+valuación	N	F	
+átomo	N	M	
+derivar	V	T	
+negación	N	F	
+inferencia	N	F	
+introducción	N	F	
+eliminación	N	F	
+pista	N	F	
+justificación	N	F	
+significar	V	T	
+calcular	V	T	
+material	N	M	
+tipo	N	M	
+convenir	V	I	formas=conviene,convienen,convenga,convengan,convino,convinieron
+separado	ADJ	-	
+clave	N	F	
+curso	N	M	
+parecer	V	I	
+sintaxis	N	F	pl=sintaxis
+semántica	N	F	
+sintáctico	ADJ	-	
+semántico	ADJ	-	
+diapositiva	N	F	
+directo	ADJ	-	
+parte	N	F	
+sacar	V	T	
+contradecir	V	T	formas=contradice,contradicen,contradiga,contradigan,contradijo,contradijeron
+proposicional	ADJ	-	
+considerar	V	T	
+unidad	N	F	
+analizar	V	T	
+interno	ADJ	-	
+solo	ADJ	-	
+orden	N	M	pl=órdenes
+permitir	V	T	
+cuantificado	ADJ	-	
+funcional	ADJ	-	
+auxiliar	ADJ	-	
+paréntesis	N	M	pl=paréntesis
+coma	N	F	
+aridad	N	F	
+unario	ADJ	-	
+binario	ADJ	-	
+ternario	ADJ	-	
+terminal	ADJ	-	
+intermedio	ADJ	-	
+cadena	N	F	
+alfabeto	N	M	
+anulable	ADJ	-	
+producción	N	F	
+gramática	N	F	

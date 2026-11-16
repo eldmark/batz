@@ -5,6 +5,8 @@ Se conservan todas las lecturas distintas; el usuario escoge antes de evaluar.
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
+from functools import lru_cache
+from itertools import product
 
 from .ast import Span
 from .errors import LogosError
@@ -12,6 +14,21 @@ from .printer import to_string
 from .spanish_cyk import grammar, parse
 from .spanish_semantics import readings as compose_readings
 from .symbols import check, parse_checked
+from . import lexicon
+
+
+@lru_cache(maxsize=1)
+def _builtin_words():
+    """Palabras que trae el archivo de gramática: conservan su símbolo de siempre."""
+    from .spanish_cyk import GRAMMAR
+    words = set()
+    for line in GRAMMAR.read_text(encoding="utf-8").splitlines():
+        if "->" in line:
+            for alternative in line.split("->", 1)[1].split("|"):
+                parts = alternative.split()
+                if len(parts) == 1 and parts[0][:1].islower():
+                    words.add((parts[0],))
+    return frozenset(words)
 
 
 @dataclass(frozen=True)
@@ -131,14 +148,33 @@ def translate_spanish(text: str) -> SpanishResult:
         key = "V" if a["tag"].startswith("V") else a["tag"].split("_")[0]
         if key != "NProp":
             spanish_semantics.EXTRA[(key, a["word"].casefold())] = a["symbol"]
-    for tree in trees:
-        for formula, note in compose_readings(tree):
-            formula = replace(formula, span=Span(0, len(text)))
-            sig = check(formula)
-            rendered = to_string(formula)
-            parse_checked(rendered, sig, strict=True)
-            if rendered not in seen:
-                seen.add(rendered)
-                readings.append(SpanishReading(f"r{len(readings) + 1}", formula, rendered, sig, note))
+    # Palabras con varios sentidos: una lectura por combinación, nunca una elegida en silencio.
+    builtin = {phrase[0] for phrase in _builtin_words()}
+    ambiguous = {}
+    for position, tag in sorted(used):
+        kind = "V" if tag.startswith("V") else tag.split("_")[0]
+        word = tokens[position].text
+        if kind == "NProp" or word in builtin:
+            continue
+        options = lexicon.senses(kind, word)
+        if len(options) > 1:
+            ambiguous[(kind, word)] = options
+    keys = list(ambiguous)
+    combos = list(product(*(ambiguous[k] for k in keys)))[:16] or [()]
+    for combo in combos:
+        spanish_semantics.SENSE.clear()
+        spanish_semantics.SENSE.update({k: sym for k, (sym, _) in zip(keys, combo)})
+        chosen = "; ".join(f"«{k[1]}» como {gloss}" for k, (_, gloss) in zip(keys, combo))
+        for tree in trees:
+            for formula, note in compose_readings(tree):
+                formula = replace(formula, span=Span(0, len(text)))
+                sig = check(formula)
+                rendered = to_string(formula)
+                parse_checked(rendered, sig, strict=True)
+                if rendered not in seen:
+                    seen.add(rendered)
+                    readings.append(SpanishReading(f"r{len(readings) + 1}", formula, rendered, sig,
+                                                   f"{note}: {chosen}" if chosen else note))
+    spanish_semantics.SENSE.clear()
     spanish_semantics.EXTRA.clear()
     return SpanishResult("ambiguous" if len(readings) > 1 else "single", tuple(readings), tuple(assumptions))

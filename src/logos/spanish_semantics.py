@@ -12,6 +12,8 @@ from . import lexicon
 # Símbolos de palabras fuera del léxico, propuestos por el etiquetador para la frase en curso:
 # {("N" | "Adj" | "V", palabra): predicado}. `spanish.translate_spanish` lo llena y lo vacía.
 EXTRA = {}
+# Sentido elegido para cada palabra con varios significados en la lectura que se está componiendo.
+SENSE = {}
 
 
 NOUN = {"estudiante": "Estudiante", "libro": "Libro", "profesor": "Profesor",
@@ -100,7 +102,8 @@ class Composer:
         if kind(tree) in ("N", "Adj"):
             word = leaf(tree)
             table = NOUN | NOUN_FORMS if kind(tree) == "N" else ADJ | ADJ_FORMS
-            symbol = table.get(word) or lexicon.symbol(kind(tree), word) or EXTRA[(kind(tree), word)]
+            symbol = (table.get(word) or SENSE.get((kind(tree), word)) or lexicon.symbol(kind(tree), word)
+                      or EXTRA[(kind(tree), word)])
             return Pred(symbol, (term,))
         if kind(tree) == "Pred":
             if len(tree.children) == 1: return self.nominal(tree.children[0], term)
@@ -215,7 +218,8 @@ class Composer:
 
     def verb(self, tree):
         word = leaf(tree)
-        return VERB.get(word) or PLURAL.get(word) or lexicon.symbol("V", word) or EXTRA[("V", word)]
+        return (VERB.get(word) or PLURAL.get(word) or SENSE.get(("V", word)) or lexicon.symbol("V", word)
+                or EXTRA[("V", word)])
 
     def transitive(self, verb_tree, obj_tree, subject, negative_object=False):
         name = self.verb(verb_tree) + "2"
