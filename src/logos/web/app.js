@@ -148,6 +148,7 @@ function pauseStory() {
 function clearStory() {
   storyNonce++;
   pauseStory();
+  exitStoryFullscreen();
   if (storyScene) storyScene.dispose();
   storyScene = null; storyState = null;
   $('story-section').hidden = true;
@@ -1363,7 +1364,7 @@ document.querySelector('.modes').addEventListener('keydown', event => {
   setMode(next); $(`tab-${next}`).focus();
 });
 $('story-close').addEventListener('click', () => {
-  pauseStory(); $('story-section').hidden = true;
+  pauseStory(); exitStoryFullscreen(); $('story-section').hidden = true;
   document.querySelectorAll('.fitch li.current').forEach(li => li.classList.remove('current'));
 });
 
@@ -1459,6 +1460,48 @@ function floatKeyboard(keyboard, fields) {
 }
 floatKeyboard($('symbols-keyboard'), [formulaBox]);
 floatKeyboard($('proof-keyboard'), [$('proof-premises'), $('proof-conclusion')]);
+
+// ── Paso a paso en pantalla completa ──
+// Va la sección entera (escena, texto del paso y controles), útil para proyectar. Con la API nativa cuando existe;
+// el iPhone no la ofrece para estos elementos, así que ahí la sección cubre la ventana (respaldo).
+function storyFullscreenElement() { return document.fullscreenElement || document.webkitFullscreenElement || null; }
+function storyIsFullscreen() { return $('story-section').classList.contains('is-fullscreen'); }
+function syncStoryFullscreen() {
+  const section = $('story-section'), fallback = section.classList.contains('story-fallback-fullscreen');
+  const on = fallback || storyFullscreenElement() === section;
+  section.classList.toggle('is-fullscreen', on);
+  document.documentElement.classList.toggle('story-locked', fallback);
+  if (!on) try { screen.orientation?.unlock?.(); } catch { /* sin bloqueo que soltar */ }
+  const button = $('story-fullscreen'), label = on ? 'Salir de pantalla completa' : 'Pantalla completa';
+  button.setAttribute('aria-pressed', String(on)); button.setAttribute('aria-label', label); button.title = label;
+}
+async function enterStoryFullscreen() {
+  const section = $('story-section');
+  const request = section.requestFullscreen || section.webkitRequestFullscreen;
+  if (request && (document.fullscreenEnabled ?? document.webkitFullscreenEnabled ?? true)) {
+    try {
+      await request.call(section, {navigationUI: 'hide'});
+      // teléfono en vertical: como los reproductores de video, se gira a horizontal si el sistema lo permite (Android)
+      if (matchMedia('(pointer: coarse) and (orientation: portrait)').matches) screen.orientation?.lock?.('landscape')?.catch?.(() => {});
+      return;
+    } catch { /* sin permiso o sin soporte: respaldo */ }
+  }
+  section.classList.add('story-fallback-fullscreen'); syncStoryFullscreen();
+}
+function exitStoryFullscreen() {
+  const section = $('story-section');
+  if (section.classList.contains('story-fallback-fullscreen')) { section.classList.remove('story-fallback-fullscreen'); syncStoryFullscreen(); return; }
+  if (storyFullscreenElement()) (document.exitFullscreen ? document.exitFullscreen() : document.webkitExitFullscreen?.())?.catch?.(() => {});
+}
+$('story-fullscreen').addEventListener('click', () => (storyIsFullscreen() ? exitStoryFullscreen() : enterStoryFullscreen()));
+document.addEventListener('fullscreenchange', syncStoryFullscreen);
+document.addEventListener('webkitfullscreenchange', syncStoryFullscreen);
+document.addEventListener('keydown', event => {
+  if (!storyIsFullscreen() || event.target.closest?.('input, textarea, select')) return;
+  if (event.key === 'Escape') exitStoryFullscreen();          // la nativa ya sale sola; esto cubre el respaldo
+  else if (event.key === 'ArrowRight') { event.preventDefault(); $('story-next').click(); }
+  else if (event.key === 'ArrowLeft') { event.preventDefault(); $('story-prev').click(); }
+});
 
 // Paso a paso: en el teléfono se cambia de paso deslizando sobre la escena.
 {
