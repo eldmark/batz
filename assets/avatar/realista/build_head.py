@@ -210,14 +210,15 @@ SIDE_T = float(np.clip(np.nanmedian(np.r_[gap_l_px, gap_r_px]), .007, .014))
 print('pelo: lados', round(SIDE_T * 1000, 1), 'mm; arriba (perfil suavizado) máx', round(np.nanmax(gap_ts_s) * 1000, 1), 'mm')
 for v in new_verts:
     p = v.co; n = v.normal
-    t_top = interp_gap([p.y], ys_, gap_ts_s, .012)[0] * 1.1
-    t_side = SIDE_T
+    t_top = interp_gap([p.y], ys_, gap_ts_s, .012)[0] * (1.4 if p.y < cy else 1.0)
+    if p.y > cy + .02: t_top = min(t_top, .016)
+    t_side = SIDE_T + .011 * float(smooth01((p.z - (brow + .01)) / .04))
     t_back = min(.012, interp_gap([p.z], zb_, gap_b, .006)[0])
     if np.isnan(t_top): t_top = .012
     wt, ws_, wb, wf = max(n.z, 0) ** 2, n.x ** 2, max(n.y, 0) ** 2, max(-n.y, 0) ** 2
     kf = .3 + .55 * smooth01((p.z - (brow + .035)) / .025)          # tupé: arriba al frente el pelo se levanta
     T = (wt * t_top + ws_ * t_side + wb * t_back + wf * t_top * kf) / max(wt + ws_ + wb + wf, 1e-6)
-    T = float(np.clip(T * 1.05, .002, .022))
+    T = float(np.clip(T * 1.05, .002, .03))
     front_top = float((p.y < cy - .035) * np.clip((p.z - (brow + .015)) / (TOP - brow - .015), 0, 1))
     R = .015 + .01 * (1 - front_top)
     r = smooth01(dist.get(v, 1) / R) * smooth01((field[orig[v]] - .5) / .35)

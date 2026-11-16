@@ -82,6 +82,12 @@ for b in bones:
         if Wt[b][i] > 1e-4: g.add([int(i)], float(Wt[b][i]), 'REPLACE')
         else: g.remove([int(i)])
 
+# cabeza 5 % más grande respecto al cuerpo (escala por el peso del hueso «head», alrededor de la base del cráneo)
+piv = np.array(J['head'][0], float)
+wh = Wt['head']
+Vs = piv + (V - piv) * (1 + .05 * wh)[:, None]
+me.vertices.foreach_set('co', Vs.ravel()); me.update()
+V = Vs
 # ── 3. ropa: copias desplazadas de la piel (heredan los pesos) ──
 def along(bone, P):
     h, t = map(np.array, J[bone]); d = t - h; return ((P - h) @ d) / (d @ d)
@@ -95,7 +101,7 @@ legs = sum(Wt[f'{b}.{s}'] for b in ('thigh', 'shin') for s in 'LR')
 feet = Wt['foot.L'] + Wt['foot.R']
 t_arm = np.maximum(along('upper_arm.L', V) * (x > 0), along('upper_arm.R', V) * (x < 0))
 rad = np.hypot(x / 1.0, (y + .012) / 1.12)
-neck_hole = (rad < .072) & (z > 1.44 + .022 * smooth01((y + .01) / .06))   # cuello redondo de hombre
+neck_hole = (rad < .074) & (z > 1.462 + .02 * smooth01((y + .01) / .06))   # cuello redondo de hombre
 SHIRT = (z > .86) & ~neck_hole & (z < 1.56) & (arm_lo < .35) & ~rigid_head & (Wt['head'] < .4) & ((arm_up < .5) | (t_arm < .52))
 PANTS = (z < .975) & (z > .1) & (arm_lo < .3) & (arm_up < .3) & (torso_w + legs > .5)
 SHOES = (z < .115) & (legs + feet > .5)

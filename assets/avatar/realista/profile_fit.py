@@ -85,6 +85,23 @@ for name, sx in (('side_px', 1), ('side_nx', -1)):
     m['ear_mesh'] = [float(ce[1]), float(ce[2])]
     m['ear_photo'] = [float(c * m['s'] + m['off']), float(m['z_sel'] - (r - m['r_sel']) * m['s'])]
     print(name, 'oreja malla', np.round(m['ear_mesh'], 3), 'foto', np.round(m['ear_photo'], 3))
+# cara más lisa: se suavizan pómulos, arco de cejas y surcos de la base (la sombra la pone la foto)
+Bfull = B
+eyec = [np.array(sum((v.co for v in e.data.vertices), Vector()) / len(e.data.vertices))[:] for e in eyes]
+nbv = [[] for _ in range(len(V))]
+for e_ in body.data.edges:
+    a_, b_ = e_.vertices; nbv[a_].append(b_); nbv[b_].append(a_)
+mouthc = (Bfull[13] + Bfull[14]) / 2
+d_eye = np.min([np.linalg.norm(V - np.array(c), axis=1) for c in eyec], axis=0)
+d_mouth = np.hypot((V[:, 0] - mouthc[0]) / 1.6, V[:, 2] - mouthc[2])
+wf_ = (smooth01((V[:, 2] - (chin + .005)) / .02) * smooth01((brow + .045 - V[:, 2]) / .02) * smooth01((cy - .035 - V[:, 1]) / .02)
+       * smooth01((d_eye - .019) / .008) * smooth01((d_mouth - .022) / .01) * smooth01((np.hypot(V[:, 0] / 1.3, V[:, 2] - (Bfull[4, 2] + .008)) - .024) / .01) * smooth01((.075 - np.abs(V[:, 0])) / .015))
+idx_f = np.nonzero(wf_ > 0)[0]
+NBf = [nbv[i] for i in idx_f]
+for _ in range(8):
+    avg = np.array([V[n].mean(0) for n in NBf])
+    V[idx_f] += (avg - V[idx_f]) * (.5 * wf_[idx_f])[:, None]
+print('cara suavizada: vértices', len(idx_f))
 # cuello un poco más grueso
 zc0, zc1 = 1.43, chin - .015
 wn = smooth01((V[:, 2] - zc0) / .025) * smooth01((zc1 - V[:, 2]) / .02) * smooth01((.1 - np.hypot(V[:, 0], V[:, 1] + .01)) / .025)
