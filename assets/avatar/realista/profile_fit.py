@@ -85,6 +85,10 @@ for name, sx in (('side_px', 1), ('side_nx', -1)):
     m['ear_mesh'] = [float(ce[1]), float(ce[2])]
     m['ear_photo'] = [float(c * m['s'] + m['off']), float(m['z_sel'] - (r - m['r_sel']) * m['s'])]
     print(name, 'oreja malla', np.round(m['ear_mesh'], 3), 'foto', np.round(m['ear_photo'], 3))
+# cuello un poco más grueso
+zc0, zc1 = 1.43, chin - .015
+wn = smooth01((V[:, 2] - zc0) / .025) * smooth01((zc1 - V[:, 2]) / .02) * smooth01((.1 - np.hypot(V[:, 0], V[:, 1] + .01)) / .025)
+V[:, 0] *= 1 + .09 * wn; V[:, 1] = (V[:, 1] + .01) * (1 + .09 * wn) - .01
 body.data.vertices.foreach_set('co', V.ravel()); body.data.update()
 for e in eyes:
     c = sum((v.co for v in e.data.vertices), Vector()) / len(e.data.vertices)

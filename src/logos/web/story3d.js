@@ -36,6 +36,8 @@ export function createStoryScene(container, model, options = {}) {
   const camera = new THREE.PerspectiveCamera(34, 1, .1, 100);
   scene.add(new THREE.HemisphereLight(0xffffff, 0x1b3a30, 2.4));
   const key = new THREE.DirectionalLight(0xffffff, 2.6); key.position.set(2.5, 6, 7); scene.add(key);
+  // relleno cálido desde el frente: sin él, la piel del avatar toma el verde del suelo y se ve más morena
+  const fill = new THREE.DirectionalLight(0xfff1e6, 1.2); fill.position.set(-3, 2.5, 9); scene.add(fill);
 
   // ── dominio: un arco a la derecha del avatar ──
   const stage = new THREE.Group(); scene.add(stage);
