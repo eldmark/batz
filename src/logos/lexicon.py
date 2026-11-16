@@ -21,6 +21,7 @@ GENDERS = {"M": "masculino", "F": "femenino", "C": "masculino y femenino"}
 USES = {"I": "sin objeto", "T": "con objeto", "IT": "con o sin objeto"}
 VOWELS = "aeiouáéíóú"
 _ACCENT = str.maketrans("áéíóú", "aeiou")
+_ACCENT_ONE = _ACCENT
 
 
 def user_path():
@@ -105,19 +106,57 @@ class Entry:
 
 # --- flexión ----------------------------------------------------------------
 
+def _groups(word):
+    """Grupos de vocales de la palabra: [(inicio, fin)] (aproximación a las sílabas)."""
+    out, start = [], None
+    for k, ch in enumerate(word + " "):
+        if ch in VOWELS and start is None:
+            start = k
+        elif ch not in VOWELS and start is not None:
+            out.append((start, k)); start = None
+    return out
+
+
+def _stress_penultimate(word):
+    """Pone tilde en la sílaba penúltima de una palabra llana terminada en consonante (examen → exámenes)."""
+    groups = _groups(word)
+    if len(groups) < 2:
+        return word
+    a, b = groups[-2]
+    chunk = word[a:b]
+    accents = {"a": "á", "e": "é", "o": "ó", "i": "í", "u": "ú"}
+    strong = [k for k, ch in enumerate(chunk) if ch in "aeo"]
+    at = strong[0] if strong else len(chunk) - 1             # diptongo: la tilde va en la vocal fuerte
+    return word[:a] + chunk[:at] + accents[chunk[at]] + chunk[at + 1:] + word[b:]
+
+
 def plural(word):
     if word.endswith("z"):
         return word[:-1] + "ces"
     for tail in ("ón", "án", "én", "ín", "és", "ún"):
         if word.endswith(tail) and len(word) > 3:
             return word[:-2] + tail.translate(_ACCENT) + "es"
-    return word + ("s" if word[-1] in VOWELS else "es")
+    if word[-1] in VOWELS:
+        return word + "s"
+    if word.endswith("s"):
+        groups = _groups(word)
+        last = word[groups[-1][0]:groups[-1][1]] if groups else ""
+        if last and last[-1] in "áéíóú":                      # autobús → autobuses, país → países
+            at = groups[-1][1] - 1
+            hiatus = at > 0 and word[at - 1] in VOWELS            # país conserva la tilde; autobús la pierde
+            return (word if hiatus else word[:at] + last[-1].translate(_ACCENT_ONE) + word[at + 1:]) + "es"
+        return word + "es" if len(groups) <= 1 else word    # mes → meses, pero paraguas, crisis, lunes no cambian
+    if word.endswith("n") and len(_groups(word)) >= 2 and not any(ch in "áéíóú" for ch in word):
+        return _stress_penultimate(word) + "es"               # joven → jóvenes, origen → orígenes
+    if word[-1] in "tcgbpkfm":                                # bit → bits, chalet → chalets, iceberg → icebergs
+        return word + "s"
+    return word + "es"
 
 
 def feminine(word):
     if word.endswith("o"):
         return word[:-1] + "a"
-    for tail in ("or", "ón", "án", "ín", "és"):
+    for tail in ("or", "ón", "án", "ín", "és", "ol"):  # -ol: gentilicios como español → española
         if word.endswith(tail):
             return word[:-len(tail)] + tail.translate(_ACCENT) + "a"
     return word
@@ -133,7 +172,11 @@ def _change(stem, change, preterite=False):
 
 # Verbos en -iar que acentúan la i (los demás, como cambiar o estudiar, no).
 STRESSED_IAR = frozenset("""enviar guiar confiar fiar variar criar liar vaciar espiar ampliar resfriar enfriar fotografiar
-desafiar rociar expiar aliar contrariar estriar aviar ansiar autografiar cartografiar desvariar enviudar""".split()) - {"enviudar"}
+desafiar rociar expiar aliar contrariar estriar aviar ansiar autografiar cartografiar desvariar desviar chirriar averiar
+desconfiar""".split())
+
+
+MONOSYLLABIC_PRETERITE = frozenset("guiar criar fiar liar piar triar".split())
 
 
 def conjugate(inf, opts=None):
@@ -151,7 +194,10 @@ def conjugate(inf, opts=None):
         # El acento cae en la i/u de la raíz: enviar → envía, evaluar → evalúa (pero cambiar → cambia).
         accented = stem[:-1] + ("í" if stem.endswith("i") else "ú")
         sub = accented
-        return (accented + "a", accented + "an", sub + "e", sub + "en", stem + "ó", stem + "aron")
+        pret = stem + ("o" if inf in MONOSYLLABIC_PRETERITE else "ó")      # guio, crio, fio: sin tilde
+        return (accented + "a", accented + "an", sub + "e", sub + "en", pret, stem + "aron")
+    if cls == "ar" and stem.endswith("gu"):                              # averiguar → averigüe
+        return (stem + "a", stem + "an", stem[:-1] + "üe", stem[:-1] + "üen", stem + "ó", stem + "aron")
     change = opts.get("cambio")
     present = _change(stem, change) if change else stem
     past = _change(stem, change, preterite=True) if change and cls == "ir" else stem

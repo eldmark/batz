@@ -155,13 +155,14 @@ class Composer:
         if kind(tree) == "NProp": return (tree,)
         return tuple(item for child in tree.children for item in self.name_leaves(child))
 
-    def apply(self, np: NP, body):
+    def apply(self, np: NP, body, var=None):
+        """`var` fija de antemano la variable de un cuantificador simple (∀, ∃, ningún)."""
         if np.mode == "name": return body(np.name)
         if np.mode in ("and_names", "or_names"):
             forms = [body(name) for name in np.names]
             return (and_all if np.mode == "and_names" else or_all)(forms)
         if np.mode in ("forall", "exists", "none"):
-            var = self.fresh()
+            var = var or self.fresh()
             predicate = body(var)
             if np.nominal:
                 restrict = self.nominal(np.nominal, var)
@@ -287,17 +288,90 @@ class Composer:
         return Exists(var.name, self.nominal(np.nominal, var))
 
 
+# ── Alcance de los cuantificadores ──
+# Pueden intercambiar su alcance los cuantificadores del sujeto y del objeto directo de la oración
+# principal. «Ningún» no entra: la concordancia negativa cuenta como una sola negación. Los nombres
+# propios no cuantifican. Lo que está dentro de una relativa o del antecedente de un «si» es isla.
+SCOPAL = frozenset({"forall", "exists", "at_least", "at_most", "exact", "bare_number"})
+SINGLE = frozenset({"forall", "exists"})  # una sola variable: se puede fijar de antemano
+
+# Paráfrasis por tipo de cuantificador: «all» (todos), «one» (uno: un, algún, exactamente un) y
+# «many» (un numeral mayor que uno). La primera describe la lectura de la frase; la segunda, la invertida.
+SCOPE_NOTES = {
+    ("all", "one"): ("Cada miembro puede tener un objeto distinto", "Un mismo objeto sirve para todos"),
+    ("all", "many"): ("Cada miembro puede tener objetos distintos", "Los mismos objetos sirven para todos"),
+    ("one", "all"): ("Un mismo miembro se relaciona con todos los objetos", "Cada objeto puede tener un miembro distinto"),
+    ("many", "all"): ("Los mismos miembros se relacionan con todos los objetos", "Cada objeto puede tener miembros distintos"),
+    ("one", "many"): ("Un mismo miembro se relaciona con esa cantidad de objetos", "Cada objeto puede tener un miembro distinto"),
+    ("many", "one"): ("Cada miembro puede tener un objeto distinto", "Un mismo objeto sirve para todos"),
+    ("many", "many"): ("Cada miembro puede tener sus propios objetos", "Cada objeto puede tener sus propios miembros"),
+    ("one", "one"): ("Primero el sujeto, como en la frase", "Primero el objeto: el alcance se invierte"),
+}
+
+
+def _main_transitive(tree: Tree):
+    """`(sujeto, verbo, objeto)` si la oración principal es «SN VT objeto», sin negación ni coordinación."""
+    clause = tree.children[0] if kind(tree) == "S" and tree.children else tree
+    if kind(clause) != "O" or len(clause.children) != 2 or kind(clause.children[0]) != "SN":
+        return None
+    subject, vp = clause.children
+    inner = vp.children[0] if kind(vp) == "SV" and len(vp.children) == 1 else vp
+    if kind(inner) == "SVpos" and len(inner.children) == 2 and kind(inner.children[0]) == "VT":
+        return subject, inner.children[0], inner.children[1]
+    return None
+
+
+def _quantity(np: NP):
+    if np.mode == "forall": return "all"
+    return "one" if np.mode == "exists" or np.count == 1 else "many"
+
+
+def _scope_notes(subject: NP, obj: NP):
+    """Paráfrasis deterministas de las dos lecturas: la de la frase y la invertida."""
+    return SCOPE_NOTES[(_quantity(subject), _quantity(obj))]
+
+
+def _inverse_scope(tree: Tree, subject_np: NP | None = None):
+    """Lectura con el objeto por encima del sujeto y las notas de ambas, o None si no hay otra.
+
+    Con el mismo cuantificador simple a los dos lados (∀∀, ∃∃) las dos órdenes son equivalentes
+    y no se pregunta."""
+    found = _main_transitive(tree)
+    if not found: return None
+    sn, verb_tree, obj_tree = found
+    c = Composer()
+    subject, obj = subject_np or c.np(sn), c.np(obj_tree)
+    if subject.mode not in SCOPAL or obj.mode not in SCOPAL: return None
+    if subject.mode == obj.mode and subject.mode in SINGLE: return None
+    name = c.verb(verb_tree) + "2"
+    # Misma variable que en la lectura de la frase: x para el sujeto, y para el objeto.
+    sv = c.fresh() if subject.mode in SINGLE else None
+    ov = c.fresh() if obj.mode in SINGLE else None
+    inverse = c.apply(obj, lambda o: c.apply(subject, lambda s: Pred(name, (s, o)), var=sv), var=ov)
+    return normalize(inverse), _scope_notes(subject, obj)
+
+
 def readings(tree: Tree):
     composer = Composer()
     formula = normalize(composer.sentence(tree))
-    # La ambigüedad cuantitativa y algunos alcances no cambian el árbol sintáctico.
+    # La ambigüedad cuantitativa y la de alcance no cambian el árbol sintáctico.
     sn = tree.children[0].children[0] if tree.children and tree.children[0].children else None
     if sn and kind(sn) == "SN" and len(sn.children) == 2 and kind(sn.children[0]) == "DetNum" and kind(sn.children[0].children[0]) == "Num":
+        # Numeral a secas: «al menos» o «exactamente» se pregunta, y cada uno con sus alcances.
         other = Composer()
         np = other.np(sn)
         exact = NP("exact", nominal=np.nominal, count=np.count)
-        return ((formula, "Al menos esa cantidad"),
-                (normalize(other.apply(exact, lambda term: other.vp(tree.children[0].children[1], term))), "Exactamente esa cantidad"))
+        exact_formula = normalize(other.apply(exact, lambda term: other.vp(tree.children[0].children[1], term)))
+        out = []
+        for subject, surface, label in ((np, formula, "Al menos esa cantidad"),
+                                        (exact, exact_formula, "Exactamente esa cantidad")):
+            inverse = _inverse_scope(tree, subject)
+            if inverse is None:
+                out.append((surface, label))
+                continue
+            inverse_formula, (surface_note, inverse_note) = inverse
+            out += [(surface, f"{label}. {surface_note}"), (inverse_formula, f"{label}. {inverse_note}")]
+        return tuple(out)
     if sn and kind(sn) == "SN" and len(sn.children) == 2 and kind(sn.children[0]) == "DetU":
         vp = tree.children[0].children[1]
         if kind(vp) == "SV" and len(vp.children) == 2 and kind(vp.children[0]) == "No":
@@ -306,17 +380,8 @@ def readings(tree: Tree):
             wide = Not(Forall("x", Implies(Composer().nominal(sn.children[1], subject), body)))
             return ((formula, "Ninguno del grupo cumple el predicado"),
                     (normalize(wide), "No todos los miembros del grupo lo cumplen"))
-        inner = vp.children[0] if kind(vp) == "SV" and len(vp.children) == 1 else vp
-        if kind(inner) == "SVpos" and len(inner.children) == 2 and kind(inner.children[0]) == "VT":
-            obj = inner.children[1]
-            if kind(obj) == "Obj": obj = obj.children[-1]
-            if kind(obj) == "SNany": obj = obj.children[0]
-            if kind(obj) == "SN" and len(obj.children) == 2 and kind(obj.children[0]) == "DetE":
-                x, y = Var("x"), Var("y")
-                c = Composer()
-                relation = Pred(c.verb(inner.children[0]) + "2", (x, y))
-                shared = Exists("y", And(c.nominal(obj.children[1], y),
-                                         Forall("x", Implies(c.nominal(sn.children[1], x), relation))))
-                return ((formula, "Cada miembro puede tener un objeto distinto"),
-                        (normalize(shared), "Un mismo objeto sirve para todos"))
+    inverse = _inverse_scope(tree)
+    if inverse is not None:
+        inverse_formula, (surface_note, inverse_note) = inverse
+        return ((formula, surface_note), (inverse_formula, inverse_note))
     return ((formula, "Lectura de la gramática controlada"),)

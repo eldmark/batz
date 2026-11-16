@@ -6,8 +6,10 @@ import { GLTFLoader } from './vendor/GLTFLoader.js';
 
 function same(a, b) { return typeof a === typeof b && a === b; }
 function indexOf(domain, value) { return domain.findIndex(item => same(item, value)); }
-const HEIGHT = 380;
 const COLORS = {idle: 0x2f9c78, member: 0x62cfa6, outside: 0x6f7f79, yes: 0xa6f0b8, no: 0xf08aa0, edge: 0xd9b44a};
+// Visemas: cada vocal de la palabra que se está diciendo abre la boca un instante; «o» y «u» la redondean.
+const SYLLABLE = .11;       // segundos por vocal a velocidad 1
+const HOLD = .15;           // cuánto dura abierta cada vocal
 
 function labelSprite(text) {
   const canvas = document.createElement('canvas');
@@ -74,6 +76,10 @@ export function createStoryScene(container, model, options = {}) {
   let mixer = null, current = null, wanted = 'Saluda';
   const clips = {};
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // Boca: morph targets «Boca_abierta» y «Boca_redonda» del GLB. Sin ellos, la cabeza asiente al hablar.
+  const mouths = [];
+  let head = null, nod = 0, speaking = false, mouthOpen = 0, mouthRound = 0;
+  const visemes = [];
 
   function play(name) {
     wanted = name;
@@ -89,6 +95,11 @@ export function createStoryScene(container, model, options = {}) {
 
   new GLTFLoader().load('/avatar/logos.glb', gltf => {
     avatar.add(gltf.scene);
+    gltf.scene.traverse(object => {
+      const names = object.morphTargetDictionary;
+      if (object.isMesh && names && 'Boca_abierta' in names) mouths.push({mesh: object, open: names.Boca_abierta, round: names.Boca_redonda});
+    });
+    head = gltf.scene.getObjectByName('head');
     mixer = new THREE.AnimationMixer(gltf.scene);
     for (const clip of gltf.animations) clips[clip.name] = clip;
     mixer.addEventListener('finished', event => {
@@ -99,11 +110,12 @@ export function createStoryScene(container, model, options = {}) {
     options.onReady?.();
   }, undefined, () => options.onError?.());
 
-  // ── tamaño y cámara: encuadra avatar y dominio ──
+  // ── tamaño y cámara: encuadra avatar y dominio; el alto lo decide el CSS (más bajo en el teléfono) ──
   function resize() {
-    const width = Math.max(container.clientWidth, 320);
-    renderer.setSize(width, HEIGHT);
-    camera.aspect = width / HEIGHT;
+    const width = Math.max(container.clientWidth, 260);
+    const height = Math.max(container.clientHeight, 200);
+    renderer.setSize(width, height);
+    camera.aspect = width / height;
     const span = count ? 7.6 : 4.2;                   // ancho de escena que debe caber
     const distance = Math.max(8.2, span / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.aspect));
     camera.position.set(0, .35, distance); camera.lookAt(0, .1, 0);
@@ -127,12 +139,39 @@ export function createStoryScene(container, model, options = {}) {
     renderer.domElement.style.cursor = pick(event) !== undefined ? 'pointer' : 'default';
   });
 
-  const clock = new THREE.Clock();
+  const timer = new THREE.Timer();
+  timer.connect(document);  // con la pestaña oculta no acumula tiempo
   let frame;
-  function draw() {
-    const dt = Math.min(clock.getDelta(), .05);
+
+  function animateMouth(t, dt) {
+    while (visemes.length && visemes[0].at + HOLD < t) visemes.shift();
+    const viseme = visemes.find(v => v.at <= t);
+    let open = speaking ? .06 : 0, round = 0;         // entre palabras, los labios quedan entreabiertos
+    if (viseme) {
+      if (viseme.round && mouths.some(m => m.round !== undefined)) round = viseme.strength;
+      else open = viseme.strength;
+    }
+    const ease = Math.min(1, dt * 24);
+    mouthOpen += (open - mouthOpen) * ease;
+    mouthRound += (round - mouthRound) * ease;
+    for (const {mesh, open: i, round: j} of mouths) {
+      mesh.morphTargetInfluences[i] = mouthOpen;
+      if (j !== undefined) mesh.morphTargetInfluences[j] = mouthRound;
+    }
+    if (!mouths.length && head && !reduceMotion) {      // respaldo: asiente con cada sílaba
+      head.rotation.x -= nod;
+      nod = (mouthOpen + mouthRound) * .1;
+      head.rotation.x += nod;
+    }
+  }
+
+  function draw(timestamp) {
+    timer.update(timestamp);
+    const dt = Math.min(timer.getDelta(), .05);
+    if (head && nod) { head.rotation.x -= nod; nod = 0; }  // la animación pone su pose; el gesto de hablar va encima
     if (mixer && !reduceMotion) mixer.update(dt);
-    const t = clock.elapsedTime;
+    const t = timer.getElapsed();
+    animateMouth(t, dt);
     nodes.forEach((node, i) => {
       const s = node.mesh.scale.x + (node.target - node.mesh.scale.x) * Math.min(1, dt * 9);
       node.mesh.scale.setScalar(s);
@@ -141,11 +180,31 @@ export function createStoryScene(container, model, options = {}) {
     renderer.render(scene, camera);
     frame = requestAnimationFrame(draw);
   }
-  draw();
+  frame = requestAnimationFrame(draw);
 
   return {
     /** Refleja un paso verificado: resalta los elementos que toca y elige el gesto del avatar. */
     setEvent(event) {
+      if (event.kind === 'search') {
+        // Búsqueda: solo existen los elementos del tamaño que se prueba; al hallarlo, el avatar lo presenta.
+        const found = event.phase === 'found';
+        nodes.forEach((node, i) => {
+          const visible = i < event.size;
+          node.target = visible ? (found ? 1.18 : 1) : .001;
+          node.label.visible = visible;
+          node.mesh.material.color.setHex(found && visible ? COLORS.yes : COLORS.idle);
+        });
+        edges.forEach(({line}) => { line.visible = false; });
+        play(found ? 'Saluda' : 'Piensa');
+        return;
+      }
+      nodes.forEach(node => { node.label.visible = true; });
+      if (event.kind === 'premise') {
+        nodes.forEach(node => { node.target = 1; node.mesh.material.color.setHex(COLORS.idle); });
+        edges.forEach(({line}) => { line.visible = false; });
+        play('Explica');
+        return;
+      }
       const relation = event.relation ? model?.predicates?.[event.relation] : null;
       const focused = (event.term_values?.length ? event.term_values :
         event.element !== null && event.element !== undefined ? [event.element] :
@@ -166,8 +225,22 @@ export function createStoryScene(container, model, options = {}) {
     /** Reacción final al valor de la fórmula completa. */
     verdict(value) { play(value ? 'Verdadero' : 'Falso'); },
     gesture(name) { play(name); },
+    /** La voz empezó o terminó de hablar. */
+    talking(on) { speaking = on; if (!on) visemes.length = 0; },
+    /** La voz va a decir `word`: una apertura de boca por vocal, al ritmo de la voz. */
+    say(word, rate = 1) {
+      const vowels = (word || '').toLowerCase().normalize('NFD').match(/[aeiou]/g) || [];
+      const start = Math.max(timer.getElapsed(), (visemes.at(-1)?.at ?? -Infinity) + SYLLABLE / rate);
+      vowels.slice(0, 8).forEach((vowel, i) => visemes.push({
+        at: start + i * SYLLABLE / rate, round: vowel === 'o' || vowel === 'u',
+        strength: vowel === 'a' ? 1 : vowel === 'i' || vowel === 'e' ? .55 : .85}));
+    },
+    /** Morph targets de boca encontrados en el modelo (para pruebas y para el respaldo). */
+    mouthTargets() { return mouths.map(m => ({open: m.open, round: m.round})); },
+    /** Cuánto está abierta y redondeada la boca ahora mismo (0 a 1). */
+    mouthLevel() { return {open: mouthOpen, round: mouthRound}; },
     dispose() {
-      cancelAnimationFrame(frame); observer.disconnect();
+      cancelAnimationFrame(frame); observer.disconnect(); timer.dispose();
       for (const {mesh, label} of nodes) { mesh.material.dispose(); label.material.map.dispose(); label.material.dispose(); }
       for (const {line} of edges) { line.geometry.dispose(); line.material.dispose(); }
       avatar.traverse(o => { if (o.isMesh) { o.geometry.dispose(); (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => m.dispose()); } });

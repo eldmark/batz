@@ -2,8 +2,10 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#006f50">
   <title>LOGOS · Evaluador semántico</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/tokens.css">
   <link rel="stylesheet" href="/style.css">
   <script defer src="/app.js"></script>
@@ -12,20 +14,26 @@
   <header class="topbar">
     <h1 class="wordmark">LOGOS <span>Evaluador semántico</span></h1>
     <div class="modes" role="tablist" aria-label="Modo de trabajo">
-      <button id="tab-evaluate" class="mode" role="tab" type="button" aria-selected="true" aria-controls="mode-evaluate">Evaluar en un modelo</button>
+      <span class="pill" aria-hidden="true"></span>
+      <button id="tab-evaluate" class="mode" role="tab" type="button" aria-selected="true" aria-controls="mode-evaluate"><span class="long">Evaluar en un modelo</span><span class="short">Evaluar</span></button>
       <button id="tab-prove" class="mode" role="tab" type="button" aria-selected="false" aria-controls="mode-prove" tabindex="-1">Demostrar</button>
       <button id="tab-dictionary" class="mode" role="tab" type="button" aria-selected="false" aria-controls="mode-dictionary" tabindex="-1">Diccionario</button>
     </div>
     <div class="topbar-actions">
-      <button id="import-json" class="button on-brand" type="button">Cargar archivo</button>
-      <button id="sample" class="button on-brand quiet" type="button">Ejemplo</button>
+      <button id="import-json" class="button on-brand" type="button" aria-label="Cargar archivo"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 13V3m0 0L6 7m4-4 4 4M3.5 12.5v3a1.5 1.5 0 0 0 1.5 1.5h10a1.5 1.5 0 0 0 1.5-1.5v-3"/></svg><span class="label">Cargar archivo</span></button>
+      <button id="sample" class="button on-brand quiet" type="button" aria-label="Cargar el ejemplo"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.5l2.2 4.6 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5L2.8 7.8l5-.7z"/></svg><span class="label">Ejemplo</span></button>
       <input id="import-file" type="file" accept=".logos,.txt,.json,application/json,text/plain" hidden>
     </div>
   </header>
-  <p id="transfer-note" class="transfer-note" role="status"></p>
+  <div id="toasts" class="toasts" role="status" aria-live="polite"></div>
 
-  <main id="mode-evaluate" class="workspace" role="tabpanel" aria-labelledby="tab-evaluate">
-    <section class="pane model" aria-labelledby="model-heading">
+  <main id="mode-evaluate" class="workspace" role="tabpanel" aria-labelledby="tab-evaluate" data-pane="model">
+    <div class="subtabs" role="tablist" aria-label="Paso del modo Evaluar">
+      <span class="pill" aria-hidden="true"></span>
+      <button id="pane-model" class="subtab" role="tab" type="button" aria-selected="true" aria-controls="pane-model-panel">1 · Modelo <span id="model-state" class="subtab-state" aria-hidden="true"></span></button>
+      <button id="pane-question" class="subtab" role="tab" type="button" aria-selected="false" aria-controls="pane-question-panel" tabindex="-1">2 · Fórmula</button>
+    </div>
+    <section id="pane-model-panel" class="pane model" aria-labelledby="model-heading">
       <h2 id="model-heading" class="pane-title">Construye el modelo</h2>
 
       <div class="block" aria-labelledby="language-heading">
@@ -42,9 +50,10 @@
         <div id="interpretation"></div>
         <div class="actions"><button id="export-json" class="button secondary" type="button" disabled>Exportar JSON</button></div>
       </div>
+      <div class="pane-next"><button id="go-question" class="button primary" type="button">Siguiente: la fórmula</button></div>
     </section>
 
-    <section class="pane question" aria-labelledby="formula-heading">
+    <section id="pane-question-panel" class="pane question" aria-labelledby="formula-heading">
       <div class="question-inner">
         <h2 id="formula-heading" class="pane-title">Evalúa una fórmula</h2>
 
@@ -111,8 +120,13 @@
     </section>
   </main>
 
-  <main id="mode-dictionary" class="workspace dictionary" role="tabpanel" aria-labelledby="tab-dictionary" hidden>
-    <section class="pane model" aria-labelledby="dict-heading">
+  <main id="mode-dictionary" class="workspace dictionary" role="tabpanel" aria-labelledby="tab-dictionary" data-pane="model" hidden>
+    <div class="subtabs" role="tablist" aria-label="Parte del diccionario">
+      <span class="pill" aria-hidden="true"></span>
+      <button id="dict-pane-model" class="subtab" role="tab" type="button" aria-selected="true" aria-controls="dict-search-panel">Buscar</button>
+      <button id="dict-pane-question" class="subtab" role="tab" type="button" aria-selected="false" aria-controls="dict-add-panel" tabindex="-1">Añadir</button>
+    </div>
+    <section id="dict-search-panel" class="pane model" aria-labelledby="dict-heading">
       <h2 id="dict-heading" class="pane-title">Diccionario del español</h2>
       <p id="dict-counts" class="pane-lede"></p>
       <div class="block">
@@ -123,7 +137,7 @@
         <div class="actions"><button id="dict-more" class="button secondary" type="button" hidden>Mostrar más</button><span id="dict-note" class="hint" role="status"></span></div>
       </div>
     </section>
-    <section class="pane question" aria-labelledby="dict-add-heading">
+    <section id="dict-add-panel" class="pane question" aria-labelledby="dict-add-heading">
       <div class="question-inner">
         <h2 id="dict-add-heading" class="pane-title">Añade una palabra</h2>
         <p class="pane-lede">Escríbela como la usarías. Si no está, el modelo propone qué es y tú lo corriges antes de guardar.</p>
@@ -168,13 +182,14 @@
       <div class="story-side">
         <div id="story-current" class="story-current" aria-live="polite"></div>
         <div class="story-controls">
-          <button id="story-prev" class="button secondary" type="button">Anterior</button>
-          <button id="story-play" class="button secondary" type="button">Reproducir</button>
-          <button id="story-pause" class="button secondary" type="button">Pausar</button>
-          <button id="story-next" class="button secondary" type="button">Siguiente</button>
-          <button id="story-replay" class="button secondary" type="button">Desde el inicio</button>
+          <button id="story-prev" class="button secondary" type="button" aria-label="Paso anterior"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M12.5 4.5 7 10l5.5 5.5"/></svg><span class="label">Anterior</span></button>
+          <button id="story-play" class="button secondary" type="button" aria-label="Reproducir"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><path class="fill" d="M6.5 4.2v11.6L16 10z"/></svg><span class="label">Reproducir</span></button>
+          <button id="story-pause" class="button secondary" type="button" aria-label="Pausar"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M7.5 4.5v11M12.5 4.5v11"/></svg><span class="label">Pausar</span></button>
+          <button id="story-next" class="button secondary" type="button" aria-label="Paso siguiente"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M7.5 4.5 13 10l-5.5 5.5"/></svg><span class="label">Siguiente</span></button>
+          <button id="story-replay" class="button secondary" type="button" aria-label="Desde el inicio"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M4.5 10a5.5 5.5 0 1 0 1.8-4.1M4.5 3.5v3h3"/></svg><span class="label">Desde el inicio</span></button>
         </div>
-        <div class="story-options"><label><input id="story-voice" type="checkbox"> Leer en voz alta</label><label><input id="story-3d" type="checkbox" checked> Vista 3D</label><span id="story-status" class="hint" role="status"></span></div>
+        <div class="story-options"><label class="check"><input id="story-voice" type="checkbox"><svg viewBox="0 0 20 20" aria-hidden="true"><path class="tick" d="M5 10.5l3.2 3.2L15 6.5"/></svg> Leer en voz alta</label><label class="check"><input id="story-3d" type="checkbox" checked><svg viewBox="0 0 20 20" aria-hidden="true"><path class="tick" d="M5 10.5l3.2 3.2L15 6.5"/></svg> Vista 3D</label><span id="story-status" class="hint" role="status"></span></div>
+        <p id="voice-help" class="hint voice-help" hidden></p>
         <details><summary>Ver todos los pasos</summary><ol id="story-list" class="story-list"></ol></details>
       </div>
     </div>

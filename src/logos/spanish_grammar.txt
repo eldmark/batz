@@ -12,10 +12,10 @@ VI_S -> lee | estudia | aprueba | escribe | leyó
 VI_P -> leen | estudian | aprueban | escriben | leyeron
 VIsub_S -> lea | estudie | apruebe | escriba
 VIsub_P -> lean | estudien | aprueben | escriban
-VT_S -> lee | ama | conoce | ve | leyó
-VT_P -> leen | aman | conocen | ven | leyeron
-VTsub_S -> lea | ame | conozca | vea
-VTsub_P -> lean | amen | conozcan | vean
+VT_S -> lee | ama | conoce | ve | leyó | estudia | aprueba | escribe
+VT_P -> leen | aman | conocen | ven | leyeron | estudian | aprueban | escriben
+VTsub_S -> lea | ame | conozca | vea | estudie | apruebe | escriba
+VTsub_P -> lean | amen | conozcan | vean | estudien | aprueben | escriban
 Cop_S -> es
 Cop_P -> son
 DetU_MS -> todo | cada
