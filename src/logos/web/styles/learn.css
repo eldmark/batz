@@ -132,3 +132,13 @@
   .fc-card[data-flipped=true] .fc-back { display: flex; }
 }
 .tl-where a, .fc-example a { color: var(--link); text-underline-offset: 2px; }
+
+/* ── Bloque de tarjetas de estudio: todo centrado ── */
+#learn-cards { text-align: center; }
+#learn-cards .pane-lede { margin-inline: auto; }
+#learn-cards .learn-filters, #learn-cards .filters, #learn-cards .fc-modes, #learn-cards .actions { justify-content: center; }
+#learn-cards .fc-stage, #learn-cards .fc-done, #learn-cards .fc-meter, #learn-cards .fc-all { margin-inline: auto; }
+#learn-cards .fc-face { text-align: left; align-items: stretch; }
+#learn-cards .fc-tag { align-self: flex-start; }
+#learn-cards .fc-all { text-align: left; }
+#learn-cards .filters { display: flex; flex-wrap: wrap; justify-content: center; margin-inline: auto; width: auto; }
