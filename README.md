@@ -74,7 +74,14 @@ El panel «Escribir la fórmula en español» reconoce un fragmento pequeño y m
 
 Al evaluar una fórmula, hallar un contramodelo o demostrar, «Ver paso a paso» recorre los pasos verificados con pausa, avance, retroceso y repetición. En un contramodelo, el avatar cuenta primero la búsqueda (qué tamaños probó, cuántas interpretaciones descartó y un ejemplo que no sirve) y luego por qué la fórmula falla. En una prueba, narra las líneas de la vista Fitch con su mismo número. La vista 3D usa Three.js incluido localmente; la vista 2D queda disponible si WebGL falla.
 
-La voz solo se activa si el usuario la marca y el sistema tiene una voz local en español; si no la hay, la casilla se desactiva y explica cómo instalarla (en Windows: Configuración → Hora e idioma → Voz → Agregar voces → Español). Mientras habla, la boca del avatar se mueve con cada palabra: abre en las vocales abiertas y se redondea en «o» y «u» (morph targets `Boca_abierta` y `Boca_redonda` del GLB).
+El botón de la esquina de la escena pone el paso a paso en pantalla completa: la escena crece y el texto del paso y los controles quedan al lado (debajo en el teléfono). Las flechas ← → cambian de paso y Esc sale. En Android, si el teléfono está vertical, intenta girar a horizontal. En el iPhone, que no ofrece pantalla completa para estos elementos, la sección cubre la ventana.
+
+La voz solo se activa si el usuario la marca y el sistema tiene una voz local en español; si no la hay, la casilla se desactiva y explica cómo instalarla (en Windows: Configuración → Hora e idioma → Voz → Agregar voces → Español). Mientras habla, la boca del avatar sigue a la voz sílaba por sílaba:
+
+- **Ritmo:** cuando la voz empieza una palabra, la palabra se parte en sílabas al ritmo medido de la voz, que se ajusta solo con el tiempo entre palabras. Así nunca se atrasa.
+- **Letras, cifras y símbolos:** se cuentan por su nombre: «x» es «equis», «0» es «cero», «=» es «igual a».
+- **Forma de la boca:** abre en las vocales abiertas, se redondea en «o» y «u» y junta los labios en m, b, p y v (morph targets `Boca_abierta` y `Boca_redonda` del GLB).
+- **Voces que no avisan cada palabra:** la boca sigue un ritmo estimado a partir del texto.
 
 ### Entrada por voz (opcional)
 
