@@ -10,6 +10,8 @@ let preparedSignature = null;
 let freeVariables = [];
 let freeRequest = 0;
 let searchRequest = 0;
+let evalInputs = 0;    // revisión de las entradas de Evaluar: una respuesta de una revisión anterior se descarta
+let proofInputs = 0;   // ídem para Demostrar
 let storyState = null;
 let storyScene = null;
 let storyTimer = null;
@@ -491,6 +493,7 @@ function signature() {
 }
 
 function invalidateTables() {
+  evalInputs++;
   clearStory();
   searchRequest++;
   preparedSignature = null;
@@ -873,7 +876,9 @@ async function evaluateFormula() {
         if (select.value === '') throw Error(`Asigna un valor a ${select.dataset.variable}.`);
         assignment[select.dataset.variable] = domain[Number(select.value)];
       }
+      const rev = evalInputs;
       const result = await api('/api/evaluate', { signature: preparedSignature, interpretation: model, formula: formulaBox.value, assignment });
+      if (rev !== evalInputs) return 'none';   // las entradas cambiaron mientras se evaluaba
       if (result.status !== 'ok') {
         const error = result.errors?.[0] || {message: 'Entrada inválida.'};
         showFormulaError(error);
@@ -927,7 +932,7 @@ function loadProofSample() {
   const sample = PROOF_SAMPLES[proofSample++ % PROOF_SAMPLES.length];
   $('proof-premises').value = sample.premises; $('proof-conclusion').value = sample.conclusion;
   $('proof-constants').value = sample.constants;
-  clearStory(); $('proof-result').replaceChildren(); checkProofSyntax();
+  proofInputs++; clearStory(); $('proof-result').replaceChildren(); checkProofSyntax();
   toast(sample.note);
 }
 function loadDictionarySample() {
@@ -1297,13 +1302,15 @@ const PROOF_LIMITS = {depth: 'la profundidad', nodes: 'el número de nodos', tim
   too_many_atoms: 'el número de letras (más de 12)', too_many_atoms_for_kalmar: 'el tamaño del certificado de Kalmár'};
 
 function contrastElement(contrast) {
-  const box = node('div', undefined, `contrast ${contrast.verdict}`);
+  // Detalle plegado tras el significado del resultado; una discrepancia real se muestra abierta.
+  const box = node('details', undefined, `contrast ${contrast.verdict}`);
+  box.open = contrast.verdict === 'soundness_alarm' || contrast.verdict === 'completeness_gap';
   const b = contrast.engine_b;
   const title = {consistent: 'Los dos motores coinciden', completeness_gap: 'El segundo motor sí la refuta',
     soundness_alarm: 'Los motores se contradicen', no_information: 'El segundo motor no decidió'}[contrast.verdict];
-  box.append(node('strong', title), node('p', contrast.message, 'hint'));
+  box.append(node('summary', `Contraste de motores: ${title}`), node('p', contrast.message, 'hint'));
   if (b.status === 'refuted') {
-    const details = node('details');
+    const details = node('details', undefined, 'contrast-steps');
     details.append(node('summary', `Refutación por resolución (${b.steps.length} cláusulas)`));
     const rule = {premise: 'premisa', negated_conclusion: 'conclusión negada', equality_axiom: 'axioma de igualdad', resolve: 'resolución', factor: 'factorización'};
     details.append(node('pre', b.steps.map(step =>
@@ -1321,7 +1328,9 @@ async function proveFormula() {
   const button = $('prove');
   await withBusy(button, 'Buscando…', async () => {
     try {
+      const rev = proofInputs;
       const result = await api('/api/proof', proofInput());
+      if (rev !== proofInputs) return 'none';  // las entradas cambiaron mientras se buscaba
       box.replaceChildren();
       if (result.status === 'invalid_input') {
         box.append(node('p', result.errors?.[0]?.message || 'Entrada inválida.', 'error')); return 'fail';
@@ -2090,6 +2099,7 @@ $('story-close').addEventListener('click', () => {
 $('add-symbol').addEventListener('click', () => { addSymbol(); invalidateTables(); });
 $('prepare').addEventListener('click', prepare);
 $('domain').addEventListener('input', invalidateTables);
+for (const type of ['change', 'input']) { interpretationBox.addEventListener(type, () => { evalInputs++; }); $('assignment').addEventListener(type, () => { evalInputs++; }); }
 $('sample').addEventListener('click', () => ({evaluate: loadSample, prove: loadProofSample, dictionary: loadDictionarySample, notebook: loadNotebookSample})[currentMode]?.());
 $('evaluate').addEventListener('click', evaluateFormula);
 $('export-json').addEventListener('click', exportJSON);
@@ -2105,7 +2115,7 @@ $('record-spanish').addEventListener('click', recordSpanish);
 $('stop-spanish').addEventListener('click', stopSpanishRecording);
 $('prove').addEventListener('click', proveFormula);
 for (const id of ['proof-premises', 'proof-conclusion', 'proof-constants']) {
-  $(id).addEventListener('input', () => { clearStory(); $('proof-result').replaceChildren(); scheduleProofCheck(); });
+  $(id).addEventListener('input', () => { proofInputs++; clearStory(); $('proof-result').replaceChildren(); scheduleProofCheck(); });
 }
 $('story-play').addEventListener('click', () => {
   if (!storyState) return;
@@ -2135,7 +2145,7 @@ $('story-3d').addEventListener('change', () => {
   if ($('story-3d').checked) initStory3D();
   else $('story-status').textContent = 'Vista 2D activa.';
 });
-formulaBox.addEventListener('input', () => { clearStory(); searchRequest++; $('result').replaceChildren(); $('countermodel-result').replaceChildren(); updateFree(); refreshReady(); });
+formulaBox.addEventListener('input', () => { evalInputs++; clearStory(); searchRequest++; $('result').replaceChildren(); $('countermodel-result').replaceChildren(); updateFree(); refreshReady(); });
 function buildKeyboard(container, target) {
   for (const symbol of ['¬', '∧', '∨', '→', '↔', '∀', '∃', '(', ')', '=', '≠', '⊥']) {
     const button = node('button', symbol, 'key'); button.type = 'button'; button.setAttribute('aria-label', `Insertar ${symbol}`);

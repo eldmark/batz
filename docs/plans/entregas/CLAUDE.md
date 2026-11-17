@@ -14,6 +14,10 @@ Estado: en curso
 - Inicio: pregunta central, 4 tarjetas y 3 ejercicios que abren el módulo y cargan datos; si
   reemplazan datos de Evaluar/Demostrar se avisa con acción «Deshacer».
 
+- F2/F4 (parcial): pasos rotulados en Evaluar; Demostrar explica «todos los modelos» frente a una interpretación;
+  el contraste de motores es un `<details>` tras el veredicto (abierto solo si hay discrepancia real);
+  las respuestas de Evaluar/Demostrar se descartan si las entradas cambiaron mientras llegaban (`evalInputs`, `proofInputs`).
+
 ## Archivos
 
 Nuevos: `web/app/navigation.js`, `web/features/home/home.js`, `web/styles/shell.css`,
@@ -29,6 +33,6 @@ Nuevos: `web/app/navigation.js`, `web/features/home/home.js`, `web/styles/shell.
 
 ## Pendiente (propietario Claude)
 
-F2 Evaluar (resultado bajo la fórmula, herramientas secundarias plegadas), F4 Demostrar, F5 Cuadernos
+F2/F4: errores con acción hacia la entrada, aviso de reemplazo en más cargas, vista móvil Modelo / Fórmula y resultado, hosts del reproductor bajo el resultado; F5 Cuadernos
 (tres paneles), F6 Diccionario, ayuda/recorrido de primer acceso, 1024/768/360 px y teclado,
 integración del reproductor de Codex (sección 7 del protocolo). El reproductor legado sigue operativo.

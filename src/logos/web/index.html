@@ -55,6 +55,7 @@
       <button id="pane-question" class="subtab" role="tab" type="button" aria-selected="false" aria-controls="pane-question-panel" tabindex="-1">2 · Fórmula</button>
     </div>
     <section id="pane-model-panel" class="pane model" aria-labelledby="model-heading">
+      <p class="step-kicker">Paso 1 de 3</p>
       <h2 id="model-heading" class="pane-title">Construye el modelo</h2>
 
       <div class="block" aria-labelledby="language-heading">
@@ -76,6 +77,7 @@
 
     <section id="pane-question-panel" class="pane question" aria-labelledby="formula-heading">
       <div class="question-inner">
+        <p class="step-kicker">Pasos 2 y 3 · escribe la fórmula, evalúa y comprende</p>
         <h2 id="formula-heading" class="pane-title">Evalúa una fórmula</h2>
 
         <div id="batch" class="batch" hidden>
@@ -117,7 +119,7 @@
   <section id="mode-prove" class="workspace prove" aria-label="Demostrar" hidden>
     <section class="pane model" aria-labelledby="proof-heading">
       <h2 id="proof-heading" class="pane-title">Plantea la consecuencia</h2>
-      <p class="pane-lede">Aquí no hay modelo: se pregunta si la conclusión se sigue de las premisas en todos.</p>
+      <p class="pane-lede">Aquí no hay un modelo concreto: se pregunta si la conclusión se sigue de las premisas en <strong>todos</strong> los modelos posibles. En Evaluar, en cambio, se comprueba la verdad en una sola interpretación.</p>
       <div class="block">
         <label for="proof-premises">Premisas, una por línea</label>
         <textarea id="proof-premises" class="formal" rows="4" spellcheck="false" placeholder="∀x (P(x) → Q(x))&#10;P(a)"></textarea>

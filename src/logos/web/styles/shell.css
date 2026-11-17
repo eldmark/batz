@@ -75,3 +75,5 @@ body[data-sidebar=collapsed] .nav-group { margin: 0; }
   .subtabs { top: 68px; }
 }
 @media (prefers-reduced-motion: reduce) { .sidebar { transition: none; } .sidebar-toggle .icon { transition: none; } }
+
+.step-kicker { margin: 0 0 var(--s1); font: 600 12px/1 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted); }
