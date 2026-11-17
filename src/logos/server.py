@@ -19,7 +19,7 @@ from .parser import _Parser, parse
 from .printer import to_string
 from .transform import free_vars
 from .modelfile import parse_model_file
-from . import lexicon, notebook, spanish_tagger as tagger
+from . import lexicon, notebook, practice, spanish_tagger as tagger
 from .propositional import atoms, is_propositional, valuation_model, valuations, value as prop_value
 from .resolution import ResolutionConfig, resolve, _MATRIX as MATRIX
 from .semantics import is_countermodel
@@ -195,6 +195,8 @@ def handle_api(route, data):
     """Procesa una solicitud JSON sin depender del transporte HTTP."""
     if not isinstance(data, dict):
         raise LogosError("syntactic", "expected_formula", "la solicitud debe ser un objeto")
+    if route.startswith("/api/practice/"):
+        return {"schema_version": SCHEMA_VERSION, "status": "ok", **practice.api(route.rsplit("/", 1)[1], data)}
     if route == "/api/spanish":
         return {"schema_version": SCHEMA_VERSION, **translate_spanish(data.get("text")).to_dict()}
     if route.startswith("/api/lexicon/"):
@@ -323,6 +325,8 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         path = urlsplit(self.path).path
         files = {"/": ("index.html", "text/html; charset=utf-8"),
+                 "/practice.js": ("practice.js", "text/javascript; charset=utf-8"),
+                 "/practice.css": ("practice.css", "text/css; charset=utf-8"),
                  "/app.js": ("app.js", "text/javascript; charset=utf-8"),
                  "/story3d.js": ("story3d.js", "text/javascript; charset=utf-8"),
                  "/style.css": ("style.css", "text/css; charset=utf-8"),
@@ -355,7 +359,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         route = urlsplit(self.path).path
-        if route not in ("/api/free", "/api/validate", "/api/evaluate", "/api/countermodel", "/api/spanish", "/api/proof", "/api/parse", "/api/load", "/api/lexicon/search", "/api/lexicon/suggest", "/api/lexicon/preview", "/api/lexicon/add", "/api/lexicon/remove", "/api/voice/status", "/api/voice/transcribe") and not route.startswith("/api/notebook/"):
+        if route not in ("/api/free", "/api/validate", "/api/evaluate", "/api/countermodel", "/api/spanish", "/api/proof", "/api/parse", "/api/load", "/api/lexicon/search", "/api/lexicon/suggest", "/api/lexicon/preview", "/api/lexicon/add", "/api/lexicon/remove", "/api/voice/status", "/api/voice/transcribe") and not route.startswith(("/api/notebook/", "/api/practice/")):
             self.send_error(404)
             return
         try:

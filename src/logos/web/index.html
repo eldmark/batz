@@ -8,7 +8,9 @@
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/tokens.css">
   <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/practice.css">
   <script defer src="/app.js"></script>
+  <script defer src="/practice.js"></script>
 </head>
 <body data-mode="evaluate">
   <header class="topbar">
@@ -19,6 +21,7 @@
       <button id="tab-prove" class="mode" role="tab" type="button" aria-selected="false" aria-controls="mode-prove" tabindex="-1">Demostrar</button>
       <button id="tab-dictionary" class="mode" role="tab" type="button" aria-selected="false" aria-controls="mode-dictionary" tabindex="-1">Diccionario</button>
       <button id="tab-notebook" class="mode" role="tab" type="button" aria-selected="false" aria-controls="mode-notebook" tabindex="-1">Cuaderno</button>
+      <button id="tab-practice" class="mode" role="tab" type="button" aria-selected="false" aria-controls="mode-practice" tabindex="-1">Practicar</button>
     </div>
     <div class="topbar-actions">
       <button id="import-json" class="button on-brand" type="button" aria-label="Cargar archivo"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 13V3m0 0L6 7m4-4 4 4M3.5 12.5v3a1.5 1.5 0 0 0 1.5 1.5h10a1.5 1.5 0 0 0 1.5-1.5v-3"/></svg><span class="label">Cargar archivo</span></button>
@@ -27,6 +30,9 @@
     </div>
   </header>
   <div id="toasts" class="toasts" role="status" aria-live="polite"></div>
+  <main id="mode-practice" class="practice" role="tabpanel" aria-labelledby="tab-practice" hidden>
+    <div id="practice-root"><p class="pr-loading" role="status">Preparando tus ejercicios…</p></div>
+  </main>
 
   <main id="mode-evaluate" class="workspace" role="tabpanel" aria-labelledby="tab-evaluate" data-pane="model">
     <div class="subtabs" role="tablist" aria-label="Paso del modo Evaluar">

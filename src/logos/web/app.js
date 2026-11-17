@@ -1766,10 +1766,12 @@ $('nb-question').addEventListener('input', () => { $('nb-answer').replaceChildre
 confirmClick($('nb-history-clear'), '¿Vaciar la lista?', () => nbChange('clear-chat', {}, {keepAnswer: true}));
 
 // --- modos ---
-const MODES = ['evaluate', 'prove', 'dictionary', 'notebook'];
+const MODES = ['evaluate', 'prove', 'dictionary', 'notebook', 'practice'];
 function setMode(mode) {
   const changed = document.body.dataset.mode !== mode;
   document.body.dataset.mode = mode;
+  if (mode === 'practice') history.replaceState(null, '', '#practicar');
+  else if (location.hash === '#practicar') history.replaceState(null, '', location.pathname + location.search);
   for (const name of MODES) {
     const active = name === mode;
     $(`mode-${name}`).hidden = !active;
@@ -1782,6 +1784,7 @@ function setMode(mode) {
   if (mode === 'prove') checkProofSyntax();
   if (mode === 'dictionary') searchDictionary(true);
   if (mode === 'notebook') openNotebookMode();
+  if (mode === 'practice') window.dispatchEvent(new Event('logos-practice'));
   if (changed && phoneLayout()) window.scrollTo({top: 0, behavior: 'auto'});
 }
 
@@ -1823,7 +1826,7 @@ $('story-close').addEventListener('click', () => {
 $('add-symbol').addEventListener('click', () => { addSymbol(); invalidateTables(); });
 $('prepare').addEventListener('click', prepare);
 $('domain').addEventListener('input', invalidateTables);
-$('sample').addEventListener('click', () => ({evaluate: loadSample, prove: loadProofSample, dictionary: loadDictionarySample, notebook: loadNotebookSample})[document.body.dataset.mode]());
+$('sample').addEventListener('click', () => ({evaluate: loadSample, prove: loadProofSample, dictionary: loadDictionarySample, notebook: loadNotebookSample})[document.body.dataset.mode]?.());
 $('evaluate').addEventListener('click', evaluateFormula);
 $('export-json').addEventListener('click', exportJSON);
 $('import-json').addEventListener('click', () => $('import-file').click());
