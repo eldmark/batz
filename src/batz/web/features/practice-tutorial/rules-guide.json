@@ -1,0 +1,634 @@
+{
+ "families": [
+  {
+   "id": "conjuncion",
+   "title": "Conjunción",
+   "blurb": "«Y»: tener las dos cosas a la vez.",
+   "rules": [
+    "and_i",
+    "and_e1",
+    "and_e2"
+   ]
+  },
+  {
+   "id": "implicacion",
+   "title": "Implicación",
+   "blurb": "«Si… entonces…»: pasar de una cosa a otra.",
+   "rules": [
+    "imp_e",
+    "imp_i"
+   ]
+  },
+  {
+   "id": "disyuncion",
+   "title": "Disyunción",
+   "blurb": "«O»: al menos una de dos.",
+   "rules": [
+    "or_i1",
+    "or_i2",
+    "or_e"
+   ]
+  },
+  {
+   "id": "negacion",
+   "title": "Negación y contradicción",
+   "blurb": "«No» y ⊥: lo que no puede ser a la vez.",
+   "rules": [
+    "not_e",
+    "not_i",
+    "bot_e",
+    "raa"
+   ]
+  },
+  {
+   "id": "cuantificadores",
+   "title": "Cuantificadores",
+   "blurb": "«Para todo» y «existe».",
+   "rules": [
+    "all_e",
+    "all_i",
+    "ex_i",
+    "ex_e"
+   ]
+  },
+  {
+   "id": "igualdad",
+   "title": "Igualdad",
+   "blurb": "Dos nombres para lo mismo.",
+   "rules": [
+    "eq_i",
+    "eq_e"
+   ]
+  },
+  {
+   "id": "equivalencia",
+   "title": "Equivalencia",
+   "blurb": "«Si y solo si»: implicación en los dos sentidos.",
+   "rules": [
+    "iff_i",
+    "iff_e1",
+    "iff_e2"
+   ]
+  },
+  {
+   "id": "hipotesis",
+   "title": "Hipótesis",
+   "blurb": "Suponer algo de forma temporal.",
+   "rules": [
+    "assume"
+   ]
+  }
+ ],
+ "examples": {
+  "and_e1": {
+   "premises": [
+    "P ∧ Q"
+   ],
+   "constants": [],
+   "moves": [
+    {
+     "formula": "P",
+     "rule": "and_e1",
+     "refs": [
+      1
+     ],
+     "params": {}
+    }
+   ],
+   "focus": 2
+  },
+  "and_e2": {
+   "premises": [
+    "P ∧ Q"
+   ],
+   "constants": [],
+   "moves": [
+    {
+     "formula": "Q",
+     "rule": "and_e2",
+     "refs": [
+      1
+     ],
+     "params": {}
+    }
+   ],
+   "focus": 2
+  },
+  "and_i": {
+   "premises": [
+    "P",
+    "Q"
+   ],
+   "constants": [],
+   "moves": [
+    {
+     "formula": "P ∧ Q",
+     "rule": "and_i",
+     "refs": [
+      1,
+      2
+     ],
+     "params": {}
+    }
+   ],
+   "focus": 3
+  },
+  "imp_e": {
+   "premises": [
+    "P → Q",
+    "P"
+   ],
+   "constants": [],
+   "moves": [
+    {
+     "formula": "Q",
+     "rule": "imp_e",
+     "refs": [
+      1,
+      2
+     ],
+     "params": {}
+    }
+   ],
+   "focus": 3
+  },
+  "assume": {
+   "premises": [],
+   "constants": [],
+   "moves": [
+    {
+     "formula": "P",
+     "rule": "assume",
+     "refs": [],
+     "params": {}
+    },
+    {
+     "formula": "P → P",
+     "rule": "imp_i",
+     "refs": [
+      1
+     ],
+     "params": {}
+    }
+   ],
+   "focus": 1
+  },
+  "imp_i": {
+   "premises": [
+    "Q"
+   ],
+   "constants": [],
+   "moves": [
+    {
+     "formula": "P",
+     "rule": "assume",
+     "refs": [],
+     "params": {}
+    },
+    {
+     "formula": "Q ∧ P",
+     "rule": "and_i",
+     "refs": [
+      1,
+      2
+     ],
+     "params": {}
+    },
+    {
+     "formula": "P → (Q ∧ P)",
+     "rule": "imp_i",
+     "refs": [
+      3
+     ],
+     "params": {}
+    }
+   ],
+   "focus": 4
+  },
+  "not_e": {
+   "premises": [
+    "P",
+    "¬P"
+   ],
+   "constants": [],
+   "moves": [
+    {
+     "formula": "⊥",
+     "rule": "not_e",
+     "refs": [
+      1,
+      2
+     ],
+     "params": {}
+    }
+   ],
+   "focus": 3
+  },
+  "not_i": {
+   "premises": [
+    "P → Q",
+    "¬Q"
+   ],
+   "constants": [],
+   "moves": [
+    {
+     "formula": "P",
+     "rule": "assume",
+     "refs": [],
+     "params": {}
+    },
+    {
+     "formula": "Q",
+     "rule": "imp_e",
+     "refs": [
+      1,
+      3
+     ],
+     "params": {}
+    },
+    {
+     "formula": "⊥",
+     "rule": "not_e",
+     "refs": [
+      4,
+      2
+     ],
+     "params": {}
+    },
+    {
+     "formula": "¬P",
+     "rule": "not_i",
+     "refs": [
+      5
+     ],
+     "params": {}
+    }
+   ],
+   "focus": 6
+  },
+  "or_e": {
+   "premises": [
+    "P ∨ Q"
+   ],
+   "constants": [],
+   "moves": [
+    {
+     "formula": "P",
+     "rule": "assume",
+     "refs": [],
+     "params": {}
+    },
+    {
+     "formula": "Q ∨ P",
+     "rule": "or_i2",
+     "refs": [
+      2
+     ],
+     "params": {}
+    },
+    {
+     "formula": "Q",
+     "rule": "assume",
+     "refs": [],
+     "params": {}
+    },
+    {
+     "formula": "Q ∨ P",
+     "rule": "or_i1",
+     "refs": [
+      4
+     ],
+     "params": {}
+    },
+    {
+     "formula": "Q ∨ P",
+     "rule": "or_e",
+     "refs": [
+      1,
+      3,
+      5
+     ],
+     "params": {}
+    }
+   ],
+   "focus": 6
+  },
+  "or_i1": {
+   "premises": [
+    "P"
+   ],
+   "constants": [],
+   "moves": [
+    {
+     "formula": "P ∨ Q",
+     "rule": "or_i1",
+     "refs": [
+      1
+     ],
+     "params": {}
+    }
+   ],
+   "focus": 2
+  },
+  "or_i2": {
+   "premises": [
+    "Q"
+   ],
+   "constants": [],
+   "moves": [
+    {
+     "formula": "P ∨ Q",
+     "rule": "or_i2",
+     "refs": [
+      1
+     ],
+     "params": {}
+    }
+   ],
+   "focus": 2
+  },
+  "all_e": {
+   "premises": [
+    "∀x P(x)"
+   ],
+   "constants": [
+    "a"
+   ],
+   "moves": [
+    {
+     "formula": "P(a)",
+     "rule": "all_e",
+     "refs": [
+      1
+     ],
+     "params": {
+      "term": "a"
+     }
+    }
+   ],
+   "focus": 2
+  },
+  "ex_i": {
+   "premises": [
+    "P(a)"
+   ],
+   "constants": [
+    "a"
+   ],
+   "moves": [
+    {
+     "formula": "∃x P(x)",
+     "rule": "ex_i",
+     "refs": [
+      1
+     ],
+     "params": {
+      "term": "a"
+     }
+    }
+   ],
+   "focus": 2
+  },
+  "eq_e": {
+   "premises": [
+    "a = b",
+    "P(a)"
+   ],
+   "constants": [
+    "a",
+    "b"
+   ],
+   "moves": [
+    {
+     "formula": "P(b)",
+     "rule": "eq_e",
+     "refs": [
+      1,
+      2
+     ],
+     "params": {
+      "var": "x",
+      "template": "P(x)"
+     }
+    }
+   ],
+   "focus": 3
+  },
+  "eq_i": {
+   "premises": [],
+   "constants": [
+    "a"
+   ],
+   "moves": [
+    {
+     "formula": "a = a",
+     "rule": "eq_i",
+     "refs": [],
+     "params": {
+      "term": "a"
+     }
+    }
+   ],
+   "focus": 1
+  },
+  "all_i": {
+   "premises": [
+    "∀x (P(x) ∧ Q(x))"
+   ],
+   "constants": [],
+   "moves": [
+    {
+     "formula": "P(u) ∧ Q(u)",
+     "rule": "all_e",
+     "refs": [
+      1
+     ],
+     "params": {
+      "term": "u"
+     }
+    },
+    {
+     "formula": "P(u)",
+     "rule": "and_e1",
+     "refs": [
+      2
+     ],
+     "params": {}
+    },
+    {
+     "formula": "∀x P(x)",
+     "rule": "all_i",
+     "refs": [
+      3
+     ],
+     "params": {
+      "var": "u"
+     }
+    }
+   ],
+   "focus": 4
+  },
+  "ex_e": {
+   "premises": [
+    "∃x P(x)",
+    "∀x (P(x) → Q(x))"
+   ],
+   "constants": [],
+   "moves": [
+    {
+     "formula": "P(u)",
+     "rule": "assume",
+     "refs": [],
+     "params": {}
+    },
+    {
+     "formula": "P(u) → Q(u)",
+     "rule": "all_e",
+     "refs": [
+      2
+     ],
+     "params": {
+      "term": "u"
+     }
+    },
+    {
+     "formula": "Q(u)",
+     "rule": "imp_e",
+     "refs": [
+      4,
+      3
+     ],
+     "params": {}
+    },
+    {
+     "formula": "∃x Q(x)",
+     "rule": "ex_i",
+     "refs": [
+      5
+     ],
+     "params": {
+      "term": "u"
+     }
+    },
+    {
+     "formula": "∃x Q(x)",
+     "rule": "ex_e",
+     "refs": [
+      1,
+      6
+     ],
+     "params": {
+      "var": "u"
+     }
+    }
+   ],
+   "focus": 7
+  },
+  "bot_e": {
+   "premises": [
+    "⊥"
+   ],
+   "constants": [],
+   "moves": [
+    {
+     "formula": "P",
+     "rule": "bot_e",
+     "refs": [
+      1
+     ],
+     "params": {}
+    }
+   ],
+   "focus": 2
+  },
+  "raa": {
+   "premises": [
+    "¬¬P"
+   ],
+   "constants": [],
+   "moves": [
+    {
+     "formula": "¬P",
+     "rule": "assume",
+     "refs": [],
+     "params": {}
+    },
+    {
+     "formula": "⊥",
+     "rule": "not_e",
+     "refs": [
+      2,
+      1
+     ],
+     "params": {}
+    },
+    {
+     "formula": "P",
+     "rule": "raa",
+     "refs": [
+      3
+     ],
+     "params": {}
+    }
+   ],
+   "focus": 4
+  },
+  "iff_i": {
+   "premises": [
+    "P → Q",
+    "Q → P"
+   ],
+   "constants": [],
+   "moves": [
+    {
+     "formula": "P ↔ Q",
+     "rule": "iff_i",
+     "refs": [
+      1,
+      2
+     ],
+     "params": {}
+    }
+   ],
+   "focus": 3
+  },
+  "iff_e1": {
+   "premises": [
+    "P ↔ Q",
+    "P"
+   ],
+   "constants": [],
+   "moves": [
+    {
+     "formula": "Q",
+     "rule": "iff_e1",
+     "refs": [
+      1,
+      2
+     ],
+     "params": {}
+    }
+   ],
+   "focus": 3
+  },
+  "iff_e2": {
+   "premises": [
+    "P ↔ Q",
+    "Q"
+   ],
+   "constants": [],
+   "moves": [
+    {
+     "formula": "P",
+     "rule": "iff_e2",
+     "refs": [
+      1,
+      2
+     ],
+     "params": {}
+    }
+   ],
+   "focus": 3
+  }
+ }
+}

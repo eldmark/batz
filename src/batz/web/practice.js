@@ -6,6 +6,14 @@
   let bank, progress = {}, current = null, result = null, hints = [], hintIndex = 0;
   let generation = 0, previewGeneration = 0, timer, busy = false, lastField, savingWarning = false;
   let activeCategory = 'introduction', migrated = false;
+  // Reglas y tutorial: módulo ES opcional (features/practice-tutorial). Si no carga, el juego sigue igual.
+  let extras = null;
+  const emit = (name, detail) => root.dispatchEvent(new CustomEvent(name, {bubbles: true, detail}));
+  // ÚNICO punto de unión con el módulo: este puente (sin globals). Eventos que emite practice.js sobre #practice-root:
+  // 'batz-practice-view' {view:'home'|'exercise', id} y 'batz-practice-checked' {ok, complete, error}.
+  const bridge = {root, getProgress: () => progress, getBank: () => bank, currentId: () => current?.id ?? null,
+    setRecord: (id, rec) => { progress[id] = rec; save(); }, open: id => open(id),
+    refreshHome: () => { if (!current && root.querySelector('.pr-hero')) home(); }};
   const el = (tag, cls, text) => {
     const n = document.createElement(tag); if (cls) n.className = cls;
     if (text !== undefined) n.textContent = text; return n;
@@ -76,7 +84,11 @@
     summary.append(el('span', 'pr-summary-symbol', '⊢'), el('p', 'pr-summary-count', `${completed()} / ${bank.total}`),
       el('p', '', completed() === bank.total ? 'Colección completada' : 'ejercicios completados'), progressBar(),
       el('span', 'pr-small', 'Sin reloj. Sin vidas. Con todas las pistas que necesites.'));
-    hero.append(heading, summary); root.append(hero);
+    hero.append(heading, summary);
+    const guide = extras?.homeGuide();
+    if (guide?.banner) root.append(guide.banner);
+    root.append(hero);
+    if (guide) root.append(guide.panel);
     if (migrated) root.append(el('p', 'pr-migration', 'Tu progreso compatible se conservó. Los ejercicios 05, 06 y 10 ahora son introductorios; sus borradores anteriores quedan archivados en este navegador.'));
     const navigation = el('nav', 'pr-categories'); navigation.setAttribute('aria-label', 'Categorías de ejercicios');
     for (const category of bank.categories) {
@@ -109,6 +121,7 @@
     }
     section.append(grid); root.append(section);
     const note = el('p', 'pr-footnote'); note.id = 'pr-save-note'; root.append(note); save();
+    emit('batz-practice-view', {view: 'home'});
   }
   function message(text, kind = '') {
     const box = byId('feedback'); if (!box) return;
@@ -150,7 +163,8 @@
     const position = el('span', 'pr-position');
     position.append(el('span', `pr-stage pr-stage-${current.category}`, categoryOf(current.category).title),
       el('span', 'pr-small', `EJERCICIO ${current.id} DE ${bank.total}`));
-    toolbar.append(button('← Ejercicios', 'pr-quiet', home), position); root.append(toolbar, progressBar());
+    toolbar.append(button('← Ejercicios', 'pr-quiet', home), position);
+    if (extras) position.prepend(extras.rulesButton()); root.append(toolbar, progressBar());
     const layout = el('div', 'pr-layout');
     const proof = el('section', 'pr-proof');
     proof.append(el('p', 'pr-eyebrow', current.topic), el('h2', 'pr-title', current.title), el('p', 'pr-intro', current.intro));
@@ -223,6 +237,7 @@
     for (const input of [field, refs]) input.addEventListener('focus', () => { if (input === field) lastField = input; });
     field.addEventListener('input', () => { message(''); rememberEditor(); schedulePreview(); });
     renderRule(saved); renderLines(); renderHints(); schedulePreview(); save();
+    emit('batz-practice-view', {view: 'exercise', id: current.id});
   }
   function key(symbol, name) {
     const b = button(symbol, 'pr-key', () => {
@@ -345,10 +360,10 @@
       byId('formula').value = ''; byId('refs').value = ''; rememberEditor();
       renderLines();
       message(response.open_goal ? 'La fórmula coincide con el objetivo, pero depende de una hipótesis pendiente. Descárgala para completar la prueba.' : '✓ Paso correcto. Tu demostración avanza.', response.open_goal ? 'is-warning' : 'is-good');
-      schedulePreview();
+      schedulePreview(); emit('batz-practice-checked', {ok: true, complete: response.complete});
       if (response.complete) byId('success').scrollIntoView({block:'nearest',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'});
       else byId('formula').focus({preventScroll:true});
-    } catch (err) { if (ticket === generation) { message(err.message, 'is-error'); byId('formula').setAttribute('aria-invalid','true'); } }
+    } catch (err) { if (ticket === generation) { message(err.message, 'is-error'); byId('formula').setAttribute('aria-invalid','true'); emit('batz-practice-checked', {ok: false, complete: false, error: err.message}); } }
     finally { if (ticket === generation) { setBusy(false); byId('undo').disabled = !record(ex.id).moves.length; } }
   }
   async function replaceMoves(moves) {
@@ -384,10 +399,12 @@
   async function init() {
     try {
       bank = await api('catalog');
+      try { extras = (await import('/features/practice-tutorial/index.js')).attach(bridge); } catch { extras = null; }
       try {
         const stored = JSON.parse(localStorage.getItem(storageKey) || '{}');
         if (stored && typeof stored === 'object' && !Array.isArray(stored)) progress = stored;
       } catch { progress = {}; }
+      try { extras?.recover(); } catch { /* sin copia que recuperar */ }
       for (const ex of bank.exercises) {
         const p = progress[ex.id];
         if (!p || typeof p !== 'object' || !Array.isArray(p.moves) || p.moves.length > 100) progress[ex.id] = {moves:[], complete:false,hints:0};
