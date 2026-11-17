@@ -71,32 +71,32 @@
 .step-body .hint { color: var(--text-muted); }
 .home .button.secondary { display: inline-flex; align-items: center; gap: var(--s2); margin-top: var(--s2); }
 
-/* ── Gödel y Turing: editorial ── */
+/* ── Carrusel: Gödel, Turing y Church ── */
 .home-banner { margin: 0; padding: 0; background: none; border: 0; border-radius: 0; }
-.banner-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s7); margin-top: var(--s6); align-items: start; }
-.banner-person { display: flex; flex-direction: column; gap: var(--s5); min-width: 0; }
-.banner-turing { margin-top: 64px; }
-.banner-portrait { margin: 0; max-width: 360px; }
-.banner-frame { position: relative; isolation: isolate; aspect-ratio: 4 / 5; overflow: hidden; display: grid; place-items: center; background: var(--brand-100); border: 0; border-radius: var(--r); }
-.banner-frame img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 20%; mix-blend-mode: multiply; filter: grayscale(1) contrast(1.05); transition: filter .6s var(--out); }
-.banner-turing .banner-frame img { filter: grayscale(1) brightness(.82) contrast(1.2); }
-.banner-frame::after { content: ""; position: absolute; inset: 0; background: var(--brand-800); mix-blend-mode: lighten; pointer-events: none; transition: opacity .6s var(--out); }
-.banner-person:hover .banner-frame img, .banner-person:focus-within .banner-frame img { filter: grayscale(.25) contrast(1.05) saturate(1.15); }
-.banner-turing:hover .banner-frame img, .banner-turing:focus-within .banner-frame img { filter: grayscale(.25) brightness(.9) contrast(1.15) saturate(1.15); }
-.banner-person:hover .banner-frame::after, .banner-person:focus-within .banner-frame::after { opacity: .55; }
-.banner-initials { display: none; font: 500 56px/1 var(--serif); color: var(--brand-800); }
-.banner-frame.is-missing::after { display: none; }
-.banner-frame.is-missing .banner-initials { display: block; }
-.banner-credit { margin-top: var(--s2); font: 400 12px/1.4 var(--sans); color: var(--text-muted); }
-.banner-credit a { color: var(--text-muted); text-underline-offset: 2px; text-decoration-color: var(--border-strong); }
-.banner-credit a:hover { color: var(--link); }
-.banner-text { display: flex; flex-direction: column; gap: var(--s3); min-width: 0; max-width: 46ch; }
-.banner-name { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s1) var(--s3); margin: 0; font: 500 clamp(26px, 3vw, 34px)/1.1 var(--serif); letter-spacing: -.015em; color: var(--brand-800); }
+.carousel-viewport { position: relative; display: grid; margin-top: var(--s6); touch-action: pan-y; }
+.slide { grid-area: 1 / 1; display: grid; grid-template-columns: minmax(220px, 380px) minmax(0, 1fr); gap: var(--s7); align-items: center; min-width: 0;
+  opacity: 0; visibility: hidden; transform: translateX(28px); }
+.slide.is-before { transform: translateX(-28px); }
+.slide.is-active { opacity: 1; visibility: visible; transform: none; }
+.slide .portrait { margin: 0; }
+.slide-text { display: flex; flex-direction: column; gap: var(--s4); min-width: 0; max-width: 52ch; }
+.banner-name { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s1) var(--s3); margin: 0; font: 500 clamp(30px, 4vw, 48px)/1.08 var(--serif); letter-spacing: -.015em; color: var(--brand-800); }
 .banner-name span { font: 400 13px/1 var(--mono); color: var(--text-muted); }
-.banner-text ul { display: grid; gap: var(--s3); margin: 0; padding: 0; list-style: none; }
-.banner-text li { font-size: 15px; line-height: 1.55; }
-.banner-link { margin: var(--s1) 0 0; font: italic 400 17px/1.5 var(--serif); color: var(--brand-800); }
-.banner-goal { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s3) var(--s5); margin-top: var(--s6); padding-top: var(--s5); border-top: var(--hair); }
+.slide-contribution { margin: 0; font-size: 17px; line-height: 1.55; }
+.banner-link { margin: 0; padding-left: var(--s4); border-left: 3px solid var(--signal-400); font: italic 400 18px/1.5 var(--serif); color: var(--brand-800); }
+.slide-link { align-self: flex-start; }
+.carousel-controls { display: flex; align-items: center; justify-content: center; gap: var(--s5); margin-top: var(--s6); padding-top: var(--s4); border-top: var(--hair); }
+.carousel-btn { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 1px solid var(--emph-1-border); border-radius: 50%; background: var(--surface); color: var(--brand-800); cursor: pointer; }
+.carousel-btn:hover { background: var(--brand-100); }
+.carousel-btn.prev .arr { transform: scaleX(-1); }
+.carousel-btn .arr { transition: none; }
+.carousel-dots { display: flex; gap: 0; }
+.carousel-dot { position: relative; width: 44px; height: 44px; padding: 0; border: 0; background: none; cursor: pointer; border-radius: 50%; }
+.carousel-dot::before { content: ""; position: absolute; left: 50%; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; border: 2px solid var(--brand-700); background: transparent; }
+.carousel-dot[aria-current="true"]::before { background: var(--brand-700); transform: scale(1.3); }
+.carousel :focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 3px; }
+
+.banner-goal { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s3) var(--s5); margin-top: var(--s5); }
 .banner-goal p { margin: 0; font: 400 17px/1.45 var(--serif); color: var(--text); max-width: 56ch; }
 
 /* ── Del teorema al ejercicio ── */
@@ -119,6 +119,9 @@
   .tool-glow { transition: opacity .2s ease-out, transform .25s var(--out); transform: translateY(3px); }
   .home-tool:hover .tool-glow, .home-tool:focus-visible .tool-glow { transform: translateY(-2px); }
   .home-cta:active { transform: scale(.97); }
+  .slide { transition: opacity .5s var(--out), transform .6s var(--out), visibility 0s .5s; }
+  .slide.is-active { transition-delay: 0s; }
+  .carousel-dot::before { transition: transform .25s var(--spring), background-color .2s; }
 }
 @media (prefers-reduced-motion: reduce) {
   .home *, .home *::before, .home *::after { transition: none !important; animation: none !important; transform: none !important; }
@@ -128,7 +131,7 @@
 /* ── Pantallas medias y pequeñas ── */
 @media (max-width: 900px) {
   .home-tools { column-gap: var(--s6); }
-  .banner-grid { column-gap: var(--s5); }
+  .slide { gap: var(--s6); }
 }
 @media (max-width: 720px) {
   .home-question { padding-left: 34px; max-width: none; }
@@ -139,9 +142,8 @@
   .tool-glow { inset: 6px -10px 8px; }
   .home-exercises li { grid-template-columns: minmax(0, 1fr); gap: var(--s2); }
   .step-n { font-size: 44px; }
-  .banner-grid { grid-template-columns: minmax(0, 1fr); gap: var(--s6); }
-  .banner-turing { margin-top: 0; }
-  .banner-portrait { max-width: 260px; }
+  .slide { grid-template-columns: minmax(0, 1fr); gap: var(--s5); align-items: start; }
+  .slide .portrait { max-width: 240px; }
   .banner-goal { flex-direction: column; align-items: flex-start; }
   .home-actions .home-cta { width: 100%; justify-content: center; }
 }

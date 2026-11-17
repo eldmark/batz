@@ -22,3 +22,14 @@ test('Aprender tiene ruta #/aprender con id learn', () => {
   assert.equal(hashFor('learn'), '#/aprender');
   assert.ok(isKnownHash('#/aprender/'));
 });
+test('páginas de personas: rutas #/godel, #/turing, #/church fuera de la barra lateral', async () => {
+  const {personFor} = await import('../../../src/logos/web/app/navigation.js');
+  for (const slug of ['godel', 'turing', 'church']) {
+    assert.equal(routeFromHash(`#/${slug}`), slug);
+    assert.equal(hashFor(slug), `#/${slug}`);
+    assert.equal(personFor(slug), slug);
+    assert.equal(ROUTES.find(r => r.id === slug).nav, false);
+  }
+  assert.equal(personFor('home'), null);
+  assert.ok(ROUTES.filter(r => r.nav !== false).every(r => !r.person));
+});

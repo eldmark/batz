@@ -1,5 +1,6 @@
-import {ROUTES, routeFromHash, hashFor, titleFor, isKnownHash} from '/app/navigation.js';
-import {renderHome} from '/features/home/home.js';
+import {ROUTES, routeFromHash, hashFor, titleFor, isKnownHash, personFor} from '/app/navigation.js';
+import {renderHome, CONNECTIONS} from '/features/home/home.js';
+import {renderPerson} from '/features/people/person.js';
 import {buildEvaluationHtml, buildProofHtml, download, printHtml} from '/features/export/export.js';
 import {initLearn} from '/features/learn/learn.js';
 import {createExplanationPlayer} from '/features/explanation-player/index.js';
@@ -2080,30 +2081,34 @@ const SECTION_HELP = {
   prove: 'Demostrar pregunta si la conclusión se sigue de las premisas en TODOS los modelos. No hay una interpretación concreta: la respuesta es una prueba o un contramodelo.',
   notebook: 'Un cuaderno son tus apuntes (por ejemplo los de la clase) en español, pero interrogables: cada oración entendida es una premisa y cada respuesta cita la oración exacta de la que salió, con prueba o contramodelo. «Se sigue de tus fuentes» no dice que lo que dicen sea cierto: solo que lo concluyes de ellas.',
   learn: 'Aprender reúne una línea de tiempo con la historia de la lógica matemática y de predicados, y tarjetas de teoría para estudiar: voltéalas, filtra por tema, marca las que sabías y repasa las demás. Tu progreso se guarda solo en este navegador.',
+  person: 'Una ficha breve de la persona: su vida, sus aportes y dónde se ve su trabajo en Bat’z. Puedes volver al inicio o ver la historia en Aprender.',
   dictionary: 'El diccionario enlaza palabras y formas conjugadas con su lema, categoría y símbolo. Las palabras que añadas se guardan aparte del léxico base.',
 };
 const SAMPLE_LABEL = {evaluate: 'Ejemplo de evaluación', prove: 'Ejemplo de demostración', dictionary: 'Ejemplo de consulta', notebook: 'Cuaderno de ejemplo'};
 let currentMode = null;
 
 function setMode(mode) {
-  if (!['home', ...MODES].includes(mode)) mode = 'home';
+  if (!['home', ...MODES].includes(mode) && !personFor(mode)) mode = 'home';
+  const slug = personFor(mode);
   const changed = currentMode !== mode;
   currentMode = mode;
   document.body.dataset.mode = mode;
   $('mode-home').hidden = mode !== 'home';
   for (const name of MODES) $(`mode-${name}`).hidden = name !== mode;
-  for (const route of ROUTES) {
+  $('mode-person').hidden = !slug;
+  if (slug && changed) renderPerson($('person-body'), slug, {runExercise, connections: CONNECTIONS});
+  for (const route of ROUTES.filter(r => r.nav !== false)) {
     const link = $(`tab-${route.id}`);
     if (route.id === mode) link.setAttribute('aria-current', 'page'); else link.removeAttribute('aria-current');
   }
   document.title = `${titleFor(mode)} · Bat’z`;
   $('page-title').textContent = titleFor(mode);
-  $('help-text').textContent = SECTION_HELP[mode];
+  $('help-text').textContent = SECTION_HELP[slug ? 'person' : mode];
   $('help-panel').hidden = true; $('help-button').setAttribute('aria-expanded', 'false');
   $('import-json').hidden = mode !== 'evaluate';
   if (mode === 'evaluate') setStep(wizardStep, {focus: false});
-  $('sample').hidden = mode === 'home' || mode === 'practice' || mode === 'evaluate' || mode === 'learn';
-  if (mode !== 'home') $('sample').querySelector('.label').textContent = SAMPLE_LABEL[mode];
+  $('sample').hidden = mode === 'home' || !!slug || mode === 'practice' || mode === 'evaluate' || mode === 'learn';
+  if (mode !== 'home' && SAMPLE_LABEL[mode]) $('sample').querySelector('.label').textContent = SAMPLE_LABEL[mode];
   closeMenu();
   pillHosts().forEach(placePill);
   if (changed) pauseExplanations();
