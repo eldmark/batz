@@ -11,20 +11,20 @@ export const BIOS = {
     alt: 'Retrato fotográfico de Kurt Gödel, joven, con gafas redondas, traje y corbata a cuadros.',
     lede: 'Mostró que la lógica de primer orden es completa y que la aritmética formal no lo es.',
     carousel: {
-      contribution: 'Demostró que, en lógica de primer orden, lo que es verdadero en todos los modelos tiene demostración (1929), y que ningún sistema formal de la aritmética lo abarca todo (1931).',
+      contribution: 'Demostró que, en lógica de primer orden, lo que es verdadero en todos los modelos tiene demostración (1929), y que ningún sistema formal consistente de la aritmética, con axiomas efectivos, demuestra todos sus enunciados (1931).',
       batz: 'Evaluar mira un modelo; Demostrar mira todos. La completitud es el puente entre ambos.',
     },
     bio: [
       'Kurt Gödel nació en 1906 en Brünn, hoy Brno, entonces parte del Imperio austrohúngaro.',
-      'Estudió en la Universidad de Viena. Se doctoró en 1929 con una tesis sobre la completitud del cálculo de predicados de primer orden, que se publicó en 1930.',
+      'Estudió en la Universidad de Viena. Presentó en 1929 su tesis doctoral, dirigida por Hans Hahn, sobre la completitud del cálculo de predicados de primer orden; se publicó como artículo en 1930.',
       'En 1931 publicó los teoremas de incompletitud: en un sistema formal consistente, con axiomas dados por un procedimiento efectivo y capaz de expresar la aritmética elemental, hay enunciados que el sistema no puede ni demostrar ni refutar. Tampoco puede demostrar su propia consistencia.',
-      'Entre 1938 y 1940 probó que el axioma de elección y la hipótesis del continuo son consistentes con el resto de los axiomas de la teoría de conjuntos, usando el universo construible L.',
+      'Entre 1938 y 1940 publicó la prueba de que el axioma de elección y la hipótesis generalizada del continuo son consistentes con los demás axiomas de la teoría de conjuntos (ZF), usando el universo construible L.',
       'Se instaló en Estados Unidos en 1940 y trabajó en el Instituto de Estudios Avanzados de Princeton, donde murió en 1978.',
     ],
     contributions: [
       {year: '1929', text: 'Completitud de la lógica de primer orden: toda fórmula válida es demostrable (tesis; publicada en 1930).'},
       {year: '1931', text: 'Teoremas de incompletitud, con el método de la numeración de Gödel.'},
-      {year: '1938–1940', text: 'Consistencia del axioma de elección y de la hipótesis del continuo mediante el universo construible L.'},
+      {year: '1938–1940', text: 'Publica la consistencia del axioma de elección y de la hipótesis generalizada del continuo mediante el universo construible L.'},
     ],
     batz: [
       {text: 'La completitud: si una conclusión vale en todos los modelos, existe una prueba. «Demostrar» busca esa prueba y «Evaluar» comprueba una fórmula en un solo modelo.', href: '#/demostrar', label: 'Abrir Demostrar'},
@@ -33,9 +33,9 @@ export const BIOS = {
     exercise: {id: 'goedel-completitud', label: 'Cargar el ejemplo de completitud en Demostrar'},
     timeline: [
       {year: '1906', text: 'Nace en Brünn (hoy Brno).'},
-      {year: '1929', text: 'Se doctora en Viena con la tesis sobre la completitud.'},
+      {year: '1929', text: 'Presenta en Viena su tesis doctoral sobre la completitud.'},
       {year: '1931', text: 'Publica los teoremas de incompletitud.'},
-      {year: '1938–1940', text: 'Consistencia del axioma de elección y de la hipótesis del continuo.'},
+      {year: '1938–1940', text: 'Publica la consistencia del axioma de elección y de la hipótesis generalizada del continuo.'},
       {year: '1940', text: 'Se instala en Estados Unidos y trabaja en el Instituto de Estudios Avanzados de Princeton.'},
       {year: '1978', text: 'Muere en Princeton.'},
     ],
@@ -109,7 +109,7 @@ export const BIOS = {
     contributions: [
       {year: 'Años 30', text: 'El cálculo lambda, un modelo de cómputo basado en funciones.'},
       {year: '1936', text: 'Indecidibilidad del problema de decisión de la lógica de primer orden.'},
-      {year: '1936', text: 'La tesis de Church: calculable de manera efectiva equivale a definible en el cálculo lambda.'},
+      {year: '1936', text: 'La tesis de Church: calculable de manera efectiva equivale a definible en el cálculo lambda (o recursivo).'},
       {year: '1936', text: 'Cofundación del Journal of Symbolic Logic.'},
     ],
     batz: [
@@ -128,7 +128,7 @@ export const BIOS = {
       '«An Unsolvable Problem of Elementary Number Theory», Alonzo Church (1936).',
       '«A Note on the Entscheidungsproblem», Alonzo Church (1936).',
       '«The Calculi of Lambda-Conversion», Alonzo Church (1941).',
-      '«Introduction to Mathematical Logic», Alonzo Church (1956).',
+      '«Introduction to Mathematical Logic», Alonzo Church (1944; edición revisada de 1956).',
     ],
     related: ['turing', 'godel'],
   },
