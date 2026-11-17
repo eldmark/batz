@@ -1,0 +1,20 @@
+/* Recorrido de primer acceso: tarjeta flotante sin velo; la aplicación sigue usable. Solo tokens existentes. */
+.tour { position: fixed; z-index: 60; right: var(--s5); bottom: var(--s5); width: min(380px, calc(100vw - 2 * var(--s4)));
+  padding: var(--s4) var(--s5) var(--s5); background: var(--surface); color: var(--text);
+  border: 1px solid var(--emph-2-border); border-top: 4px solid var(--emph-4-bg); border-radius: var(--r);
+  box-shadow: 0 12px 40px rgb(0 0 0 / .25); animation: tour-in .22s var(--out); }
+.tour-count { margin: 0 0 var(--s1); font: 600 13px/1.2 var(--sans); color: var(--text-muted); }
+.tour-title { margin: 0 0 var(--s2); font: 600 22px/1.2 var(--serif); color: var(--brand-900); outline: none; }
+.tour-text { margin: 0 0 var(--s4); font: 400 15px/1.5 var(--sans); }
+.tour-actions { display: flex; flex-wrap: wrap; gap: var(--s2); justify-content: flex-end; }
+.tour-actions .button.primary { min-width: 0; font-size: 15px; padding: 11px 20px; }
+.tour-actions #tour-skip { margin-right: auto; border-color: transparent; background: transparent; color: var(--text-muted); text-decoration: underline; }
+.tour :focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
+.tour-target { outline: 3px solid var(--focus-ring); outline-offset: -3px; border-radius: var(--r); }
+.help-tour { margin-top: var(--s2); }
+@keyframes tour-in { from { opacity: 0; transform: translateY(12px); } }
+@media (max-width: 900px) {
+  .tour { left: var(--s3); right: var(--s3); bottom: var(--s3); width: auto; max-height: 60dvh; overflow-y: auto; }
+  .tour-actions .button { min-height: var(--tap); }
+}
+@media (prefers-reduced-motion: reduce) { .tour { animation: none; } }

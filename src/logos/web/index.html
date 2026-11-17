@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="/style.css">
   <link rel="stylesheet" href="/styles/shell.css">
   <link rel="stylesheet" href="/features/explanation-player/player.css">
+  <link rel="stylesheet" href="/styles/tour.css">
   <link rel="stylesheet" href="/practice.css">
   <script type="module" src="/app.js"></script>
   <script defer src="/practice.js"></script>
@@ -45,7 +46,7 @@
           <input id="import-file" type="file" accept=".logos,.txt,.json,application/json,text/plain" hidden>
         </div>
       </header>
-      <div id="help-panel" class="help-panel" role="region" aria-label="Ayuda de la sección" hidden><p id="help-text"></p></div>
+      <div id="help-panel" class="help-panel" role="region" aria-label="Ayuda de la sección" hidden><p id="help-text"></p><button id="tour-open" class="button secondary help-tour" type="button">Ver el recorrido</button></div>
       <div id="toasts" class="toasts" role="status" aria-live="polite"></div>
       <main id="main" class="main" tabindex="-1">
       <section id="mode-home" class="home" aria-labelledby="home-heading">
