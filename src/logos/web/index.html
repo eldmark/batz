@@ -204,9 +204,10 @@
       <span class="pill" aria-hidden="true"></span>
       <button id="nb-pane-model" class="subtab" role="tab" type="button" aria-selected="true" aria-controls="nb-sources-panel">Fuentes <span id="nb-state" class="subtab-state" aria-hidden="true"></span></button>
       <button id="nb-pane-question" class="subtab" role="tab" type="button" aria-selected="false" aria-controls="nb-chat-panel" tabindex="-1">Preguntas</button>
+      <button id="nb-pane-evidence" class="subtab" role="tab" type="button" aria-selected="false" aria-controls="nb-evidence-panel" tabindex="-1">Evidencia <span id="nb-evidence-dot" class="subtab-state" aria-hidden="true"></span></button>
     </div>
     <section id="nb-sources-panel" class="pane model" aria-labelledby="nb-heading">
-      <h2 id="nb-heading" class="pane-title">Cuaderno</h2>
+      <h2 id="nb-heading" class="pane-title">Fuentes</h2>
       <p class="pane-lede">Reúne textos en español. Cada oración que se entiende pasa a ser una premisa, y las respuestas citan de qué oración salió cada una.</p>
 
       <div id="nb-empty" class="block" hidden>
@@ -238,7 +239,7 @@
         </div>
 
         <div id="nb-viewer" class="block" hidden>
-          <div class="result-head nb-viewer-head"><h3 id="nb-viewer-title"></h3><button id="nb-viewer-close" class="button secondary small" type="button">Cerrar</button></div>
+          <div class="result-head nb-viewer-head"><h3 id="nb-viewer-title"></h3><span class="nb-viewer-actions"><button id="nb-viewer-back" class="button secondary small" type="button" hidden>Volver a la evidencia</button><button id="nb-viewer-close" class="button secondary small" type="button">Cerrar</button></span></div>
           <p class="nb-legend" aria-hidden="true"><span class="nb-key premise">premisa</span><span class="nb-key choose">falta elegir lectura</span><span class="nb-key rejected">no se usa</span></p>
           <div id="nb-text" class="nb-text"></div>
           <div id="nb-sentence" class="nb-sentence" aria-live="polite"></div>
@@ -254,7 +255,7 @@
 
     <section id="nb-chat-panel" class="pane question" aria-labelledby="nb-chat-heading">
       <div class="question-inner">
-        <h2 id="nb-chat-heading" class="pane-title">Pregunta a tus fuentes</h2>
+        <h2 id="nb-chat-heading" class="pane-title">Preguntas y respuestas</h2>
         <p class="pane-lede">La respuesta sale solo de las premisas activas y llega con su prueba verificada o con un contramodelo.</p>
         <div class="nb-ask">
           <label for="nb-question" class="sr-only">Pregunta</label>
@@ -267,6 +268,14 @@
           <div class="result-head"><h3>Preguntas anteriores</h3><button id="nb-history-clear" class="button secondary small" type="button">Vaciar</button></div>
           <ul id="nb-history-list"></ul>
         </div>
+      </div>
+    </section>
+
+    <section id="nb-evidence-panel" class="pane evidence" aria-labelledby="nb-evidence-heading">
+      <div class="question-inner">
+        <h2 id="nb-evidence-heading" class="pane-title" tabindex="-1">Evidencia</h2>
+        <p class="pane-lede">Las premisas usadas con su cita, la prueba o el contramodelo y, si existe, el recorrido paso a paso.</p>
+        <div id="nb-evidence" class="result nb-evidence" aria-live="polite"></div>
       </div>
     </section>
   </section>

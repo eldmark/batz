@@ -1543,6 +1543,10 @@ const NB_VERDICTS = {follows: ['Sí', 'true'], contradicts: ['No', 'false'], und
   not_follows: ['No se sigue', 'neutral'], unknown: ['Sin respuesta', 'neutral']};
 let nb = null;        // el cuaderno abierto, tal como lo devuelve el servidor
 let nbList = [];
+let nbAskRev = 0;     // una respuesta de una pregunta o de unas fuentes anteriores se descarta
+function clearNotebookAnswer() {
+  nbAskRev++; $('nb-answer').replaceChildren(); $('nb-evidence').replaceChildren(); $('nb-evidence-dot').textContent = ''; clearStory();
+}
 let nbOpen = null;    // fuente abierta en el visor: {source, sentence, cited}
 
 async function nbCall(action, payload = {}) {
@@ -1584,7 +1588,7 @@ async function loadNotebook(id) {
   const result = await nbCall('get', {id});
   if (!same) nbOpen = null;
   setNotebook(result.notebook, {keepAnswer: same});
-  $('nb-answer').querySelectorAll('.story-open').forEach(button => button.remove());   // el paso a paso se cierra al cambiar de modo
+  $('nb-evidence').querySelectorAll('.story-open').forEach(button => button.remove());   // el paso a paso se cierra al cambiar de modo
 }
 
 /** Cambia el cuaderno mostrado. Si cambiaron las premisas, la respuesta en pantalla ya no vale y se quita. */
@@ -1593,7 +1597,7 @@ function setNotebook(notebook, {keepAnswer = false} = {}) {
   const entry = nbList.find(item => item.id === nb.id);
   if (entry) Object.assign(entry, {title: nb.title, sources: nb.sources.length});
   else nbList.unshift({id: nb.id, title: nb.title, sources: nb.sources.length});
-  if (!keepAnswer) { $('nb-answer').replaceChildren(); clearStory(); }
+  if (!keepAnswer) clearNotebookAnswer();
   renderNotebook();
 }
 
@@ -1605,7 +1609,7 @@ async function nbChange(action, payload = {}, options = {}) {
 function renderNotebook() {
   $('nb-empty').hidden = !!nb; $('nb-body').hidden = !nb;
   $('nb-ask').disabled = !nb; $('nb-question').disabled = !nb;
-  if (!nb) { $('nb-state').textContent = ''; $('nb-answer').replaceChildren(); $('nb-history').hidden = true; return; }
+  if (!nb) { $('nb-state').textContent = ''; clearNotebookAnswer(); $('nb-history').hidden = true; return; }
   const select = $('nb-select'); select.replaceChildren();
   for (const item of nbList) { const option = node('option', item.title); option.value = item.id; select.append(option); }
   select.value = nb.id;
@@ -1644,6 +1648,7 @@ function renderNotebookViewer() {
   $('nb-viewer').hidden = !source;
   if (!source) { nbOpen = null; return; }
   $('nb-viewer-title').textContent = source.title;
+  $('nb-viewer-back').hidden = !(nbOpen.cited && $('nb-evidence').childElementCount);
   const chars = [...source.text];   // los tramos vienen en caracteres, no en unidades UTF-16
   const piece = (start, end) => chars.slice(start, end).join('');
   const box = $('nb-text'); box.replaceChildren();
@@ -1841,7 +1846,9 @@ function notebookModel(found, title, lede) {
 }
 
 function renderNotebookAnswer(result) {
-  const box = $('nb-answer'); box.replaceChildren();
+  const box = $('nb-answer'), ev = $('nb-evidence'); box.replaceChildren(); ev.replaceChildren(); $('nb-evidence-dot').textContent = '';
+  const toEvidence = node('button', 'Ver evidencia', 'button secondary nb-to-evidence'); toEvidence.type = 'button';
+  toEvidence.addEventListener('click', showNotebookEvidence);
   if (result.answer === 'choose') {
     if (result.assumptions.length) box.append(assumptionsElement(result.assumptions));
     box.append(node('p', result.readings.length > 1 ? 'La pregunta tiene más de una lectura. Elige la que quisiste decir.' : 'Confirma que esto es lo que preguntas.', 'hint'));
@@ -1879,7 +1886,8 @@ function renderNotebookAnswer(result) {
       box.append(alarm);
     }
     notes.forEach(note => box.append(node('p', note, 'hint')));
-    box.append(node('h3', 'De dónde sale'), citesElement(result.cited));
+    box.append(toEvidence); $('nb-evidence-dot').textContent = '•';
+    ev.append(node('h3', 'De dónde sale'), citesElement(result.cited));
     const head = node('div', undefined, 'result-head'); head.append(node('h3', 'Derivación'), node('span', 'Primer orden', 'chip logic'));
     const fitch = fitchElement(proof.fitch);
     for (const line of proof.fitch) {
@@ -1890,8 +1898,8 @@ function renderNotebookAnswer(result) {
       if (cite) chip.addEventListener('click', () => openNotebookSource(cite.source, cite.sentence, true));
       fitch.querySelector(`li[data-line="${line.n}"] .why`)?.before(chip);
     }
-    box.append(head, fitch, contrastElement(proof.contrast));
-    showStory(proof.story, null, box);
+    ev.append(head, fitch, contrastElement(proof.contrast));
+    showStory(proof.story, null, ev);
     return;
   }
 
@@ -1904,25 +1912,33 @@ function renderNotebookAnswer(result) {
   notes.forEach(note => box.append(node('p', note, 'hint')));
   const saturated = 'La resolución saturó sin contradicción, así que ese caso existe; no apareció entre los modelos pequeños.';
   if (result.countermodel) {
-    box.append(...notebookModel(result.countermodel, 'Un caso donde es falsa', 'En este modelo todas las premisas activas son verdaderas y lo que preguntas es falso.'),
+    ev.append(...notebookModel(result.countermodel, 'Un caso donde es falsa', 'En este modelo todas las premisas activas son verdaderas y lo que preguntas es falso.'),
       node('h3', '¿Por qué es falsa aquí?'), explanationElement(result.countermodel.explanation, true));
-  } else if (engine.follows === 'saturated') box.append(node('h3', 'Un caso donde es falsa'), node('p', saturated, 'hint'));
+  } else if (engine.follows === 'saturated') ev.append(node('h3', 'Un caso donde es falsa'), node('p', saturated, 'hint'));
   if (result.witness) {
-    box.append(...notebookModel(result.witness, 'Un caso donde es verdadera', 'En este otro modelo las premisas también son verdaderas, y lo que preguntas es verdadero.'));
-  } else if (engine.contradicts === 'saturated') box.append(node('h3', 'Un caso donde es verdadera'), node('p', saturated, 'hint'));
-  if (result.countermodel) showStory(result.countermodel.story, result.countermodel.model, box);
+    ev.append(...notebookModel(result.witness, 'Un caso donde es verdadera', 'En este otro modelo las premisas también son verdaderas, y lo que preguntas es verdadero.'));
+  } else if (engine.contradicts === 'saturated') ev.append(node('h3', 'Un caso donde es verdadera'), node('p', saturated, 'hint'));
+  if (result.countermodel) showStory(result.countermodel.story, result.countermodel.model, ev);
+}
+
+function showNotebookEvidence() {
+  setPane($('mode-notebook'), 'evidence');
+  const heading = $('nb-evidence-heading');
+  heading.scrollIntoView({behavior: reduceMotion() || phoneLayout() ? 'auto' : 'smooth', block: 'start'});
+  heading.focus({preventScroll: true});
 }
 
 async function askNotebook(question, formula) {
   if (!nb) return;
   const text = (question ?? $('nb-question').value).trim();
   if (!text) { $('nb-question').focus(); return; }
-  clearStory();
+  clearNotebookAnswer(); const rev = nbAskRev;
   const box = $('nb-answer');
   setPane($('mode-notebook'), 'question');
   await withBusy($('nb-ask'), 'Buscando…', async () => {
     try {
       const result = await api('/api/notebook/ask', {id: nb.id, question: text, formula});
+      if (rev !== nbAskRev) return 'none';   // cambió la pregunta o las fuentes mientras se respondía
       if (result.status !== 'ok') {
         box.replaceChildren(node('p', result.errors?.[0]?.message || 'No se pudo leer la pregunta.', 'error'),
           node('p', 'Escríbela como una afirmación con el sujeto primero: «¿Juan aprueba?», no «¿Aprueba Juan?».', 'hint'));
@@ -1948,6 +1964,7 @@ $('nb-first-sample').addEventListener('click', loadNotebookSample);
 $('nb-source-save').addEventListener('click', saveNotebookSource);
 $('nb-source-file').addEventListener('click', () => $('nb-file').click());
 $('nb-file').addEventListener('change', event => notebookFile(event.target.files[0]));
+$('nb-viewer-back').addEventListener('click', showNotebookEvidence);
 $('nb-viewer-close').addEventListener('click', () => { nbOpen = null; renderNotebookSources(); renderNotebookViewer(); });
 $('nb-export').addEventListener('click', exportNotebook);
 $('nb-import').addEventListener('click', () => $('nb-import-file').click());
@@ -1955,7 +1972,7 @@ $('nb-import-file').addEventListener('change', event => notebookFile(event.targe
 confirmClick($('nb-delete'), '¿Borrar para siempre?', deleteNotebook);
 $('nb-ask').addEventListener('click', () => askNotebook());
 $('nb-question').addEventListener('keydown', event => { if (event.key === 'Enter') askNotebook(); });
-$('nb-question').addEventListener('input', () => { $('nb-answer').replaceChildren(); clearStory(); });
+$('nb-question').addEventListener('input', clearNotebookAnswer);
 confirmClick($('nb-history-clear'), '¿Vaciar la lista?', () => nbChange('clear-chat', {}, {keepAnswer: true}));
 
 // --- navegación: rutas con hash, sidebar y encabezado ---
@@ -2036,8 +2053,14 @@ function setSidebarCollapsed(collapsed, remember = true) {
   button.setAttribute('aria-pressed', String(collapsed)); button.setAttribute('aria-label', label); button.title = label;
   if (remember) try { localStorage.setItem('logos-sidebar', collapsed ? 'collapsed' : 'expanded'); } catch { /* sin almacenamiento */ }
 }
-$('sidebar-collapse').addEventListener('click', () => setSidebarCollapsed(document.body.dataset.sidebar !== 'collapsed'));
-try { const saved = localStorage.getItem('logos-sidebar'); if (saved) setSidebarCollapsed(saved === 'collapsed', false); } catch { /* sin almacenamiento */ }
+$('sidebar-collapse').addEventListener('click', () => { sidebarSaved = 'manual'; setSidebarCollapsed(document.body.dataset.sidebar !== 'collapsed'); });
+// Sin preferencia guardada, la barra se contrae sola en portátiles estrechos (901–1100 px).
+let sidebarSaved = null;
+try { sidebarSaved = localStorage.getItem('logos-sidebar'); } catch { /* sin almacenamiento */ }
+const narrowDesktop = window.matchMedia('(min-width: 901px) and (max-width: 1100px)');
+const applyAutoSidebar = () => { if (!sidebarSaved && !document.body.dataset.sidebarManual) setSidebarCollapsed(narrowDesktop.matches, false); };
+if (sidebarSaved) setSidebarCollapsed(sidebarSaved === 'collapsed', false); else applyAutoSidebar();
+narrowDesktop.addEventListener('change', applyAutoSidebar);
 
 $('help-button').addEventListener('click', () => {
   const open = $('help-panel').hidden;
@@ -2083,13 +2106,15 @@ function setPane(workspace, pane) {
 for (const workspace of [$('mode-evaluate'), $('mode-dictionary'), $('mode-notebook')]) {
   const tabs = [...workspace.querySelectorAll(':scope > .subtabs .subtab')];
   tabs.forEach(tab => tab.addEventListener('click', () => {
-    setPane(workspace, tab.id.endsWith('question') ? 'question' : 'model');
+    setPane(workspace, tab.id.endsWith('evidence') ? 'evidence' : tab.id.endsWith('question') ? 'question' : 'model');
     if (phoneLayout()) workspace.scrollIntoView({behavior: 'auto', block: 'start'});
   }));
   workspace.querySelector(':scope > .subtabs').addEventListener('keydown', event => {
     if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
-    const next = workspace.dataset.pane === 'model' ? 'question' : 'model';
-    setPane(workspace, next); tabs.find(tab => tab.id.endsWith(next)).focus();
+    const names = tabs.map(tab => tab.id.endsWith('evidence') ? 'evidence' : tab.id.endsWith('question') ? 'question' : 'model');
+    const at = names.indexOf(workspace.dataset.pane);
+    const next = names[(at + (event.key === 'ArrowRight' ? 1 : names.length - 1)) % names.length];
+    setPane(workspace, next); tabs[names.indexOf(next)].focus();
   });
 }
 $('go-question').addEventListener('click', () => { setPane($('mode-evaluate'), 'question'); $('mode-evaluate').scrollIntoView({block: 'start'}); });
