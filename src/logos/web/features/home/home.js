@@ -45,6 +45,22 @@ function thread(cls, d, box) {
   return svg;
 }
 
+/** Del teorema al ejercicio: cada tarjeta carga en Demostrar un caso que ilustra un resultado de Gödel o de Turing. */
+export const CONNECTIONS = [
+  {id: 'goedel-completitud', route: 'prove', who: 'Gödel · completitud (1929)', title: 'Lo que se sigue, se demuestra',
+   does: 'Carga ∀x (Humano(x) → Mortal(x)), Humano(socrates) ⊢ Mortal(socrates).',
+   watch: 'Pulsa «Buscar prueba»: Batz halla la derivación y el verificador la acepta. Si en todos los modelos vale, hay prueba: ese es el puente entre Evaluar y Demostrar.',
+   proof: {premises: '∀x (Humano(x) → Mortal(x))\nHumano(socrates)', conclusion: 'Mortal(socrates)', constants: 'socrates'}},
+  {id: 'goedel-contramodelo', route: 'prove', who: 'Tarski y Gödel · modelos', title: 'Lo que no se sigue, tiene un contramodelo',
+   does: 'Carga ∀x ∃y Ama(x, y) ⊢ ∃y ∀x Ama(x, y): cambiar el orden de ∀ y ∃ cambia el significado.',
+   watch: 'Pulsa «Buscar prueba»: no hay prueba, y Batz muestra un modelo concreto donde las premisas son verdaderas y la conclusión falsa. Ábrelo en Evaluar.',
+   proof: {premises: '∀x ∃y Ama(x, y)', conclusion: '∃y ∀x Ama(x, y)', constants: ''}},
+  {id: 'turing-inconclusa', route: 'prove', who: 'Turing y Church · indecidibilidad (1936)', title: 'A veces la búsqueda no decide',
+   does: 'Carga transitividad, irreflexividad y serialidad de R ⊢ ∃x ∀y ¬R(y, x).',
+   watch: 'Pulsa «Buscar prueba»: queda «Búsqueda inconclusa». No decide la consecuencia: no es «falsa» ni «demostrada». No existe un algoritmo que decida toda consecuencia de primer orden.',
+   proof: {premises: '∀x ∀y ∀z ((R(x, y) ∧ R(y, z)) → R(x, z))\n∀x ¬R(x, x)\n∀x ∃y R(x, y)', conclusion: '∃x ∀y ¬R(y, x)', constants: ''}},
+];
+
 export function renderBanner(make) {
   const section = make('section', undefined, 'home-banner');
   section.setAttribute('aria-labelledby', 'banner-title');
@@ -93,5 +109,15 @@ export function renderHome(host, {go, runExercise}) {
     item.append(make('strong', ex.title), make('p', ex.does), make('p', ex.watch, 'hint'), button);
     list.append(item);
   }
-  host.append(renderBanner(make), cards, make('h3', 'Empieza con un ejemplo'), make('p', 'Tres ejercicios progresivos. Cargar uno reemplaza lo que haya en esa herramienta y te avisa antes.', 'hint'), list);
+  const bridge = make('section', undefined, 'home-bridge'); bridge.setAttribute('aria-labelledby', 'home-bridge-title');
+  const bridgeTitle = make('h3', 'Practica lo que probaron Gödel y Turing'); bridgeTitle.id = 'home-bridge-title';
+  const bridgeList = make('ul', undefined, 'home-bridge-list');
+  for (const item of CONNECTIONS) {
+    const li = make('li'), button = make('button', 'Cargar en Demostrar', 'button secondary'); button.type = 'button';
+    button.addEventListener('click', () => runExercise(item));
+    li.append(make('span', item.who, 'bridge-who'), make('strong', item.title), make('p', item.does), make('p', item.watch, 'hint'), button);
+    bridgeList.append(li);
+  }
+  bridge.append(bridgeTitle, bridgeList);
+  host.append(renderBanner(make), bridge, cards, make('h3', 'Empieza con un ejemplo'), make('p', 'Tres ejercicios progresivos. Cargar uno reemplaza lo que haya en esa herramienta y te avisa antes.', 'hint'), list);
 }

@@ -39,3 +39,7 @@
   .result-actions .button, .wz-back .button, .wizard .pane-next .button { width: 100%; }
 }
 #wz-result .verdict { margin-inline: 0; border-radius: var(--r); }
+
+.export-group { display: flex; flex-wrap: wrap; gap: var(--s2); }
+#proof-result .export-group { margin-top: var(--s4); }
+@media (max-width: 720px) { .export-group .button { width: 100%; } }

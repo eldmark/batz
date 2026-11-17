@@ -1,5 +1,6 @@
 import {ROUTES, routeFromHash, hashFor, titleFor, isKnownHash} from '/app/navigation.js';
 import {renderHome} from '/features/home/home.js';
+import {buildEvaluationHtml, buildProofHtml, download, printHtml} from '/features/export/export.js';
 import {createExplanationPlayer} from '/features/explanation-player/index.js';
 import {EXAMPLE_GROUPS, EXAMPLES, defaultExample, examplePackage, SPANISH_PHRASES} from '/features/evaluator/examples.js';
 import {createTour} from '/features/tour/tour.js';
@@ -15,6 +16,7 @@ let freeRequest = 0;
 let searchRequest = 0;
 let evalInputs = 0;    // revisión de las entradas de Evaluar: una respuesta de una revisión anterior se descarta
 let proofInputs = 0;   // ídem para Demostrar
+let lastProof = null;  // último resultado de Demostrar, para exportarlo
 let spanishRecorder = null;
 let spanishStream = null;
 let spanishRecordTimer = null;
@@ -462,7 +464,7 @@ function refreshReady() {
   $('find-countermodel').disabled = !preparedSignature || !formulaBox.value.trim();
   $('go-question').disabled = !ready;
   $('model-next-note').textContent = ready ? '' : note;
-  evalDone = false;
+  evalDone = false; lastEvaluation = null;
   updateStepper();
 }
 
@@ -708,6 +710,7 @@ async function evaluateFormula() {
       }
       showFormulaError(null);
       renderResultFormula(assignment);
+      lastEvaluation = {formula: formulaBox.value.trim(), assignment, value: result.value, explanation: result.explanation, model};
       resultBox.append(verdictElement(result.value ? 'Verdadero' : 'Falso', result.value ? 'true' : 'false', result.explanation.summary));
       const reasons = node('div', undefined, 'reasons');
       const tree = explanationElement(result.explanation, true);
@@ -769,6 +772,7 @@ function loadSample() { return loadExample(defaultExample); }
 // ── Evaluar como asistente de tres pasos: Modelo → Fórmula → Resultado ──
 let wizardStep = 1;
 let evalDone = false;    // hay un resultado vigente para el paso 3
+let lastEvaluation = null;   // datos del resultado vigente de Evaluar, para exportarlo
 const wizardPanels = () => [...$('mode-evaluate').querySelectorAll('[data-step-panel]')];
 function modelIsReady() { try { return !!preparedSignature && !!interpretation(); } catch { return false; } }
 
@@ -819,6 +823,17 @@ for (const button of $('wizard-steps').querySelectorAll('.wz-step')) {
 $('edit-model').addEventListener('click', () => setStep(1));
 $('back-model').addEventListener('click', () => setStep(1));
 $('change-formula').addEventListener('click', () => { setStep(2); formulaBox.focus(); });
+
+/** Botones «Descargar» e «Imprimir / PDF» para un resultado; `build` devuelve el HTML del momento. */
+function exportButtons(build, baseName) {
+  const group = node('div', undefined, 'export-group'); group.setAttribute('role', 'group'); group.setAttribute('aria-label', 'Exportar el resultado');
+  const save = node('button', 'Descargar resultado', 'button secondary'); save.type = 'button';
+  const print = node('button', 'Imprimir o guardar PDF', 'button secondary'); print.type = 'button';
+  save.addEventListener('click', () => { const html = build(); if (!html) return; download(`${baseName}.html`, html); toast('Resultado descargado como página HTML.', 'success'); });
+  print.addEventListener('click', () => { const html = build(); if (html) printHtml(html); });
+  group.append(save, print); return group;
+}
+$('result-actions').append(exportButtons(() => (lastEvaluation ? buildEvaluationHtml(lastEvaluation) : null), 'batz-evaluacion'));
 
 /** Copia del estado de Evaluar para poder deshacer un reemplazo. */
 function snapshotEvaluate() {
@@ -1260,14 +1275,15 @@ function contrastElement(contrast) {
 }
 
 async function proveFormula() {
-  clearStory('prove');
+  clearStory('prove'); lastProof = null;
   const box = $('proof-result'); box.replaceChildren();
   const button = $('prove');
   await withBusy(button, 'Buscando…', async () => {
     try {
-      const rev = proofInputs;
-      const result = await api('/api/proof', proofInput());
+      const rev = proofInputs, sent = proofInput();
+      const result = await api('/api/proof', sent);
       if (rev !== proofInputs) return 'none';  // las entradas cambiaron mientras se buscaba
+      if (result.status !== 'invalid_input') lastProof = {premises: sent.premises, conclusion: sent.conclusion, result, rev};
       box.replaceChildren();
       if (result.status === 'invalid_input') {
         box.append(node('p', result.errors?.[0]?.message || 'Entrada inválida.', 'error')); return 'fail';
@@ -1321,6 +1337,9 @@ async function proveFormula() {
     } catch (exc) { box.replaceChildren(node('p', exc.message || 'No se pudo buscar la prueba.', 'error')); return 'fail'; }
     finally { checkProofSyntax(); }
   });
+  if (lastProof && lastProof.rev === proofInputs && box.childElementCount) {
+    box.append(exportButtons(() => (lastProof && lastProof.rev === proofInputs ? buildProofHtml(lastProof) : null), 'batz-consecuencia'));
+  }
 }
 
 // --- diccionario ---
@@ -2167,6 +2186,17 @@ async function runExercise(exercise) {
   let undo = null;
   if (exercise.id === 'evaluate') {
     await loadExample(defaultExample);
+  } else if (exercise.proof) {
+    const fields = {'proof-premises': exercise.proof.premises, 'proof-conclusion': exercise.proof.conclusion, 'proof-constants': exercise.proof.constants};
+    const before = Object.keys(fields).map(id => $(id).value);
+    const had = before.some(value => value.trim());
+    Object.entries(fields).forEach(([id, value]) => { $(id).value = value; });
+    proofInputs++; clearStory('prove'); $('proof-result').replaceChildren(); checkProofSyntax();
+    toast(`Cargado: ${exercise.title}. Pulsa «Buscar prueba».`, 'info', 6000);
+    if (had) toast('Se reemplazó lo que había en Demostrar.', 'warning', 9000, {label: 'Deshacer', run: () => {
+      Object.keys(fields).forEach((id, i) => { $(id).value = before[i]; });
+      proofInputs++; clearStory('prove'); $('proof-result').replaceChildren(); checkProofSyntax();
+    }});
   } else if (exercise.id === 'prove') {
     const before = ['proof-premises', 'proof-conclusion', 'proof-constants'].map(id => $(id).value);
     const had = before.some(value => value.trim());
