@@ -840,6 +840,7 @@ function batchRow(row) {
 }
 
 async function loadFile(file) {
+  if (document.body.dataset.mode === 'notebook') return notebookFile(file);   // en el cuaderno, un archivo es una fuente
   try {
     if (!file) return;
     if (file.size > 500000) throw Error('El archivo pesa más de 500 kB.');
@@ -905,6 +906,23 @@ async function searchCountermodel() {
   });
 }
 
+/** Palabras fuera del léxico: qué categoría se les supuso, antes de ofrecer la fórmula. */
+function assumptionsElement(assumptions) {
+  const assumed = node('div', undefined, 'assumptions');
+  assumed.append(node('strong', 'Palabras que no conocía. Supuse esto; revísalo antes de usar la fórmula:'));
+  const list = node('ul');
+  for (const a of assumptions) {
+    const item = node('li');
+    item.append(node('code', a.word), document.createTextNode(` es ${a.label} `),
+      node('span', `${Math.round(a.probability * 100)} %`, 'chip'), document.createTextNode(' → símbolo '), node('code', a.symbol));
+    const fix = node('button', 'Añadir al diccionario', 'button secondary small'); fix.type = 'button';
+    fix.addEventListener('click', () => openDictionaryWith(a.word));
+    item.append(fix); list.append(item);
+  }
+  assumed.append(list);
+  return assumed;
+}
+
 async function showSpanishReadings() {
   const box = $('spanish-readings'); box.replaceChildren();
   try {
@@ -913,21 +931,7 @@ async function showSpanishReadings() {
       box.append(node('p', result.errors?.[0]?.message || 'Frase no admitida.', 'error'));
       return;
     }
-    if (result.assumptions?.length) {
-      // palabras fuera del léxico: se muestra qué categoría se les supuso antes de ofrecer la fórmula
-      const assumed = node('div', undefined, 'assumptions');
-      assumed.append(node('strong', 'Palabras que no conocía. Supuse esto; revísalo antes de usar la fórmula:'));
-      const list = node('ul');
-      for (const a of result.assumptions) {
-        const item = node('li');
-        item.append(node('code', a.word), document.createTextNode(` es ${a.label} `),
-          node('span', `${Math.round(a.probability * 100)} %`, 'chip'), document.createTextNode(' → símbolo '), node('code', a.symbol));
-        const fix = node('button', 'Añadir al diccionario', 'button secondary small'); fix.type = 'button';
-        fix.addEventListener('click', () => openDictionaryWith(a.word));
-        item.append(fix); list.append(item);
-      }
-      assumed.append(list); box.append(assumed);
-    }
+    if (result.assumptions?.length) box.append(assumptionsElement(result.assumptions));
     if (result.status === 'ambiguous') {
       box.append(node('p', 'Hay más de una lectura. Elige la que quisiste decir.', 'hint'));
     }
@@ -1337,8 +1341,432 @@ $('dict-category').addEventListener('change', () => { dictSetCategory($('dict-ca
 for (const id of ['dict-lemma', 'dict-feature', 'dict-synonym', 'dict-sense']) $(id).addEventListener('input', dictPreview);
 $('dict-save').addEventListener('click', dictSave);
 
+// --- cuaderno: fuentes en español, premisas con cita y preguntas ---
+const NB_SAMPLE = {title: 'Ejemplo: la clase de lógica', sources: [
+  {title: 'Apuntes de la clase', text: 'Todo estudiante que estudia aprueba.\nJuan es un estudiante. Juan estudia.\nMaría es una estudiante.\n' +
+    'Ningún profesor estudia. Pedro es un profesor.\nTodos los estudiantes leen un libro.\nEl examen fue difícil para muchos.'},
+  {title: 'Un clásico', text: 'Todos los hombres son mortales. Sócrates es un hombre.'}]};
+const NB_VERDICTS = {follows: ['Sí', 'true'], contradicts: ['No', 'false'], undecided: ['No lo deciden', 'neutral'],
+  not_follows: ['No se sigue', 'neutral'], unknown: ['Sin respuesta', 'neutral']};
+let nb = null;        // el cuaderno abierto, tal como lo devuelve el servidor
+let nbList = [];
+let nbOpen = null;    // fuente abierta en el visor: {source, sentence, cited}
+
+async function nbCall(action, payload = {}) {
+  const result = await api(`/api/notebook/${action}`, payload);
+  if (result.status !== 'ok') throw Error(result.errors?.[0]?.message || 'No se pudo completar.');
+  return result;
+}
+function nbRemember(id) { try { localStorage.setItem('logos-cuaderno', id); } catch { /* sin almacenamiento: se abre el más reciente */ } }
+function nbRemembered() { try { return localStorage.getItem('logos-cuaderno'); } catch { return null; } }
+function nbCountsText(counts) {
+  return plural(counts.premises, 'premisa', 'premisas') + (counts.choose ? ` · ${counts.choose} por elegir` : '') +
+    (counts.rejected ? ` · ${counts.rejected} sin usar` : '');
+}
+
+/** Acción que borra algo: el primer toque pide confirmar en el mismo botón; el segundo la ejecuta. */
+function confirmClick(button, question, action) {
+  const original = button.innerHTML;
+  let timer = null;
+  const reset = () => { delete button.dataset.confirm; button.innerHTML = original; };
+  button.addEventListener('click', () => {
+    clearTimeout(timer);
+    if (button.dataset.confirm) { reset(); action(); return; }
+    button.dataset.confirm = '1'; button.textContent = question;
+    timer = setTimeout(reset, 4000);
+  });
+}
+
+async function openNotebookMode() {
+  try {
+    nbList = (await nbCall('list')).notebooks;
+    if (!nbList.length) { nb = null; renderNotebook(); return; }
+    const wanted = nb?.id || nbRemembered();
+    await loadNotebook(nbList.some(item => item.id === wanted) ? wanted : nbList[0].id);
+  } catch (exc) { toast(exc.message, 'error', 6000); }
+}
+
+async function loadNotebook(id) {
+  const same = nb?.id === id;   // al volver del diccionario se conserva lo que estaba abierto
+  const result = await nbCall('get', {id});
+  if (!same) nbOpen = null;
+  setNotebook(result.notebook, {keepAnswer: same});
+  $('nb-answer').querySelectorAll('.story-open').forEach(button => button.remove());   // el paso a paso se cierra al cambiar de modo
+}
+
+/** Cambia el cuaderno mostrado. Si cambiaron las premisas, la respuesta en pantalla ya no vale y se quita. */
+function setNotebook(notebook, {keepAnswer = false} = {}) {
+  nb = notebook; nbRemember(nb.id);
+  const entry = nbList.find(item => item.id === nb.id);
+  if (entry) Object.assign(entry, {title: nb.title, sources: nb.sources.length});
+  else nbList.unshift({id: nb.id, title: nb.title, sources: nb.sources.length});
+  if (!keepAnswer) { $('nb-answer').replaceChildren(); clearStory(); }
+  renderNotebook();
+}
+
+async function nbChange(action, payload = {}, options = {}) {
+  try { setNotebook((await nbCall(action, {id: nb.id, ...payload})).notebook, options); return true; }
+  catch (exc) { toast(exc.message, 'error', 6000); renderNotebook(); return false; }
+}
+
+function renderNotebook() {
+  $('nb-empty').hidden = !!nb; $('nb-body').hidden = !nb;
+  $('nb-ask').disabled = !nb; $('nb-question').disabled = !nb;
+  if (!nb) { $('nb-state').textContent = ''; $('nb-answer').replaceChildren(); $('nb-history').hidden = true; return; }
+  const select = $('nb-select'); select.replaceChildren();
+  for (const item of nbList) { const option = node('option', item.title); option.value = item.id; select.append(option); }
+  select.value = nb.id;
+  if (document.activeElement !== $('nb-title')) $('nb-title').value = nb.title;
+  renderNotebookSources(); renderNotebookViewer(); renderNotebookHistory();
+}
+
+function renderNotebookSources() {
+  const list = $('nb-sources'); list.replaceChildren();
+  let premises = 0, choose = 0, active = 0;
+  for (const source of nb.sources) {
+    if (source.enabled) { premises += source.counts.premises; choose += source.counts.choose; active++; }
+    const item = node('li', undefined, 'nb-source');
+    if (nbOpen?.source === source.id) item.classList.add('open');
+    const use = node('input'); use.type = 'checkbox'; use.checked = source.enabled;
+    use.setAttribute('aria-label', `Usar «${source.title}» al responder`);
+    use.addEventListener('change', () => nbChange('source-toggle', {source: source.id, enabled: use.checked}));
+    const open = node('button', undefined, 'nb-source-open'); open.type = 'button';
+    open.append(node('strong', source.title), node('span', nbCountsText(source.counts), 'hint'));
+    open.addEventListener('click', () => openNotebookSource(source.id));
+    const remove = node('button', undefined, 'remove'); remove.type = 'button'; remove.setAttribute('aria-label', `Quitar «${source.title}»`);
+    remove.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M2 2l10 10M12 2L2 12"/></svg>';
+    confirmClick(remove, '¿Quitar?', () => nbChange('source-remove', {source: source.id}));
+    item.append(checkBox(use), open, remove); list.append(item);
+  }
+  $('nb-summary').textContent = !nb.sources.length ? 'Aún no hay fuentes. Añade la primera aquí abajo.'
+    : `${plural(premises, 'premisa activa', 'premisas activas')} en ${plural(active, 'fuente', 'fuentes')}.` +
+      (choose ? ` ${choose === 1 ? 'Una oración espera' : `${choose} oraciones esperan`} que elijas su lectura: ábrela para decidir.` : '');
+  $('nb-state').textContent = premises ? String(premises) : '';
+  if (!nb.sources.length) $('nb-add').open = true;
+}
+
+/** Texto de la fuente con cada oración marcada según cómo se leyó; al tocarla se ve su fórmula. */
+function renderNotebookViewer() {
+  const source = nbOpen && nb.sources.find(item => item.id === nbOpen.source);
+  $('nb-viewer').hidden = !source;
+  if (!source) { nbOpen = null; return; }
+  $('nb-viewer-title').textContent = source.title;
+  const chars = [...source.text];   // los tramos vienen en caracteres, no en unidades UTF-16
+  const piece = (start, end) => chars.slice(start, end).join('');
+  const box = $('nb-text'); box.replaceChildren();
+  let at = 0;
+  for (const sentence of source.sentences) {
+    const [start, end] = sentence.span;
+    if (start > at) box.append(document.createTextNode(piece(at, start)));
+    const mark = node('span', undefined, `nb-s ${sentence.status}`);
+    mark.dataset.i = sentence.i; mark.tabIndex = 0; mark.setAttribute('role', 'button');
+    mark.setAttribute('aria-pressed', String(nbOpen.sentence === sentence.i));
+    if (nbOpen.cited && nbOpen.sentence === sentence.i) mark.classList.add('cited');
+    const wrong = sentence.error?.span;
+    if (wrong) mark.append(document.createTextNode(piece(start, wrong[0])), node('u', piece(wrong[0], wrong[1])), document.createTextNode(piece(wrong[1], end)));
+    else mark.textContent = piece(start, end);
+    const pick = () => { nbOpen = {source: source.id, sentence: sentence.i}; renderNotebookViewer(); };
+    mark.addEventListener('click', pick);
+    mark.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); pick(); box.querySelector(`[data-i="${sentence.i}"]`)?.focus(); } });
+    box.append(mark); at = end;
+  }
+  if (at < chars.length) box.append(document.createTextNode(piece(at, chars.length)));
+  renderNotebookSentence(source);
+}
+
+function renderNotebookSentence(source) {
+  const box = $('nb-sentence'); box.replaceChildren();
+  const sentence = source.sentences.find(item => item.i === nbOpen.sentence);
+  if (!sentence) {
+    box.append(node('p', 'Toca una oración para ver cómo se leyó.' + (source.truncated ? ' La fuente es larga: solo se analizaron sus primeras 150 oraciones.' : ''), 'hint'));
+    return;
+  }
+  if (sentence.status === 'rejected') {
+    box.append(node('strong', 'No se usa como premisa'), node('p', sentence.error.message));
+    if (sentence.error.word) {
+      const fix = node('button', `Añadir «${sentence.error.word}» al diccionario`, 'button secondary small'); fix.type = 'button';
+      fix.addEventListener('click', () => openDictionaryWith(sentence.error.word));
+      box.append(fix);
+    } else box.append(node('p', 'Queda fuera del español controlado. Si la necesitas, reescríbela en una fuente nueva.', 'hint'));
+    return;
+  }
+  if (!sentence.readings) {
+    box.append(node('strong', 'Premisa'), node('code', sentence.formula, 'nb-formula'));
+    return;
+  }
+  if (sentence.assumptions.length) box.append(assumptionsElement(sentence.assumptions));
+  const several = sentence.readings.length > 1;
+  box.append(node('strong', sentence.status === 'premise' ? 'Premisa, con la lectura que elegiste'
+    : several ? 'Tiene más de una lectura: elige la que dice el texto' : 'Confirma la lectura para usarla como premisa'));
+  for (const reading of sentence.readings) {
+    const row = node('div', undefined, 'spanish-reading');
+    row.append(node('strong', reading.note), node('code', reading.formula));
+    if (reading.formula === sentence.formula) row.append(node('span', 'En uso', 'badge true'));
+    else {
+      const use = node('button', several ? 'Usar esta lectura' : 'Usar como premisa', 'button secondary small'); use.type = 'button';
+      use.addEventListener('click', () => nbChange('choose', {source: source.id, sentence: sentence.i, formula: reading.formula}));
+      row.append(use);
+    }
+    box.append(row);
+  }
+  if (sentence.status === 'premise') {
+    const drop = node('button', 'Dejar de usarla', 'button secondary small'); drop.type = 'button';
+    drop.addEventListener('click', () => nbChange('choose', {source: source.id, sentence: sentence.i, formula: null}));
+    const actions = node('div', undefined, 'actions'); actions.append(drop); box.append(actions);
+  }
+}
+
+/** Abre una fuente en el visor; con `sentence`, salta a esa oración (así llegan las citas de una respuesta). */
+function openNotebookSource(id, sentence = null, cited = false) {
+  nbOpen = {source: id, sentence, cited};
+  renderNotebookSources(); renderNotebookViewer();
+  setPane($('mode-notebook'), 'model');
+  const target = sentence === null ? $('nb-viewer') : $('nb-text').querySelector(`[data-i="${sentence}"]`);
+  // En el teléfono el panel acaba de aparecer: se salta sin animación, que ahí se interrumpe.
+  const behavior = reduceMotion() || phoneLayout() ? 'auto' : 'smooth';
+  target?.scrollIntoView({behavior, block: sentence === null ? 'nearest' : 'center'});
+}
+
+async function addNotebookSource(title, text) {
+  const before = new Set(nb.sources.map(source => source.id));
+  const result = await nbCall('source-add', {id: nb.id, title, text});
+  setNotebook(result.notebook);
+  const added = nb.sources.find(source => !before.has(source.id));
+  if (!added) return;
+  openNotebookSource(added.id);
+  toast(`«${added.title}»: ${nbCountsText(added.counts)}.`, added.counts.premises ? 'success' : 'warning', 6000);
+}
+
+async function saveNotebookSource() {
+  const error = $('nb-source-error'); error.hidden = true;
+  await withBusy($('nb-source-save'), 'Leyendo…', async () => {
+    try {
+      await addNotebookSource($('nb-source-title').value, $('nb-source-text').value);
+      $('nb-source-title').value = ''; $('nb-source-text').value = ''; $('nb-add').open = false;
+      return 'done';
+    } catch (exc) { error.textContent = exc.message; error.hidden = false; return 'fail'; }
+  });
+}
+
+/** Un archivo en el modo Cuaderno: un `.json` exportado se importa; cualquier otro texto entra como fuente. */
+async function notebookFile(file) {
+  try {
+    if (!file) return;
+    if (file.size > 500000) throw Error('El archivo pesa más de 500 kB.');
+    const text = await file.text();
+    if (/\.json$/i.test(file.name)) {
+      let data;
+      try { data = JSON.parse(text); } catch { throw Error('El archivo no es un cuaderno de LOGOS.'); }
+      const result = await nbCall('import', {notebook: data});
+      nbOpen = null; setNotebook(result.notebook);
+      toast(`Cuaderno «${nb.title}» importado.`, 'success');
+    } else {
+      if (!nb) setNotebook((await nbCall('create', {title: 'Cuaderno nuevo'})).notebook);
+      await addNotebookSource(file.name.replace(/\.[^.]+$/, ''), text);
+    }
+  } catch (exc) { toast(`No se pudo cargar: ${exc.message}`, 'error', 7000); }
+  for (const id of ['nb-file', 'nb-import-file', 'import-file']) $(id).value = '';
+}
+
+async function newNotebook() {
+  try {
+    nbOpen = null; setNotebook((await nbCall('create', {title: 'Cuaderno nuevo'})).notebook);
+    $('nb-title').focus(); $('nb-title').select();
+  } catch (exc) { toast(exc.message, 'error', 6000); }
+}
+
+async function loadNotebookSample() {
+  try {
+    nbOpen = null; setNotebook((await nbCall('import', {notebook: NB_SAMPLE})).notebook);
+    $('nb-question').value = '¿Juan aprueba?';
+    toast('Cuaderno de ejemplo creado. Abre una fuente para ver sus premisas y pulsa «Preguntar».', 'success', 6000);
+  } catch (exc) { toast(exc.message, 'error', 6000); }
+}
+
+async function exportNotebook() {
+  try {
+    const result = await nbCall('export', {id: nb.id});
+    const url = URL.createObjectURL(new Blob([JSON.stringify(result.notebook, null, 2)], {type: 'application/json'}));
+    const anchor = node('a'); anchor.href = url;
+    anchor.download = `${nb.title.replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-|-$/g, '') || 'cuaderno'}.cuaderno.json`;
+    document.body.append(anchor); anchor.click(); anchor.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    toast('Cuaderno exportado.', 'success');
+  } catch (exc) { toast(exc.message, 'error'); }
+}
+
+async function deleteNotebook() {
+  try {
+    const title = nb.title;
+    nbList = (await nbCall('delete', {id: nb.id})).notebooks;
+    nb = null; nbOpen = null; clearStory();
+    if (nbList.length) await loadNotebook(nbList[0].id); else renderNotebook();
+    toast(`Cuaderno «${title}» borrado.`);
+  } catch (exc) { toast(exc.message, 'error', 6000); }
+}
+
+function renderNotebookHistory() {
+  const list = $('nb-history-list'); list.replaceChildren();
+  $('nb-history').hidden = !nb.chat.length;
+  for (const turn of [...nb.chat].reverse()) {
+    const item = node('li');
+    const again = node('button', undefined, 'nb-turn'); again.type = 'button';
+    again.append(node('span', turn.question));
+    const verdict = NB_VERDICTS[turn.answer];   // sin veredicto si las fuentes cambiaron después de preguntar
+    if (verdict) again.append(node('span', verdict[0], `badge ${verdict[1]}`));
+    again.addEventListener('click', () => { $('nb-question').value = turn.question; askNotebook(turn.question, turn.formula || undefined); });
+    item.append(again); list.append(item);
+  }
+}
+
+/** Premisas que usa la prueba, cada una con la oración de la fuente de donde salió. */
+function citesElement(cited) {
+  const list = node('ol', undefined, 'nb-cites');
+  for (const premise of cited) {
+    const item = node('li');
+    const body = node('div');
+    for (const cite of premise.cites) {
+      const link = node('button', undefined, 'nb-cite'); link.type = 'button';
+      link.append(node('span', `«${cite.text}»`), node('span', cite.title, 'hint'));
+      link.addEventListener('click', () => openNotebookSource(cite.source, cite.sentence, true));
+      body.append(link);
+    }
+    body.append(node('code', premise.formula));
+    item.append(node('span', String(premise.n), 'nb-cite-n'), body); list.append(item);
+  }
+  return list;
+}
+
+function notebookModel(found, title, lede) {
+  const parts = [node('h3', title), node('p', lede, 'hint'), modelElement(found.model, {json: false})];
+  const all = node('details', undefined, 'model-json-toggle');
+  const truths = node('ul', undefined, 'truth-list');
+  for (const premise of found.premises) { const row = node('li'); row.append(node('span', 'V', 'truth'), node('code', premise.formula)); truths.append(row); }
+  all.append(node('summary', `Ver ${found.premises.length === 1 ? 'la premisa, verdadera' : `las ${found.premises.length} premisas, verdaderas`} en este caso`), truths);
+  parts.push(all);
+  return parts;
+}
+
+function renderNotebookAnswer(result) {
+  const box = $('nb-answer'); box.replaceChildren();
+  if (result.answer === 'choose') {
+    if (result.assumptions.length) box.append(assumptionsElement(result.assumptions));
+    box.append(node('p', result.readings.length > 1 ? 'La pregunta tiene más de una lectura. Elige la que quisiste decir.' : 'Confirma que esto es lo que preguntas.', 'hint'));
+    for (const reading of result.readings) {
+      const row = node('div', undefined, 'spanish-reading');
+      row.append(node('strong', reading.note), node('code', reading.formula));
+      const use = node('button', 'Preguntar esto', 'button secondary'); use.type = 'button';
+      use.addEventListener('click', () => askNotebook(result.question, reading.formula));
+      row.append(use); box.append(row);
+    }
+    return;
+  }
+  if (result.answer === 'empty') {
+    box.append(verdictElement('Sin premisas', 'neutral', 'Ninguna fuente activa tiene oraciones que se usen como premisa. Añade una fuente, actívala o elige las lecturas pendientes.'));
+    return;
+  }
+  const [word, kind] = NB_VERDICTS[result.answer];
+  const engine = result.engine_b || {};
+  const goal = node('p', undefined, 'nb-goal');
+  goal.append(node('span', 'Se puso a prueba ', 'hint'), node('code', result.conclusion.formula),
+    node('span', ` contra ${plural(result.premise_count, 'premisa', 'premisas')} de ${plural(result.source_count, 'fuente', 'fuentes')}.`, 'hint'));
+  const notes = [];
+  if (result.counts.choose) notes.push(`${result.counts.choose === 1 ? 'Una oración tiene' : `${result.counts.choose} oraciones tienen`} la lectura sin elegir y no se ${result.counts.choose === 1 ? 'usó' : 'usaron'}.`);
+  if (result.new_symbols?.length) notes.push(`${result.new_symbols.map(name => `«${name}»`).join(', ')} no ${result.new_symbols.length === 1 ? 'aparece' : 'aparecen'} en ninguna premisa activa.`);
+
+  if (result.proof) {
+    const proof = result.proof, lines = proof.fitch.length;
+    box.append(verdictElement(word, kind, result.answer === 'follows'
+      ? countLine('Se sigue de tus fuentes: ', lines, ` ${lines === 1 ? 'línea' : 'líneas'} de deducción natural, aceptadas por el verificador independiente.`, '', 'small')
+      : `Tus fuentes dicen lo contrario: de ellas se sigue ${proof.goal}, con una prueba aceptada por el verificador independiente.`), goal);
+    if (result.inconsistent) {
+      const alarm = node('div', undefined, 'assumptions');
+      alarm.append(node('strong', 'Tus fuentes se contradicen entre sí.'),
+        node('p', 'La resolución deriva también lo contrario, y de una contradicción se sigue cualquier cosa. Revisa las premisas citadas o desactiva una fuente.'));
+      box.append(alarm);
+    }
+    notes.forEach(note => box.append(node('p', note, 'hint')));
+    box.append(node('h3', 'De dónde sale'), citesElement(result.cited));
+    const head = node('div', undefined, 'result-head'); head.append(node('h3', 'Derivación'), node('span', 'Primer orden', 'chip logic'));
+    const fitch = fitchElement(proof.fitch);
+    for (const line of proof.fitch) {
+      if (!line.cite) continue;
+      const cite = result.cited.find(premise => premise.n === line.cite)?.cites[0];
+      const chip = node('button', String(line.cite), 'nb-cite-n'); chip.type = 'button'; chip.title = 'Ver la oración citada';
+      chip.setAttribute('aria-label', `Cita ${line.cite}: ver la oración en la fuente`);
+      if (cite) chip.addEventListener('click', () => openNotebookSource(cite.source, cite.sentence, true));
+      fitch.querySelector(`li[data-line="${line.n}"] .why`)?.before(chip);
+    }
+    box.append(head, fitch, contrastElement(proof.contrast));
+    showStory(proof.story, null, box);
+    return;
+  }
+
+  const refuted = engine.follows === 'refuted' ? 'la pregunta' : engine.contradicts === 'refuted' ? 'su negación' : null;
+  const detail = result.answer === 'undecided' ? 'Tus fuentes no alcanzan para afirmarlo ni para negarlo.'
+    : result.answer === 'not_follows' ? 'De tus fuentes no se sigue. No se pudo determinar si se sigue lo contrario.'
+    : refuted ? `La resolución deriva ${refuted}, pero no se encontró una prueba que el verificador acepte dentro de los límites. Sin prueba verificada no se afirma.`
+    : 'No se encontró prueba ni contramodelo dentro de los límites. Eso no decide la pregunta.';
+  box.append(verdictElement(word, kind, detail), goal);
+  notes.forEach(note => box.append(node('p', note, 'hint')));
+  const saturated = 'La resolución saturó sin contradicción, así que ese caso existe; no apareció entre los modelos pequeños.';
+  if (result.countermodel) {
+    box.append(...notebookModel(result.countermodel, 'Un caso donde es falsa', 'En este modelo todas las premisas activas son verdaderas y lo que preguntas es falso.'),
+      node('h3', '¿Por qué es falsa aquí?'), explanationElement(result.countermodel.explanation, true));
+  } else if (engine.follows === 'saturated') box.append(node('h3', 'Un caso donde es falsa'), node('p', saturated, 'hint'));
+  if (result.witness) {
+    box.append(...notebookModel(result.witness, 'Un caso donde es verdadera', 'En este otro modelo las premisas también son verdaderas, y lo que preguntas es verdadero.'));
+  } else if (engine.contradicts === 'saturated') box.append(node('h3', 'Un caso donde es verdadera'), node('p', saturated, 'hint'));
+  if (result.countermodel) showStory(result.countermodel.story, result.countermodel.model, box);
+}
+
+async function askNotebook(question, formula) {
+  if (!nb) return;
+  const text = (question ?? $('nb-question').value).trim();
+  if (!text) { $('nb-question').focus(); return; }
+  clearStory();
+  const box = $('nb-answer');
+  setPane($('mode-notebook'), 'question');
+  await withBusy($('nb-ask'), 'Buscando…', async () => {
+    try {
+      const result = await api('/api/notebook/ask', {id: nb.id, question: text, formula});
+      if (result.status !== 'ok') {
+        box.replaceChildren(node('p', result.errors?.[0]?.message || 'No se pudo leer la pregunta.', 'error'),
+          node('p', 'Escríbela como una afirmación con el sujeto primero: «¿Juan aprueba?», no «¿Aprueba Juan?».', 'hint'));
+        return 'fail';
+      }
+      renderNotebookAnswer(result);
+      if (!['choose', 'empty'].includes(result.answer)) {
+        const same = turn => turn.question === result.question && turn.formula === result.conclusion.formula;
+        nb.chat = [...nb.chat.filter(turn => !same(turn)), {question: result.question, formula: result.conclusion.formula, answer: result.answer}];
+        renderNotebookHistory();
+      }
+      return result.proof ? 'done' : 'none';
+    } catch (exc) { box.replaceChildren(node('p', exc.message || 'No se pudo consultar.', 'error')); return 'fail'; }
+  });
+}
+
+$('nb-select').addEventListener('change', () => loadNotebook($('nb-select').value).catch(exc => toast(exc.message, 'error')));
+$('nb-title').addEventListener('change', () => { if ($('nb-title').value.trim()) nbChange('rename', {title: $('nb-title').value}, {keepAnswer: true}); else $('nb-title').value = nb.title; });
+$('nb-title').addEventListener('keydown', event => { if (event.key === 'Enter') $('nb-title').blur(); });
+$('nb-new').addEventListener('click', newNotebook);
+$('nb-first-blank').addEventListener('click', newNotebook);
+$('nb-first-sample').addEventListener('click', loadNotebookSample);
+$('nb-source-save').addEventListener('click', saveNotebookSource);
+$('nb-source-file').addEventListener('click', () => $('nb-file').click());
+$('nb-file').addEventListener('change', event => notebookFile(event.target.files[0]));
+$('nb-viewer-close').addEventListener('click', () => { nbOpen = null; renderNotebookSources(); renderNotebookViewer(); });
+$('nb-export').addEventListener('click', exportNotebook);
+$('nb-import').addEventListener('click', () => $('nb-import-file').click());
+$('nb-import-file').addEventListener('change', event => notebookFile(event.target.files[0]));
+confirmClick($('nb-delete'), '¿Borrar para siempre?', deleteNotebook);
+$('nb-ask').addEventListener('click', () => askNotebook());
+$('nb-question').addEventListener('keydown', event => { if (event.key === 'Enter') askNotebook(); });
+$('nb-question').addEventListener('input', () => { $('nb-answer').replaceChildren(); clearStory(); });
+confirmClick($('nb-history-clear'), '¿Vaciar la lista?', () => nbChange('clear-chat', {}, {keepAnswer: true}));
+
 // --- modos ---
-const MODES = ['evaluate', 'prove', 'dictionary'];
+const MODES = ['evaluate', 'prove', 'dictionary', 'notebook'];
 function setMode(mode) {
   const changed = document.body.dataset.mode !== mode;
   document.body.dataset.mode = mode;
@@ -1353,6 +1781,7 @@ function setMode(mode) {
   clearStory(); $('story-section').hidden = true;
   if (mode === 'prove') checkProofSyntax();
   if (mode === 'dictionary') searchDictionary(true);
+  if (mode === 'notebook') openNotebookMode();
   if (changed && phoneLayout()) window.scrollTo({top: 0, behavior: 'auto'});
 }
 
@@ -1366,7 +1795,7 @@ function setPane(workspace, pane) {
   }
   placePill(workspace.querySelector(':scope > .subtabs'));
 }
-for (const workspace of [$('mode-evaluate'), $('mode-dictionary')]) {
+for (const workspace of [$('mode-evaluate'), $('mode-dictionary'), $('mode-notebook')]) {
   const tabs = [...workspace.querySelectorAll(':scope > .subtabs .subtab')];
   tabs.forEach(tab => tab.addEventListener('click', () => {
     setPane(workspace, tab.id.endsWith('question') ? 'question' : 'model');
@@ -1394,7 +1823,7 @@ $('story-close').addEventListener('click', () => {
 $('add-symbol').addEventListener('click', () => { addSymbol(); invalidateTables(); });
 $('prepare').addEventListener('click', prepare);
 $('domain').addEventListener('input', invalidateTables);
-$('sample').addEventListener('click', () => ({evaluate: loadSample, prove: loadProofSample, dictionary: loadDictionarySample})[document.body.dataset.mode]());
+$('sample').addEventListener('click', () => ({evaluate: loadSample, prove: loadProofSample, dictionary: loadDictionarySample, notebook: loadNotebookSample})[document.body.dataset.mode]());
 $('evaluate').addEventListener('click', evaluateFormula);
 $('export-json').addEventListener('click', exportJSON);
 $('import-json').addEventListener('click', () => $('import-file').click());
