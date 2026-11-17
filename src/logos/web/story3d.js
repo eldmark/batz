@@ -47,11 +47,11 @@ export function syllables(word) {
   return out;
 }
 
-function labelSprite(text) {
+function labelSprite(text, color) {
   const canvas = document.createElement('canvas');
   canvas.width = 256; canvas.height = 96;
   const ctx = canvas.getContext('2d');
-  ctx.fillStyle = '#f6fff7';
+  ctx.fillStyle = color;
   ctx.font = '600 34px "JetBrains Mono NL", ui-monospace, monospace';
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.fillText(String(text), 128, 48, 238);
@@ -62,11 +62,28 @@ function labelSprite(text) {
 }
 
 export function createStoryScene(container, model, options = {}) {
+  let disposed = false, active = true, frame = null;
+  const resources = object => {
+    const geometries = new Set(), materials = new Set(), textures = new Set(), skeletons = new Set();
+    object.traverse(o => {
+      if (o.geometry) geometries.add(o.geometry);
+      if (o.skeleton) skeletons.add(o.skeleton);
+      for (const material of (Array.isArray(o.material) ? o.material : [o.material])) {
+        if (!material) continue;
+        materials.add(material);
+        for (const value of Object.values(material)) if (value?.isTexture) textures.add(value);
+      }
+    });
+    textures.forEach(texture => texture.dispose()); materials.forEach(material => material.dispose());
+    geometries.forEach(geometry => geometry.dispose());
+    skeletons.forEach(skeleton => skeleton.dispose());
+  };
   const domain = model?.domain || [];
   if (domain.length > 12) throw new Error('Dominio demasiado grande para la vista 3D');
   const renderer = new THREE.WebGLRenderer({antialias: true, alpha: true});
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.domElement.setAttribute('aria-hidden', 'true');
   container.append(renderer.domElement);
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(34, 1, .1, 100);
@@ -90,7 +107,8 @@ export function createStoryScene(container, model, options = {}) {
     const material = new THREE.MeshStandardMaterial({color: COLORS.idle, roughness: .4, metalness: .05, emissive: 0x0b3324, emissiveIntensity: .18});
     const mesh = new THREE.Mesh(sphere, material);
     mesh.position.copy(positions[i]); mesh.userData.index = i; stage.add(mesh);
-    const label = labelSprite(typeof element === 'string' ? element : String(element));
+    const textColor = getComputedStyle(container).getPropertyValue('--text').trim() || '#292f2d';
+    const label = labelSprite(typeof element === 'string' ? element : String(element), textColor);
     label.position.copy(positions[i]).add(new THREE.Vector3(0, .7, 0)); stage.add(label);
     return {mesh, label, target: 1};
   });
@@ -115,7 +133,8 @@ export function createStoryScene(container, model, options = {}) {
   scene.add(avatar);
   let mixer = null, current = null, wanted = 'Saluda';
   const clips = {};
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  let reduceMotion = motion.matches;
   // Boca: morph targets «Boca_abierta» y «Boca_redonda» del GLB. Sin ellos, la cabeza asiente al hablar.
   const mouths = [];
   let head = null, nod = 0, speaking = false, mouthOpen = 0, mouthRound = 0;
@@ -124,6 +143,7 @@ export function createStoryScene(container, model, options = {}) {
   let mouthWasOpen = false;
 
   function play(name) {
+    if (disposed) return;
     wanted = name;
     if (!mixer || !clips[name]) return;
     const loop = name === 'Idle' || name === 'Explica' || name === 'Piensa';
@@ -136,6 +156,7 @@ export function createStoryScene(container, model, options = {}) {
   }
 
   new GLTFLoader().load('/avatar/logos.glb', gltf => {
+    if (disposed) { resources(gltf.scene); return; }
     avatar.add(gltf.scene);
     gltf.scene.traverse(object => {
       const names = object.morphTargetDictionary;
@@ -150,11 +171,12 @@ export function createStoryScene(container, model, options = {}) {
     });
     play(wanted);
     options.onReady?.();
-  }, undefined, () => options.onError?.());
+  }, undefined, error => { if (!disposed) options.onError?.(error); });
 
   // ── tamaño y cámara: encuadra avatar y dominio; el alto lo decide el CSS (más bajo en el teléfono) ──
   function resize() {
-    const width = Math.max(container.clientWidth, 260);
+    if (disposed) return;
+    const width = Math.max(container.clientWidth || 260, 1);
     const height = Math.max(container.clientHeight, 200);
     renderer.setSize(width, height);
     camera.aspect = width / height;
@@ -162,6 +184,7 @@ export function createStoryScene(container, model, options = {}) {
     const distance = Math.max(8.2, span / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.aspect));
     camera.position.set(0, .35, distance); camera.lookAt(0, .1, 0);
     camera.updateProjectionMatrix();
+    schedule();
   }
   const observer = new ResizeObserver(resize); observer.observe(container); resize();
 
@@ -171,19 +194,25 @@ export function createStoryScene(container, model, options = {}) {
     const box = renderer.domElement.getBoundingClientRect();
     pointer.set((event.clientX - box.left) / box.width * 2 - 1, -(event.clientY - box.top) / box.height * 2 + 1);
     raycaster.setFromCamera(pointer, camera);
-    return raycaster.intersectObjects(nodes.map(n => n.mesh))[0]?.object.userData.index;
+    return raycaster.intersectObjects(nodes.filter(n => n.label.visible).map(n => n.mesh))[0]?.object.userData.index;
   }
-  renderer.domElement.addEventListener('click', event => {
+  function onClick(event) {
     const index = pick(event);
     if (index !== undefined) options.onPick?.(domain[index]);
-  });
-  renderer.domElement.addEventListener('pointermove', event => {
+  }
+  function onPointerMove(event) {
     renderer.domElement.style.cursor = pick(event) !== undefined ? 'pointer' : 'default';
-  });
+  }
+  const onContextLost = event => {
+    event.preventDefault();
+    if (!disposed) options.onError?.(new Error('Se perdió el contexto WebGL.'));
+  };
+  renderer.domElement.addEventListener('click', onClick);
+  renderer.domElement.addEventListener('pointermove', onPointerMove);
+  renderer.domElement.addEventListener('webglcontextlost', onContextLost);
 
   const timer = new THREE.Timer();
   timer.connect(document);  // con la pestaña oculta no acumula tiempo
-  let frame;
 
   // Parpadeo: morph target «Parpadeo», cada 2–6 s al azar (a veces doble); cierra en 70 ms y abre en 110 ms.
   let nextBlink = 1.5 + Math.random() * 2, blinkStart = -1;
@@ -237,6 +266,8 @@ export function createStoryScene(container, model, options = {}) {
   }
 
   function draw(timestamp) {
+    frame = null;
+    if (disposed || document.hidden) return;
     timer.update(timestamp);
     const dt = Math.min(timer.getDelta(), .05);
     if (head && nod) { head.rotation.x -= nod; nod = 0; }  // la animación pone su pose; el gesto de hablar va encima
@@ -249,13 +280,26 @@ export function createStoryScene(container, model, options = {}) {
       if (!reduceMotion) node.mesh.position.y = positions[i].y + Math.sin(t * 1.3 + i) * .035;
     });
     renderer.render(scene, camera);
-    frame = requestAnimationFrame(draw);
+    if (active) schedule();
   }
-  frame = requestAnimationFrame(draw);
+  function schedule() {
+    if (!disposed && frame === null && !document.hidden) frame = requestAnimationFrame(draw);
+  }
+  function onVisibility() { if (!document.hidden && active) schedule(); }
+  function onMotion() {
+    reduceMotion = motion.matches;
+    for (const {mesh, blink} of mouths) if (blink !== undefined) mesh.morphTargetInfluences[blink] = 0;
+    play(wanted); schedule();
+  }
+  document.addEventListener('visibilitychange', onVisibility);
+  motion.addEventListener('change', onMotion);
+  schedule();
 
   return {
     /** Refleja un paso verificado: resalta los elementos que toca y elige el gesto del avatar. */
     setEvent(event) {
+      if (disposed) return;
+      schedule();
       if (event.kind === 'search') {
         // Búsqueda: solo existen los elementos del tamaño que se prueba; al hallarlo, el avatar lo presenta.
         const found = event.phase === 'found';
@@ -285,7 +329,7 @@ export function createStoryScene(container, model, options = {}) {
         const active = focused.some(value => same(value, element));
         let color = COLORS.idle;
         if (relation?.arity === 1) color = relation.tuples.some(tuple => same(tuple[0], element)) ? COLORS.member : COLORS.outside;
-        if (active) color = event.value ? COLORS.yes : COLORS.no;
+        if (active && typeof event.value === 'boolean') color = event.value ? COLORS.yes : COLORS.no;
         node.mesh.material.color.setHex(color);
         node.target = active ? 1.28 : 1;
       });
@@ -294,10 +338,22 @@ export function createStoryScene(container, model, options = {}) {
       play(pointing ? 'Senala' : event.kind === 'quantifier' ? 'Explica' : event.kind === 'connective' ? 'Piensa' : 'Explica');
     },
     /** Reacción final al valor de la fórmula completa. */
-    verdict(value) { play(value ? 'Verdadero' : 'Falso'); },
+    verdict(value) { active = true; play(value ? 'Verdadero' : 'Falso'); schedule(); },
     gesture(name) { play(name); },
     /** La voz empezó o terminó de hablar. */
-    talking(on) { speaking = on; visemes.length = 0; lastWord = null; },
+    talking(on) {
+      speaking = on; visemes.length = 0; lastWord = null; secPerSyllable = null;
+      if (!on) {
+        mouthOpen = mouthRound = 0;
+        for (const {mesh, open, round} of mouths) {
+          mesh.morphTargetInfluences[open] = 0;
+          if (round !== undefined) mesh.morphTargetInfluences[round] = 0;
+        }
+      }
+      schedule();
+    },
+    /** Detiene el bucle al pausar o esconder el reproductor, sin perder su pose. */
+    setActive(on) { active = Boolean(on); if (active) schedule(); },
     /** La voz empieza a decir `word`; `pause`: antes hubo una pausa (coma, punto), así que ese hueco no mide el ritmo. */
     say(word, rate = 1, pause = false) {
       const now = timer.getElapsed();
@@ -324,11 +380,15 @@ export function createStoryScene(container, model, options = {}) {
     /** Cuánto está abierta y redondeada la boca ahora mismo (0 a 1). */
     mouthLevel() { return {open: mouthOpen, round: mouthRound}; },
     dispose() {
+      if (disposed) return;
+      disposed = true;
       cancelAnimationFrame(frame); observer.disconnect(); timer.dispose();
-      for (const {mesh, label} of nodes) { mesh.material.dispose(); label.material.map.dispose(); label.material.dispose(); }
-      for (const {line} of edges) { line.geometry.dispose(); line.material.dispose(); }
-      avatar.traverse(o => { if (o.isMesh) { o.geometry.dispose(); (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => m.dispose()); } });
-      sphere.dispose(); renderer.dispose(); renderer.domElement.remove();
+      document.removeEventListener('visibilitychange', onVisibility); motion.removeEventListener('change', onMotion);
+      renderer.domElement.removeEventListener('click', onClick);
+      renderer.domElement.removeEventListener('pointermove', onPointerMove);
+      renderer.domElement.removeEventListener('webglcontextlost', onContextLost);
+      mixer?.stopAllAction();
+      resources(scene); if (!nodes.length) sphere.dispose(); renderer.dispose(); renderer.domElement.remove();
     }
   };
 }

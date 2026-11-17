@@ -1,0 +1,917 @@
+{
+  "evaluation": {
+    "resultId": "evaluation",
+    "origin": "evaluate",
+    "kind": "evaluation",
+    "title": "Evaluación semántica",
+    "story": {
+      "schema_version": "1",
+      "events": [
+        {
+          "id": 1,
+          "trace_path": "0",
+          "kind": "quantifier",
+          "formula": "∀x (P(x) → Q(x))",
+          "value": false,
+          "text_es": "Contraejemplo: x = 1 no satisface la fórmula.",
+          "span": [
+            0,
+            16
+          ],
+          "assignment": {},
+          "element": null,
+          "relation": null,
+          "term_values": [],
+          "verified_by": {
+            "trace_path": "0"
+          }
+        },
+        {
+          "id": 2,
+          "trace_path": "0.0",
+          "kind": "connective",
+          "formula": "P(x) → Q(x)",
+          "value": true,
+          "text_es": "El consecuente es verdadero; la implicación es verdadera.",
+          "span": [
+            4,
+            15
+          ],
+          "assignment": {
+            "x": 0
+          },
+          "element": 0,
+          "relation": null,
+          "term_values": [],
+          "verified_by": {
+            "trace_path": "0.0"
+          }
+        },
+        {
+          "id": 3,
+          "trace_path": "0.0.0",
+          "kind": "predicate",
+          "formula": "P(x)",
+          "value": true,
+          "text_es": "La tupla (0) pertenece a Pᴵ.",
+          "span": [
+            4,
+            8
+          ],
+          "assignment": {
+            "x": 0
+          },
+          "element": null,
+          "relation": "P",
+          "term_values": [
+            0
+          ],
+          "verified_by": {
+            "trace_path": "0.0.0"
+          }
+        },
+        {
+          "id": 4,
+          "trace_path": "0.0.1",
+          "kind": "predicate",
+          "formula": "Q(x)",
+          "value": true,
+          "text_es": "La tupla (0) pertenece a Qᴵ.",
+          "span": [
+            11,
+            15
+          ],
+          "assignment": {
+            "x": 0
+          },
+          "element": null,
+          "relation": "Q",
+          "term_values": [
+            0
+          ],
+          "verified_by": {
+            "trace_path": "0.0.1"
+          }
+        },
+        {
+          "id": 5,
+          "trace_path": "0.1",
+          "kind": "connective",
+          "formula": "P(x) → Q(x)",
+          "value": false,
+          "text_es": "El antecedente es verdadero y el consecuente es falso.",
+          "span": [
+            4,
+            15
+          ],
+          "assignment": {
+            "x": 1
+          },
+          "element": 1,
+          "relation": null,
+          "term_values": [],
+          "verified_by": {
+            "trace_path": "0.1"
+          }
+        },
+        {
+          "id": 6,
+          "trace_path": "0.1.0",
+          "kind": "predicate",
+          "formula": "P(x)",
+          "value": true,
+          "text_es": "La tupla (1) pertenece a Pᴵ.",
+          "span": [
+            4,
+            8
+          ],
+          "assignment": {
+            "x": 1
+          },
+          "element": null,
+          "relation": "P",
+          "term_values": [
+            1
+          ],
+          "verified_by": {
+            "trace_path": "0.1.0"
+          }
+        },
+        {
+          "id": 7,
+          "trace_path": "0.1.1",
+          "kind": "predicate",
+          "formula": "Q(x)",
+          "value": false,
+          "text_es": "La tupla (1) no pertenece a Qᴵ.",
+          "span": [
+            11,
+            15
+          ],
+          "assignment": {
+            "x": 1
+          },
+          "element": null,
+          "relation": "Q",
+          "term_values": [
+            1
+          ],
+          "verified_by": {
+            "trace_path": "0.1.1"
+          }
+        }
+      ]
+    },
+    "model": {
+      "schema_version": "1",
+      "domain": [
+        0,
+        1
+      ],
+      "constants": {},
+      "functions": {},
+      "predicates": {
+        "P": {
+          "arity": 1,
+          "tuples": [
+            [
+              0
+            ],
+            [
+              1
+            ]
+          ]
+        },
+        "Q": {
+          "arity": 1,
+          "tuples": [
+            [
+              0
+            ]
+          ]
+        }
+      }
+    }
+  },
+  "true": {
+    "resultId": "true",
+    "origin": "evaluate",
+    "kind": "evaluation",
+    "title": "Evaluación semántica",
+    "story": {
+      "schema_version": "1",
+      "events": [
+        {
+          "id": 1,
+          "trace_path": "0",
+          "kind": "quantifier",
+          "formula": "∃x (P(x) ∧ Q(x))",
+          "value": true,
+          "text_es": "Testigo: x = 0 satisface la fórmula.",
+          "span": [
+            0,
+            16
+          ],
+          "assignment": {},
+          "element": null,
+          "relation": null,
+          "term_values": [],
+          "verified_by": {
+            "trace_path": "0"
+          }
+        },
+        {
+          "id": 2,
+          "trace_path": "0.0",
+          "kind": "connective",
+          "formula": "P(x) ∧ Q(x)",
+          "value": true,
+          "text_es": "Ambas partes son verdaderas.",
+          "span": [
+            4,
+            15
+          ],
+          "assignment": {
+            "x": 0
+          },
+          "element": 0,
+          "relation": null,
+          "term_values": [],
+          "verified_by": {
+            "trace_path": "0.0"
+          }
+        },
+        {
+          "id": 3,
+          "trace_path": "0.0.0",
+          "kind": "predicate",
+          "formula": "P(x)",
+          "value": true,
+          "text_es": "La tupla (0) pertenece a Pᴵ.",
+          "span": [
+            4,
+            8
+          ],
+          "assignment": {
+            "x": 0
+          },
+          "element": null,
+          "relation": "P",
+          "term_values": [
+            0
+          ],
+          "verified_by": {
+            "trace_path": "0.0.0"
+          }
+        },
+        {
+          "id": 4,
+          "trace_path": "0.0.1",
+          "kind": "predicate",
+          "formula": "Q(x)",
+          "value": true,
+          "text_es": "La tupla (0) pertenece a Qᴵ.",
+          "span": [
+            11,
+            15
+          ],
+          "assignment": {
+            "x": 0
+          },
+          "element": null,
+          "relation": "Q",
+          "term_values": [
+            0
+          ],
+          "verified_by": {
+            "trace_path": "0.0.1"
+          }
+        },
+        {
+          "id": 5,
+          "trace_path": "0.1",
+          "kind": "connective",
+          "formula": "P(x) ∧ Q(x)",
+          "value": false,
+          "text_es": "Una parte es falsa.",
+          "span": [
+            4,
+            15
+          ],
+          "assignment": {
+            "x": 1
+          },
+          "element": 1,
+          "relation": null,
+          "term_values": [],
+          "verified_by": {
+            "trace_path": "0.1"
+          }
+        },
+        {
+          "id": 6,
+          "trace_path": "0.1.0",
+          "kind": "predicate",
+          "formula": "P(x)",
+          "value": true,
+          "text_es": "La tupla (1) pertenece a Pᴵ.",
+          "span": [
+            4,
+            8
+          ],
+          "assignment": {
+            "x": 1
+          },
+          "element": null,
+          "relation": "P",
+          "term_values": [
+            1
+          ],
+          "verified_by": {
+            "trace_path": "0.1.0"
+          }
+        },
+        {
+          "id": 7,
+          "trace_path": "0.1.1",
+          "kind": "predicate",
+          "formula": "Q(x)",
+          "value": false,
+          "text_es": "La tupla (1) no pertenece a Qᴵ.",
+          "span": [
+            11,
+            15
+          ],
+          "assignment": {
+            "x": 1
+          },
+          "element": null,
+          "relation": "Q",
+          "term_values": [
+            1
+          ],
+          "verified_by": {
+            "trace_path": "0.1.1"
+          }
+        }
+      ]
+    },
+    "model": {
+      "schema_version": "1",
+      "domain": [
+        0,
+        1
+      ],
+      "constants": {},
+      "functions": {},
+      "predicates": {
+        "P": {
+          "arity": 1,
+          "tuples": [
+            [
+              0
+            ],
+            [
+              1
+            ]
+          ]
+        },
+        "Q": {
+          "arity": 1,
+          "tuples": [
+            [
+              0
+            ]
+          ]
+        }
+      }
+    }
+  },
+  "proof": {
+    "resultId": "proof",
+    "origin": "prove",
+    "kind": "proof",
+    "title": "Demostración",
+    "story": {
+      "schema_version": "1",
+      "kind": "proof",
+      "events": [
+        {
+          "id": 1,
+          "step_id": 1,
+          "line": 1,
+          "trace_path": "p1",
+          "kind": "proof",
+          "formula": "∀x (P(x) → Q(x))",
+          "value": null,
+          "text_es": "Partimos de la premisa ∀x (P(x) → Q(x)).",
+          "span": null,
+          "assignment": {},
+          "element": null,
+          "relation": null,
+          "term_values": [],
+          "rule": "premise",
+          "rule_label": "Premisa",
+          "refs": [],
+          "context": [],
+          "depth": 0,
+          "steps": [
+            1
+          ],
+          "verified_by": {
+            "certificate_step": 1
+          }
+        },
+        {
+          "id": 2,
+          "step_id": 3,
+          "line": 2,
+          "trace_path": "p2",
+          "kind": "proof",
+          "formula": "P(a)",
+          "value": null,
+          "text_es": "Partimos de la premisa P(a).",
+          "span": null,
+          "assignment": {},
+          "element": null,
+          "relation": null,
+          "term_values": [],
+          "rule": "premise",
+          "rule_label": "Premisa",
+          "refs": [],
+          "context": [],
+          "depth": 0,
+          "steps": [
+            3
+          ],
+          "verified_by": {
+            "certificate_step": 3
+          }
+        },
+        {
+          "id": 3,
+          "step_id": 2,
+          "line": 3,
+          "trace_path": "p3",
+          "kind": "proof",
+          "formula": "P(a) → Q(a)",
+          "value": null,
+          "text_es": "Con la regla de eliminación de universal y la línea 1, obtenemos P(a) → Q(a).",
+          "span": null,
+          "assignment": {},
+          "element": null,
+          "relation": null,
+          "term_values": [],
+          "rule": "all_e",
+          "rule_label": "∀E",
+          "refs": [
+            "1"
+          ],
+          "context": [],
+          "depth": 0,
+          "steps": [
+            2
+          ],
+          "verified_by": {
+            "certificate_step": 2
+          }
+        },
+        {
+          "id": 4,
+          "step_id": 4,
+          "line": 4,
+          "trace_path": "p4",
+          "kind": "proof",
+          "formula": "Q(a)",
+          "value": null,
+          "text_es": "Con la regla de eliminación de implicación y las líneas 3 y 2, obtenemos Q(a).",
+          "span": null,
+          "assignment": {},
+          "element": null,
+          "relation": null,
+          "term_values": [],
+          "rule": "imp_e",
+          "rule_label": "→E",
+          "refs": [
+            "3",
+            "2"
+          ],
+          "context": [],
+          "depth": 0,
+          "steps": [
+            4
+          ],
+          "verified_by": {
+            "certificate_step": 4
+          }
+        }
+      ]
+    },
+    "model": null
+  },
+  "countermodel": {
+    "resultId": "countermodel",
+    "origin": "prove",
+    "kind": "countermodel",
+    "title": "Contramodelo",
+    "story": {
+      "schema_version": "1",
+      "events": [
+        {
+          "kind": "search",
+          "text_es": "Busco un modelo donde todas las premisas sean verdaderas y la conclusión falsa. Empiezo por dominios pequeños.",
+          "size": 0,
+          "phase": "start",
+          "trace_path": "s0",
+          "formula": "∃y ∀x R(x, y)",
+          "value": null,
+          "span": null,
+          "assignment": {},
+          "element": null,
+          "relation": null,
+          "term_values": [],
+          "verified_by": {
+            "countermodel_search": true
+          },
+          "id": 1
+        },
+        {
+          "kind": "search",
+          "text_es": "Con 1 elemento revisé 2 interpretaciones: en ninguna son verdaderas las premisas con la conclusión falsa. Por ejemplo, con R = {(0, 0)} no sirve.",
+          "size": 1,
+          "phase": "none",
+          "trace_path": "s1",
+          "formula": "∃y ∀x R(x, y)",
+          "value": null,
+          "span": null,
+          "assignment": {},
+          "element": null,
+          "relation": null,
+          "term_values": [],
+          "verified_by": {
+            "countermodel_search": true
+          },
+          "id": 2
+        },
+        {
+          "kind": "search",
+          "text_es": "Con 2 elementos, la interpretación número 6 sirve: en ella las premisas son verdaderas y la conclusión, falsa. Este es el contramodelo.",
+          "size": 2,
+          "phase": "found",
+          "trace_path": "s2",
+          "formula": "∃y ∀x R(x, y)",
+          "value": null,
+          "span": null,
+          "assignment": {},
+          "element": null,
+          "relation": null,
+          "term_values": [],
+          "verified_by": {
+            "countermodel_search": true
+          },
+          "id": 3
+        },
+        {
+          "kind": "premise",
+          "trace_path": "q0",
+          "formula": "∀x ∃y R(x, y)",
+          "value": true,
+          "text_es": "La premisa ∀x ∃y R(x, y) es verdadera: Se revisaron los 2 elementos de D; todos satisfacen la fórmula.",
+          "span": null,
+          "assignment": {},
+          "element": null,
+          "relation": null,
+          "term_values": [],
+          "verified_by": {
+            "premise": 0
+          },
+          "id": 4
+        },
+        {
+          "id": 5,
+          "trace_path": "0",
+          "kind": "quantifier",
+          "formula": "∃y ∀x R(x, y)",
+          "value": false,
+          "text_es": "Se revisaron los 2 elementos de D; ninguno satisface la fórmula.",
+          "span": [
+            0,
+            13
+          ],
+          "assignment": {},
+          "element": null,
+          "relation": null,
+          "term_values": [],
+          "verified_by": {
+            "trace_path": "0"
+          },
+          "formula_role": "conclusion"
+        },
+        {
+          "id": 6,
+          "trace_path": "0.0",
+          "kind": "quantifier",
+          "formula": "∀x R(x, y)",
+          "value": false,
+          "text_es": "Contraejemplo: x = 0 no satisface la fórmula.",
+          "span": [
+            3,
+            13
+          ],
+          "assignment": {
+            "y": 0
+          },
+          "element": 0,
+          "relation": null,
+          "term_values": [],
+          "verified_by": {
+            "trace_path": "0.0"
+          },
+          "formula_role": "conclusion"
+        },
+        {
+          "id": 7,
+          "trace_path": "0.0.0",
+          "kind": "predicate",
+          "formula": "R(x, y)",
+          "value": false,
+          "text_es": "La tupla (0, 0) no pertenece a Rᴵ.",
+          "span": [
+            6,
+            13
+          ],
+          "assignment": {
+            "x": 0,
+            "y": 0
+          },
+          "element": 0,
+          "relation": "R",
+          "term_values": [
+            0,
+            0
+          ],
+          "verified_by": {
+            "trace_path": "0.0.0"
+          },
+          "formula_role": "conclusion"
+        },
+        {
+          "id": 8,
+          "trace_path": "0.0.1",
+          "kind": "predicate",
+          "formula": "R(x, y)",
+          "value": true,
+          "text_es": "La tupla (1, 0) pertenece a Rᴵ.",
+          "span": [
+            6,
+            13
+          ],
+          "assignment": {
+            "x": 1,
+            "y": 0
+          },
+          "element": 1,
+          "relation": "R",
+          "term_values": [
+            1,
+            0
+          ],
+          "verified_by": {
+            "trace_path": "0.0.1"
+          },
+          "formula_role": "conclusion"
+        },
+        {
+          "id": 9,
+          "trace_path": "0.1",
+          "kind": "quantifier",
+          "formula": "∀x R(x, y)",
+          "value": false,
+          "text_es": "Contraejemplo: x = 1 no satisface la fórmula.",
+          "span": [
+            3,
+            13
+          ],
+          "assignment": {
+            "y": 1
+          },
+          "element": 1,
+          "relation": null,
+          "term_values": [],
+          "verified_by": {
+            "trace_path": "0.1"
+          },
+          "formula_role": "conclusion"
+        },
+        {
+          "id": 10,
+          "trace_path": "0.1.0",
+          "kind": "predicate",
+          "formula": "R(x, y)",
+          "value": true,
+          "text_es": "La tupla (0, 1) pertenece a Rᴵ.",
+          "span": [
+            6,
+            13
+          ],
+          "assignment": {
+            "x": 0,
+            "y": 1
+          },
+          "element": 0,
+          "relation": "R",
+          "term_values": [
+            0,
+            1
+          ],
+          "verified_by": {
+            "trace_path": "0.1.0"
+          },
+          "formula_role": "conclusion"
+        },
+        {
+          "id": 11,
+          "trace_path": "0.1.1",
+          "kind": "predicate",
+          "formula": "R(x, y)",
+          "value": false,
+          "text_es": "La tupla (1, 1) no pertenece a Rᴵ.",
+          "span": [
+            6,
+            13
+          ],
+          "assignment": {
+            "x": 1,
+            "y": 1
+          },
+          "element": 1,
+          "relation": "R",
+          "term_values": [
+            1,
+            1
+          ],
+          "verified_by": {
+            "trace_path": "0.1.1"
+          },
+          "formula_role": "conclusion"
+        }
+      ]
+    },
+    "model": {
+      "schema_version": "1",
+      "domain": [
+        0,
+        1
+      ],
+      "constants": {},
+      "functions": {},
+      "predicates": {
+        "R": {
+          "arity": 2,
+          "tuples": [
+            [
+              0,
+              1
+            ],
+            [
+              1,
+              0
+            ]
+          ]
+        }
+      }
+    }
+  },
+  "notebook": {
+    "resultId": "notebook",
+    "origin": "notebook",
+    "kind": "proof",
+    "title": "Prueba desde las premisas del cuaderno",
+    "story": {
+      "schema_version": "1",
+      "kind": "proof",
+      "events": [
+        {
+          "id": 1,
+          "step_id": 1,
+          "line": 1,
+          "trace_path": "p1",
+          "kind": "proof",
+          "formula": "∀x (P(x) → Q(x))",
+          "value": null,
+          "text_es": "Partimos de la premisa ∀x (P(x) → Q(x)).",
+          "span": null,
+          "assignment": {},
+          "element": null,
+          "relation": null,
+          "term_values": [],
+          "rule": "premise",
+          "rule_label": "Premisa",
+          "refs": [],
+          "context": [],
+          "depth": 0,
+          "steps": [
+            1
+          ],
+          "verified_by": {
+            "certificate_step": 1
+          }
+        },
+        {
+          "id": 2,
+          "step_id": 3,
+          "line": 2,
+          "trace_path": "p2",
+          "kind": "proof",
+          "formula": "P(a)",
+          "value": null,
+          "text_es": "Partimos de la premisa P(a).",
+          "span": null,
+          "assignment": {},
+          "element": null,
+          "relation": null,
+          "term_values": [],
+          "rule": "premise",
+          "rule_label": "Premisa",
+          "refs": [],
+          "context": [],
+          "depth": 0,
+          "steps": [
+            3
+          ],
+          "verified_by": {
+            "certificate_step": 3
+          }
+        },
+        {
+          "id": 3,
+          "step_id": 2,
+          "line": 3,
+          "trace_path": "p3",
+          "kind": "proof",
+          "formula": "P(a) → Q(a)",
+          "value": null,
+          "text_es": "Con la regla de eliminación de universal y la línea 1, obtenemos P(a) → Q(a).",
+          "span": null,
+          "assignment": {},
+          "element": null,
+          "relation": null,
+          "term_values": [],
+          "rule": "all_e",
+          "rule_label": "∀E",
+          "refs": [
+            "1"
+          ],
+          "context": [],
+          "depth": 0,
+          "steps": [
+            2
+          ],
+          "verified_by": {
+            "certificate_step": 2
+          }
+        },
+        {
+          "id": 4,
+          "step_id": 4,
+          "line": 4,
+          "trace_path": "p4",
+          "kind": "proof",
+          "formula": "Q(a)",
+          "value": null,
+          "text_es": "Con la regla de eliminación de implicación y las líneas 3 y 2, obtenemos Q(a).",
+          "span": null,
+          "assignment": {},
+          "element": null,
+          "relation": null,
+          "term_values": [],
+          "rule": "imp_e",
+          "rule_label": "→E",
+          "refs": [
+            "3",
+            "2"
+          ],
+          "context": [],
+          "depth": 0,
+          "steps": [
+            4
+          ],
+          "verified_by": {
+            "certificate_step": 4
+          }
+        }
+      ]
+    },
+    "model": null
+  },
+  "empty": {
+    "resultId": "empty",
+    "origin": "evaluate",
+    "kind": "evaluation",
+    "title": "Sin recorrido",
+    "story": {
+      "events": []
+    },
+    "model": null
+  }
+}
