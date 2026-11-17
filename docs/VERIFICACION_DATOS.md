@@ -50,7 +50,7 @@ Veredictos: correcta / corregida / eliminada / no verificada (no se pudo contras
 | Hodges, «Alan Turing: The Enigma», 1983 | bios.js | correcta | https://en.wikipedia.org/wiki/Alan_Turing:_The_Enigma | |
 | Church: Washington D. C. 1903, doctorado 1927 con Veblen, Princeton desde 1929, UCLA, JSL 1936, alumnos Kleene y Turing, muerte 1995; «Calculi of Lambda-Conversion» 1941 | bios.js | correcta | https://en.wikipedia.org/wiki/Alonzo_Church ; https://en.wikipedia.org/wiki/Stephen_Cole_Kleene | Kleene, doctorado 1934 con Church. |
 | JSL fundado en 1936 | bios.js | correcta (parcial) | https://en.wikipedia.org/wiki/Journal_of_Symbolic_Logic ; Church (WP) | El año consta en ambas; «cofundador» solo en la ficha de Church. |
-| Fechas de nacimiento y muerte de las 22 personas | people.js | correcta | Páginas de WP de cada persona; Schröder, Aristóteles, Leibniz, Whitehead, Russell también por WP | Todas coinciden. Jaśkowski, Gentzen, Tarski, Peirce y el resto, igualmente. |
+| Fechas de nacimiento y muerte de 21 de las 22 personas | people.js | correcta | Páginas de WP de cada persona (en.wikipedia.org/wiki/<nombre>) | Todas coinciden. **David Hilbert (1862–1943) no se consultó: no verificada.** |
 | «Bat'z» significa «hilo» | home.js | correcta | https://maya.nmai.si.edu/sites/default/files/resources/Significado%20de%20los%20dias%20del%20calendario%20sagrado%20maya.pdf (resultado de búsqueda) | Día B'atz' del Cholq'ij (k'iche'), «hilo». No se abrió el PDF; se apoya en el resumen de la búsqueda. |
 
 ## Revisión matemática de las 33 tarjetas
