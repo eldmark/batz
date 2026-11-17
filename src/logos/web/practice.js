@@ -68,7 +68,7 @@
     root.dataset.category = activeCategory;
     const hero = el('section', 'pr-hero');
     const heading = el('div');
-    heading.append(el('p', 'pr-eyebrow', 'EL TALLER DE BATZ'), el('h2', '', 'Aprende a demostrar. Paso a paso.'),
+    heading.append(el('p', 'pr-eyebrow', 'EL TALLER DE BAT’Z'), el('h2', '', 'Aprende a demostrar. Paso a paso.'),
       el('p', 'pr-lead', 'Cincuenta ejercicios, tres etapas y cada vez más ideas por conectar. De tu primera deducción a demostrar por qué el orden de una suma no importa.'));
     const next = bank.exercises.find(ex => !record(ex.id).complete) || bank.exercises[0];
     heading.append(button(completed() ? 'Continuar practicando →' : 'Empezar el primer ejercicio →', 'pr-primary', () => open(next.id)));

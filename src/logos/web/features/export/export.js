@@ -27,9 +27,9 @@ const STYLE = `
 function page(title, body) {
   const date = new Date().toLocaleDateString('es', {year: 'numeric', month: 'long', day: 'numeric'});
   return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${esc(title)} · Batz</title><style>${STYLE}</style></head><body><main>
-<header><p>Batz · el hilo de la lógica</p><h1>${esc(title)}</h1></header>${body}
-<footer>Generado por Batz el ${esc(date)}. La verdad se evalúa en la interpretación indicada: verdadera aquí no significa válida en todos los modelos.</footer></main></body></html>`;
+<title>${esc(title)} · Bat’z</title><style>${STYLE}</style></head><body><main>
+<header><p>Bat’z · el hilo de la lógica</p><h1>${esc(title)}</h1></header>${body}
+<footer>Generado por Bat’z el ${esc(date)}. La verdad se evalúa en la interpretación indicada: verdadera aquí no significa válida en todos los modelos.</footer></main></body></html>`;
 }
 
 /** Interpretación: dominio, constantes, funciones y relaciones, como tablas. */

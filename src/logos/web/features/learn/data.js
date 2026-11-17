@@ -9,7 +9,7 @@ export const HISTORY_TOPICS = [
   {id: 'limites', label: 'Límites y decidibilidad'},
 ];
 
-// `where`: dónde se ve en Batz. `href` y `link` son opcionales (ruta interna con hash).
+// `where`: dónde se ve en Bat’z. `href` y `link` son opcionales (ruta interna con hash).
 export const HISTORY = [
   {id: 'aristoteles', year: 's. IV a. C.', people: 'Aristóteles', title: 'El silogismo', topic: 'pruebas',
    what: 'En los «Analíticos primeros» estudió qué inferencias valen por su forma y no por su tema, con el silogismo como modelo. Es la primera teoría sistemática de la inferencia formal que se conserva.',
@@ -22,7 +22,7 @@ export const HISTORY = [
    where: 'Evaluar: ¬, ∧, ∨ y → se calculan sobre dos valores, verdadero y falso, como en un álgebra.', href: '#/evaluar', link: 'Abrir Evaluar'},
   {id: 'frege', year: '1879', people: 'Gottlob Frege', title: '«Begriffsschrift»: cuantificadores y predicados', topic: 'lenguaje',
    what: 'Presentó el primer sistema formal con cuantificadores y variables ligadas, con reglas de inferencia explícitas. Es el origen de la lógica de predicados moderna, aunque su notación bidimensional no se adoptó.',
-   where: 'Evaluar y Demostrar: ∀x y ∃x con variables ligadas son el centro del lenguaje de Batz.', href: '#/evaluar', link: 'Abrir Evaluar'},
+   where: 'Evaluar y Demostrar: ∀x y ∃x con variables ligadas son el centro del lenguaje de Bat’z.', href: '#/evaluar', link: 'Abrir Evaluar'},
   {id: 'peirce-schroder', year: 'década de 1880', people: 'Charles S. Peirce y Ernst Schröder', title: 'Cuantificadores y notación en la escuela algebraica', topic: 'lenguaje',
    what: 'Peirce publicó en 1885 «On the Algebra of Logic: a contribution to the philosophy of notation», con cuantificadores sobre un dominio. Schröder los difundió en sus «Vorlesungen über die Algebra der Logik» (desde 1890). Por esta vía llegó la lógica de predicados a gran parte de la comunidad matemática.',
    where: 'Evaluar: ∀ y ∃ se leen siempre sobre el dominio que tú defines.', href: '#/evaluar', link: 'Abrir Evaluar'},
@@ -34,7 +34,7 @@ export const HISTORY = [
    where: 'Evaluar: toda interpretación pide un dominio explícito; no existe «la colección de todo» sin más.', href: '#/evaluar', link: 'Abrir Evaluar'},
   {id: 'principia', year: '1910–1913', people: 'Alfred N. Whitehead y Bertrand Russell', title: '«Principia Mathematica»', topic: 'fundamentos',
    what: 'Tres volúmenes que desarrollan buena parte de la matemática desde axiomas lógicos con una teoría de tipos que evita la paradoja. Mostraron que las pruebas largas pueden escribirse por completo en un lenguaje formal.',
-   where: 'Demostrar: cada paso de una prueba escrita en Batz es una regla explícita sobre líneas anteriores.', href: '#/demostrar', link: 'Abrir Demostrar'},
+   where: 'Demostrar: cada paso de una prueba escrita en Bat’z es una regla explícita sobre líneas anteriores.', href: '#/demostrar', link: 'Abrir Demostrar'},
   {id: 'lowenheim-skolem', year: '1915 y 1920', people: 'Leopold Löwenheim y Thoralf Skolem', title: 'Teorema de Löwenheim–Skolem', topic: 'semantica',
    what: 'Löwenheim (1915) y Skolem (1920) demostraron que si un conjunto numerable de sentencias de primer orden tiene un modelo, tiene también uno numerable. Los axiomas de primer orden no pueden fijar el tamaño de un modelo infinito.',
    where: 'Evaluar: el dominio lo eliges tú; una teoría de primer orden por sí sola no obliga a uno determinado.', href: '#/evaluar', link: 'Abrir Evaluar'},
@@ -49,7 +49,7 @@ export const HISTORY = [
    where: 'Demostrar: gracias a la completitud, una consecuencia válida siempre tiene una prueba que se puede buscar.', href: '#/demostrar', link: 'Abrir Demostrar'},
   {id: 'godel-incompletitud', year: '1931', people: 'Kurt Gödel', title: 'Teoremas de incompletitud', topic: 'limites',
    what: 'Probó que toda teoría consistente, con axiomas reconocibles mecánicamente y capaz de expresar cierta aritmética, tiene enunciados que ni se demuestran ni se refutan en ella. No contradice la completitud de 1929: trata de teorías concretas, no de la lógica pura.',
-   where: 'Batz trabaja con lógica pura de primer orden y no formaliza la aritmética, así que no verás enunciados gödelianos. Una búsqueda inconclusa se explica por la indecidibilidad, no por este teorema.'},
+   where: 'Bat’z trabaja con lógica pura de primer orden y no formaliza la aritmética, así que no verás enunciados gödelianos. Una búsqueda inconclusa se explica por la indecidibilidad, no por este teorema.'},
   {id: 'church-turing', year: '1936', people: 'Alonzo Church y Alan Turing', title: 'La validez de primer orden es indecidible', topic: 'limites',
    what: 'De forma independiente, Church y Turing mostraron que no existe un algoritmo que decida si una fórmula de primer orden es válida (el Entscheidungsproblem). Si es válida, una búsqueda sistemática acaba por hallar una prueba; si no lo es, puede no terminar.',
    where: 'Demostrar: por eso existe el resultado «búsqueda inconclusa». Que no se halle una prueba no es una demostración de que la consecuencia sea falsa.', href: '#/demostrar', link: 'Abrir Demostrar'},

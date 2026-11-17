@@ -1347,7 +1347,7 @@ async function proveFormula() {
 const DICT_FEATURES = {N: [['M', 'Masculino'], ['F', 'Femenino'], ['C', 'Los dos']], NP: [['M', 'Masculino'], ['F', 'Femenino']],
   V: [['I', 'Sin objeto (duerme)'], ['T', 'Con objeto (admira a…)'], ['IT', 'Las dos (lee / lee un libro)']], ADJ: [['-', 'Se flexiona solo']]};
 const DICT_FORMS = ['él/ella, presente', 'ellos, presente', 'él/ella, subjuntivo', 'ellos, subjuntivo', 'él/ella, pasado', 'ellos, pasado'];
-const DICT_SOURCE = {base: ['base', 'Léxico base: viene con Batz y no se edita.'],
+const DICT_SOURCE = {base: ['base', 'Léxico base: viene con Bat’z y no se edita.'],
   usuario: ['tuya', 'Añadida por ti. Se guarda en este equipo, aparte del léxico base.'],
   auto: ['automática', 'Deducida sola: diminutivo o participio de otra palabra.']};
 const DICT_ORIGIN_LABEL = {evaluate: 'Evaluar modelo', prove: 'Demostrar', notebook: 'Cuadernos', practice: 'Practicar'};
@@ -1850,7 +1850,7 @@ async function notebookFile(file) {
     const text = await file.text();
     if (/\.json$/i.test(file.name)) {
       let data;
-      try { data = JSON.parse(text); } catch { throw Error('El archivo no es un cuaderno de Batz.'); }
+      try { data = JSON.parse(text); } catch { throw Error('El archivo no es un cuaderno de Bat’z.'); }
       const result = await nbCall('import', {notebook: data});
       nbOpen = null; setNotebook(result.notebook);
       toast(`Cuaderno «${nb.title}» importado.`, 'success');
@@ -2096,7 +2096,7 @@ function setMode(mode) {
     const link = $(`tab-${route.id}`);
     if (route.id === mode) link.setAttribute('aria-current', 'page'); else link.removeAttribute('aria-current');
   }
-  document.title = `${titleFor(mode)} · Batz`;
+  document.title = `${titleFor(mode)} · Bat’z`;
   $('page-title').textContent = titleFor(mode);
   $('help-text').textContent = SECTION_HELP[mode];
   $('help-panel').hidden = true; $('help-button').setAttribute('aria-expanded', 'false');

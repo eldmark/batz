@@ -34,7 +34,7 @@ function buildHistory() {
   const status = h('p', {class: 'hint learn-count', role: 'status'});
   const list = h('ol', {class: 'timeline'});
   const items = HISTORY.map(item => {
-    const where = h('p', {class: 'tl-where'}, h('strong', {text: 'Dónde lo ves en Batz. '}), item.where);
+    const where = h('p', {class: 'tl-where'}, h('strong', {text: 'Dónde lo ves en Bat’z. '}), item.where);
     if (item.href) where.append(' ', h('a', {href: item.href, text: `${item.link} →`}));
     const details = h('details', {class: 'tl-card'},
       h('summary', {}, h('span', {class: 'tl-year', text: item.year}), h('span', {class: 'tl-name', text: item.title}), h('span', {class: 'tl-people', text: item.people})),
@@ -56,7 +56,7 @@ function buildHistory() {
   open.addEventListener('click', () => setAll(true));
   close.addEventListener('click', () => setAll(false));
   section.append(title,
-    h('p', {class: 'pane-lede', text: 'Una línea de hilo con un nudo por cada hito. Abre cada nudo para ver qué aportó y dónde lo ves en Batz. Las fechas son las de la publicación original.'}),
+    h('p', {class: 'pane-lede', text: 'Una línea de hilo con un nudo por cada hito. Abre cada nudo para ver qué aportó y dónde lo ves en Bat’z. Las fechas son las de la publicación original.'}),
     filters, h('div', {class: 'actions learn-actions'}, open, close), status, list);
   apply();
   return {section, title};
@@ -221,7 +221,7 @@ export function initLearn(root, {storage = (() => { try { return localStorage; }
   root.append(
     h('header', {class: 'learn-head'},
       h('h2', {class: 'pane-title', text: 'Aprender'}),
-      h('p', {class: 'pane-lede', text: 'Dos formas de repasar la teoría que Batz aplica: cómo se llegó a la lógica de predicados y las ideas clave en tarjetas.'}),
+      h('p', {class: 'pane-lede', text: 'Dos formas de repasar la teoría que Bat’z aplica: cómo se llegó a la lógica de predicados y las ideas clave en tarjetas.'}),
       h('div', {class: 'actions learn-actions', role: 'group', 'aria-label': 'Ir a una parte de la página'}, toHistory, toCards)),
     history.section, cards.section);
 }

@@ -49,11 +49,11 @@ function thread(cls, d, box) {
 export const CONNECTIONS = [
   {id: 'goedel-completitud', route: 'prove', who: 'Gödel · completitud (1929)', title: 'Lo que se sigue, se demuestra',
    does: 'Carga ∀x (Humano(x) → Mortal(x)), Humano(socrates) ⊢ Mortal(socrates).',
-   watch: 'Pulsa «Buscar prueba»: Batz halla la derivación y el verificador la acepta. Si en todos los modelos vale, hay prueba: ese es el puente entre Evaluar y Demostrar.',
+   watch: 'Pulsa «Buscar prueba»: Bat’z halla la derivación y el verificador la acepta. Si en todos los modelos vale, hay prueba: ese es el puente entre Evaluar y Demostrar.',
    proof: {premises: '∀x (Humano(x) → Mortal(x))\nHumano(socrates)', conclusion: 'Mortal(socrates)', constants: 'socrates'}},
   {id: 'goedel-contramodelo', route: 'prove', who: 'Tarski y Gödel · modelos', title: 'Lo que no se sigue, tiene un contramodelo',
    does: 'Carga ∀x ∃y Ama(x, y) ⊢ ∃y ∀x Ama(x, y): cambiar el orden de ∀ y ∃ cambia el significado.',
-   watch: 'Pulsa «Buscar prueba»: no hay prueba, y Batz muestra un modelo concreto donde las premisas son verdaderas y la conclusión falsa. Ábrelo en Evaluar.',
+   watch: 'Pulsa «Buscar prueba»: no hay prueba, y Bat’z muestra un modelo concreto donde las premisas son verdaderas y la conclusión falsa. Ábrelo en Evaluar.',
    proof: {premises: '∀x ∃y Ama(x, y)', conclusion: '∃y ∀x Ama(x, y)', constants: ''}},
   {id: 'turing-inconclusa', route: 'prove', who: 'Turing y Church · indecidibilidad (1936)', title: 'A veces la búsqueda no decide',
    does: 'Carga transitividad, irreflexividad y serialidad de R ⊢ ∃x ∀y ¬R(y, x).',

@@ -2,7 +2,7 @@
 
 Rama integrada: `rediseno/claude-interfaz` (worktree `../proyecto1-claude`). No se fusionó a `main` ni se publicó.
 Base común: `ea78374`. Ramas fusionadas: `rediseno/codex-reproductor`, `rediseno/recorrido`, `rediseno/a11y`,
-`rediseno/diccionario`, `rediseno/responsive`, `rediseno/banner` (todas locales).
+`rediseno/diccionario`, `rediseno/responsive`, `rediseno/banner`, `rediseno/aprender` (todas locales).
 
 ## Estado por fase
 
@@ -34,7 +34,11 @@ Base común: `ea78374`. Ramas fusionadas: `rediseno/codex-reproductor`, `redisen
 - Evaluar: no se repitió el barrido de responsive tras rehacerlo como asistente (solo 1440 y 390 px, flujo principal).
   Casillas de las tablas de interpretación de 22 px en móvil; la fila entera ya conmuta, pero no se midió.
 - Cuadernos con fuentes contradictorias: la cabecera dice «Sí» y la contradicción va solo en el aviso inferior.
-- Logotipo definitivo de Batz: pendiente de que lo envíe el usuario; hay una marca provisional (`.brand-mark`).
+- Logotipo: reconstruido en vectores desde las capturas que envió el usuario (no es el archivo original).
 - Las fotos del banner son de dominio público verificadas en Commons (`img/CREDITOS.md`); los pies enlazan a Commons.
 - Quedan ramas y worktrees locales (`proyecto1-dict`, `-tour`, `-a11y`, `-resp`, `-banner`, `/tmp/logos-codex-reproductor`)
   para retirar cuando el usuario decida; nada se publicó.
+
+## Añadido después de la primera integración
+
+Inicio: tarjetas «Practica lo que probaron Gödel y Turing»; exportar resultados (HTML e impresión/PDF) de Evaluar y Demostrar; sección Aprender (`#/aprender`, 18 hitos históricos y 33 tarjetas; fechas y atribuciones sin contrastar con fuentes externas); nombre Bat’z y logotipo.
