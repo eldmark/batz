@@ -67,3 +67,8 @@
   .dict-add .actions .button { flex: 1 1 auto; min-height: var(--tap); }
 }
 @media (min-width: 1024px) and (max-width: 1279px) { .dict-toolbar { grid-template-columns: minmax(0, 1fr); } }
+
+/* Filtros: la píldora deslizante vive dentro del grupo; en el teléfono envuelven en vez de desplazarse */
+.dict-toolbar .filters { position: relative; isolation: isolate; }
+.dict-toolbar .filter { position: relative; z-index: 1; }
+@media (max-width: 720px) { .dict-toolbar .filters { flex-wrap: wrap; overflow: visible; margin-inline: 0; padding: 0; } }
