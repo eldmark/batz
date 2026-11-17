@@ -71,7 +71,7 @@ function buildHistory() {
 
   function renderNodes() {
     nodesList.replaceChildren(...state.list.map((item, i) => {
-      const b = h('button', {class: 'tl2-node', type: 'button', 'data-i': String(i), 'aria-label': `${item.year}: ${item.title}`}, h('span', {class: 'tl2-dot', 'aria-hidden': 'true'}), h('span', {class: 'tl2-ylab', 'aria-hidden': 'true', text: trackYear(item.year)}));
+      const b = h('button', {class: 'tl2-node', type: 'button', 'data-i': String(i), }, h('span', {class: 'tl2-dot', 'aria-hidden': 'true'}), h('span', {class: 'tl2-ylab', text: trackYear(item.year)}), h('span', {class: 'sr-only', text: `: ${item.year}, ${item.title}`}));
       b.addEventListener('click', () => select(i));
       return h('li', {class: 'tl2-n'}, b);
     }));
@@ -80,9 +80,8 @@ function buildHistory() {
     btn.hidden = false;
     btn.disabled = !item;
     btn.classList.toggle('is-empty', !item);
-    if (!item) { btn.replaceChildren(h('span', {class: 'tl2-side-dir', text: dir < 0 ? 'Antes' : 'Después'}), h('span', {class: 'tl2-side-empty', text: dir < 0 ? 'Aquí empieza' : 'Aquí termina'})); btn.setAttribute('aria-label', dir < 0 ? 'No hay un hito anterior' : 'No hay un hito siguiente'); return; }
+    if (!item) { btn.replaceChildren(h('span', {class: 'tl2-side-dir', text: dir < 0 ? 'Antes' : 'Después'}), h('span', {class: 'tl2-side-empty', text: dir < 0 ? 'Aquí empieza' : 'Aquí termina'})); return; }
     btn.replaceChildren(h('span', {class: 'tl2-side-dir', text: dir < 0 ? '‹ Antes' : 'Después ›'}), h('span', {class: 'tl2-side-year', text: item.year}), h('span', {class: 'tl2-side-title', text: item.title}), h('span', {class: 'tl2-side-ppl', text: item.people}));
-    btn.setAttribute('aria-label', `${dir < 0 ? 'Hito anterior' : 'Hito siguiente'}: ${item.year}, ${item.title}`);
   }
   function renderCard() {
     const item = state.list[state.index];

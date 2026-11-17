@@ -172,3 +172,24 @@ Rama `rediseno/imagenes`. Retratos locales de 19 de las 22 personas de la histor
 Fuente única de datos: `features/people/people.js` (`PEOPLE`, `PEOPLE_ORDER`, `person(slug)`, más `initials` y `lifespan`). Cada entrada trae nombre, años, `image` (ruta o `null`), `credit`, `creditUrl` y `license`. Quien use un retrato con licencia CC BY-SA (Löwenheim, Tarski, Gentzen, Robinson) debe mostrar el `credit` de forma visible; el resto, de dominio público, lo muestra igualmente como cortesía. Tabla completa con autor, licencia, URL y fecha en `img/CREDITOS.md`.
 
 `do_GET` registra cada imagen existente y `people.js` en su lista controlada; no hay servicio de archivos por ruta (`/img/people/../../server.py` devuelve 404). Si se añade un retrato: archivo + fila en `CREDITOS.md` + entrada en `people.js` + línea en `do_GET`. Prueba: `node --test tests/frontend/app/people.test.mjs`.
+
+## Línea del tiempo de Aprender
+
+Rama `rediseno/linea-tiempo`. La historia de la lógica deja de ser una lista de 18 `<details>` y pasa a una línea del tiempo:
+pista horizontal con hilo y un nudo por hito (etiqueta de año corta), el hito elegido en una tarjeta grande y, a los lados,
+el hito de antes y el de después como tarjetas pequeñas (en ≤767 px, pestañas laterales de 44 px con la fecha en vertical).
+
+- Elegir: clic en un nudo, arrastre del ratón sobre el hilo, flechas, Inicio/Fin y RePág/AvPág (nudos con `tabindex` móvil y
+  `aria-current="step"`), botones Anterior/Siguiente (deshabilitados en los extremos), tocar las tarjetas vecinas y deslizar con
+  el dedo sobre la tarjeta. Los filtros por tema se conservan y limitan los hitos que se recorren (se mantiene el actual si sigue visible).
+- Anuncio `role="status"` educado («Hito N de M: año, título»). El deslizamiento usa solo `transform`/`opacity`; con
+  `prefers-reduced-motion` no hay animación propia.
+- Tarjeta: año, tema, título, personas (de `features/people/people.js` vía `slugs` en `data.js`) con retrato redondeado,
+  nombre y años de vida; sin foto (Church, Jaśkowski, Fitch) hay monograma; los créditos CC BY / CC BY-SA (Löwenheim, Tarski,
+  Gentzen, Robinson) se ven como enlace a la fuente junto al retrato; el resto lleva el crédito en el `title`. Aportación y
+  «Dónde lo ves en Bat’z» no cambian.
+- Cierre: en el último hito aparece «Has recorrido la historia — ahora repásala»; el botón pone las tarjetas en «Estudiar»
+  (tema «Todas», barajadas), hace scroll al bloque y enfoca «Voltear tarjeta». Las tarjetas de teoría no se tocaron salvo la función `startStudy`.
+- Corrección de datos: el orden de la lista ahora es cronológico por año de inicio (Tarski 1933 y Gentzen 1934 iban después de Church y Turing 1936).
+- Archivos: `features/learn/timeline.js` (lógica pura, nuevo), `learn.js`, `data.js` (`slugs`), `styles/learn.css`,
+  `server.py` (ruta de `timeline.js`), `tests/frontend/app/learn.test.mjs`.

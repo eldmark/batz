@@ -25,7 +25,7 @@
 .tl2-dot { width: 15px; height: 15px; margin-top: 7px; border-radius: 50%; background: var(--surface); border: 3px solid var(--thread); box-shadow: 0 0 0 3px var(--canvas); transition: transform .2s ease; }
 .tl2-node.is-past .tl2-dot { background: var(--brand-600); border-color: var(--brand-600); }
 .tl2-node:hover .tl2-dot { transform: scale(1.25); }
-.tl2-node[aria-current] .tl2-dot { background: var(--signal-300); border-color: var(--signal-600); transform: scale(1.5); }
+.tl2-node[aria-current] .tl2-dot { background: var(--signal-300); border-color: var(--signal-600); transform: scale(1.5); margin-bottom: 3px; }
 .tl2-ylab { font: 600 11px/1.1 var(--sans); color: var(--text-muted); font-variant-numeric: lining-nums tabular-nums; white-space: nowrap; }
 .tl2-node[aria-current] .tl2-ylab { color: var(--text); }
 .tl2-node[aria-current] .tl2-ylab { font-weight: 700; }
@@ -55,7 +55,7 @@
 @keyframes tl2-in-next { from { opacity: 0; transform: translateX(32px); } to { opacity: 1; transform: none; } }
 @keyframes tl2-in-prev { from { opacity: 0; transform: translateX(-32px); } to { opacity: 1; transform: none; } }
 
-.tl2-side { all: unset; box-sizing: border-box; display: flex; flex-direction: column; gap: var(--s1); padding: var(--s4); cursor: pointer; background: var(--surface-sunken); border: 1px dashed var(--border-strong); border-radius: var(--r); min-width: 0; align-self: center; text-align: left; }
+.tl2-side { all: unset; box-sizing: border-box; display: flex; flex-direction: column; gap: var(--s1); padding: var(--s4); cursor: pointer; background: var(--surface-sunken); border: 1px dashed var(--border-strong); border-radius: var(--r); min-width: 0; align-self: start; margin-top: var(--s6); text-align: left; }
 .tl2-side:hover:not(:disabled) { background: var(--brand-50); border-style: solid; border-color: var(--brand-400); }
 .tl2-side:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
 .tl2-side.is-empty { cursor: default; opacity: 1; }
@@ -112,7 +112,7 @@
   .learn-page { padding-top: var(--s5); }
   /* Una sola tarjeta; el antes y el después quedan como pestañas laterales con la fecha en vertical */
   .tl2-stage { grid-template-columns: 44px minmax(0, 1fr) 44px; gap: var(--s2); align-items: stretch; }
-  .tl2-side { align-self: stretch; align-items: center; justify-content: center; padding: var(--s2) 0; gap: var(--s2); }
+  .tl2-side { align-self: stretch; margin-top: 0; align-items: center; justify-content: center; padding: var(--s2) 0; gap: var(--s2); }
   .tl2-side-title, .tl2-side-ppl, .tl2-side-empty { display: none; }
   .tl2-side-year, .tl2-side-dir { writing-mode: vertical-rl; }
   .tl2-side-year { font-size: 13px; }
