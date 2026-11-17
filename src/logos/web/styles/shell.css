@@ -1,0 +1,77 @@
+/* Estructura de la aplicación: sidebar, encabezado, Inicio. Usa los tokens existentes sin redefinirlos. */
+.skip-link { position: absolute; left: var(--s3); top: -60px; z-index: 50; padding: var(--s2) var(--s4); background: var(--emph-5-bg); color: var(--emph-5-fg); border-radius: var(--r); }
+.skip-link:focus { top: var(--s3); }
+
+body { display: block; min-height: 100dvh; }
+.app { display: grid; grid-template-columns: var(--sidebar-w, 240px) minmax(0, 1fr); min-height: 100dvh; }
+body[data-sidebar=collapsed] .app { --sidebar-w: 64px; }
+.shell { display: flex; flex-direction: column; min-width: 0; min-height: 100dvh; }
+.main { flex: 1 0 auto; outline: none; min-width: 0; }
+.shell > footer { margin-top: auto; }
+
+/* ── Sidebar ── */
+.sidebar { position: sticky; top: 0; align-self: start; height: 100dvh; display: flex; flex-direction: column; gap: var(--s4); padding: var(--s4) var(--s3); background: var(--emph-4-bg); color: var(--emph-4-fg); overflow-y: auto; z-index: 30; }
+.sidebar-head { display: flex; align-items: center; justify-content: space-between; gap: var(--s2); min-height: 40px; }
+.wordmark { margin: 0; font: 600 22px/1.1 var(--serif); letter-spacing: .06em; }
+.wordmark span { display: block; margin-top: var(--s1); font: 400 12px/1.2 var(--sans); letter-spacing: 0; color: var(--brand-100); }
+.sidebar-toggle { display: grid; place-items: center; width: 36px; height: 36px; border: 0; border-radius: 8px; background: transparent; color: var(--brand-100); cursor: pointer; }
+.sidebar-toggle:hover { background: var(--brand-800); }
+.sidebar-toggle .icon { transition: transform .2s var(--out); }
+body[data-sidebar=collapsed] .sidebar-toggle .icon { transform: rotate(180deg); }
+.nav { display: flex; flex-direction: column; gap: 2px; }
+.nav-group { margin: var(--s4) var(--s3) var(--s1); font: 600 11px/1 var(--sans); letter-spacing: .1em; text-transform: uppercase; color: var(--brand-200); }
+.nav-link { display: flex; align-items: center; gap: var(--s3); min-height: 40px; padding: 0 var(--s3); border-radius: 8px; color: var(--brand-50); text-decoration: none; font: 500 15px/1.2 var(--sans); }
+.nav-link .icon { flex: none; width: 20px; height: 20px; }
+.nav-link:hover { background: var(--brand-800); }
+.nav-link[aria-current=page] { background: var(--brand-50); color: var(--brand-900); font-weight: 600; }
+.sidebar :focus-visible { outline-color: var(--brand-50); }
+.nav-link[aria-current=page]:focus-visible { outline-color: var(--accent-700); }
+body[data-sidebar=collapsed] .wordmark, body[data-sidebar=collapsed] .nav-label, body[data-sidebar=collapsed] .nav-group { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+body[data-sidebar=collapsed] .sidebar-head { justify-content: center; }
+body[data-sidebar=collapsed] .nav-link { justify-content: center; padding: 0; }
+body[data-sidebar=collapsed] .nav-group { margin: 0; }
+
+/* ── Encabezado ── */
+.appbar { display: flex; align-items: center; gap: var(--s3); padding: var(--s3) var(--gutter); background: var(--surface); border-bottom: var(--hair); }
+.page-title { flex: 0 1 auto; min-width: 0; margin: 0; font: 600 24px/1.2 var(--serif); color: var(--text); outline: none; }
+.appbar-actions { display: flex; gap: var(--s2); margin-left: auto; }
+.appbar .menu-button { display: none; width: var(--tap); height: var(--tap); padding: 0; }
+.help-mark { display: none; }
+.help-panel { padding: var(--s3) var(--gutter); background: var(--info-bg); color: var(--info-fg); border-bottom: 1px solid var(--info-solid); max-width: none; }
+.shell > footer { padding: var(--s4) var(--gutter); }
+
+/* ── Inicio ── */
+.home { padding: var(--s6) var(--gutter) var(--s7); max-width: 1100px; }
+.home-question { font: 600 clamp(28px, 4vw, 40px)/1.15 var(--serif); color: var(--brand-900); margin-bottom: var(--s5); }
+.home h3 { margin: var(--s6) 0 var(--s1); font: 600 22px/1.2 var(--serif); }
+.home-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--s4); margin: 0; padding: 0; list-style: none; }
+.home-card { display: flex; flex-direction: column; gap: var(--s2); height: 100%; padding: var(--s4); color: var(--text); text-decoration: none; background: var(--surface); border: 1px solid var(--emph-2-border); border-radius: var(--r); }
+.home-card strong { font: 600 19px/1.2 var(--serif); color: var(--emph-2-fg); }
+.home-card code { margin-top: auto; padding: var(--s1) var(--s2); background: var(--surface-sunken); border-radius: 4px; overflow-wrap: anywhere; }
+.home-card:hover { border-color: var(--brand-600); }
+.home-exercises { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--s4); margin: var(--s4) 0 0; padding: 0; list-style: none; }
+.home-exercises li { display: flex; flex-direction: column; gap: var(--s2); align-items: flex-start; padding: var(--s4); background: var(--surface); border: var(--hair); border-radius: var(--r); }
+.home-exercises strong { font: 600 17px/1.2 var(--serif); }
+.home-exercises .button { margin-top: auto; }
+
+/* ── Escritorio medio: la barra lateral se contrae sola ── */
+@media (max-width: 1100px) and (min-width: 901px) { body:not([data-sidebar=expanded]) .app { --sidebar-w: 64px; } }
+
+/* ── Móvil: menú lateral con botón, fondo y cierre ── */
+@media (max-width: 900px) {
+  .app { display: block; }
+  .sidebar { position: fixed; inset: 0 auto 0 0; width: min(300px, 86vw); transform: translateX(-102%); transition: transform .22s var(--out); box-shadow: 0 0 40px rgb(0 0 0 / .3); visibility: hidden; }
+  body.menu-open .sidebar { transform: none; visibility: visible; }
+  .scrim { position: fixed; inset: 0; z-index: 25; background: rgb(0 0 0 / .45); }
+  .appbar .menu-button { display: inline-flex; align-items: center; justify-content: center; flex: none; }
+  .sidebar-toggle { display: none; }
+  .appbar { position: sticky; top: 0; z-index: 20; padding-inline: var(--s4); }
+  .appbar { gap: var(--s2); }
+  .page-title { font-size: 18px; line-height: 1.15; }
+  .appbar-actions .label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .appbar-actions .button { width: var(--tap); height: var(--tap); padding: 0; }
+  .help-mark { display: inline; font: 700 16px/1 var(--sans); }
+  body.menu-open { overflow: hidden; }
+  .subtabs { top: 68px; }
+}
+@media (prefers-reduced-motion: reduce) { .sidebar { transition: none; } .sidebar-toggle .icon { transition: none; } }

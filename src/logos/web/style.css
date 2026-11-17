@@ -37,8 +37,6 @@
 html { background: var(--canvas); color: var(--text); font: 15px/1.5 var(--sans); scrollbar-color: var(--brand-300) transparent; -webkit-text-size-adjust: 100%; }
 /* El pie de página siempre queda abajo, aunque el modo tenga poco contenido */
 body { margin: 0; min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; background: var(--canvas); }
-body > main:not([hidden]) { flex: 1 0 auto; }
-body > footer { margin-top: auto; }
 ::selection { background: var(--signal-200); color: var(--signal-950); }
 :focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 [hidden] { display: none !important; }
@@ -48,10 +46,6 @@ code, pre, textarea, .mono { font-family: var(--mono); }
 code { font-size: .92em; color: var(--brand-800); }
 
 /* ── Barra superior: identidad (emph-4) ── */
-.topbar { display: flex; align-items: center; gap: var(--s5); padding: var(--s3) var(--gutter); background: var(--emph-4-bg); color: var(--emph-4-fg); }
-.wordmark { font: 600 24px/1 var(--serif); letter-spacing: .06em; white-space: nowrap; }
-.wordmark span { font: 400 15px/1 var(--sans); letter-spacing: 0; margin-left: var(--s3); color: var(--brand-100); }
-.topbar-note { margin-left: auto; font-size: 13px; color: var(--brand-100); }
 
 /* ── Dos paneles: el modelo es el fondo; la fórmula, la figura ── */
 .workspace { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); align-items: start; }
@@ -98,8 +92,6 @@ textarea.small { font-size: 14px; }
 .button.primary:hover:not(:disabled) { background: var(--emph-5-hover); }
 .button.secondary { --bg: var(--emph-2-bg); background: var(--emph-2-bg); color: var(--emph-2-fg); border-color: var(--emph-2-border); }
 .button.secondary:hover:not(:disabled) { background: var(--brand-50); border-color: var(--brand-600); }
-.button.on-brand { background: transparent; color: var(--emph-4-fg); border-color: var(--brand-300); }
-@media (hover: hover) { .button.on-brand:hover { background: var(--brand-800); } }  /* en pantallas táctiles el hover se queda pegado */
 .button:disabled { background: var(--surface-sunken); color: var(--neutral-500); border-color: var(--border); cursor: not-allowed; }
 .remove { display: grid; place-items: center; width: 34px; height: 34px; padding: 0; background: none; border: 0; border-radius: var(--r); color: var(--text-muted); cursor: pointer; transition: background-color .12s ease-out, color .12s ease-out; }
 .remove:hover { background: var(--danger-bg); color: var(--danger-fg); }
@@ -261,15 +253,12 @@ footer { padding: var(--s5) var(--gutter); font-size: 13px; color: var(--brand-1
   .workspace, .story-body, .lab-grid { grid-template-columns: minmax(0, 1fr); }
   .pane.question { border-left: 0; border-top: var(--hair); }
   .question-inner { position: static; max-height: none; overflow: visible; }
-  .topbar-note { display: none; }
-  .topbar { justify-content: space-between; }
   .pane { padding-block: var(--s5) var(--s6); }
   .question-inner { margin-top: calc(-1 * var(--s5)); padding-top: var(--s5); }
   .run-action { align-items: stretch; flex: 1 1 100%; text-align: left; }
   .symbols-table { min-width: 340px; }
 }
 @media (max-width: 520px) {
-  .wordmark span { display: none; }
   .inline { flex-wrap: wrap; }
   .inline .button { width: 100%; }
 }
@@ -285,13 +274,6 @@ footer { padding: var(--s5) var(--gutter); font-size: 13px; color: var(--brand-1
 @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
 
 /* ── Modos: dos tareas distintas, una a la vez ── */
-.topbar { flex-wrap: wrap; }
-.modes { display: flex; gap: 2px; margin-left: var(--s5); padding: 3px; border-radius: 99px; background: var(--brand-800); }
-.mode { font: 600 14px/1 var(--sans); padding: 9px 16px; border: 0; border-radius: 99px; background: transparent; color: var(--brand-100); cursor: pointer; transition: background-color .15s ease-out, color .15s ease-out; }
-.mode:hover { color: var(--brand-50); }
-.mode[aria-selected=true] { background: var(--brand-50); color: var(--brand-900); }
-.topbar-actions { display: flex; gap: var(--s2); margin-left: auto; }
-.button.on-brand.quiet { border-color: transparent; }
 body.dropping::after { content: "Suelta el archivo para cargarlo"; position: fixed; inset: var(--s4); display: grid; place-items: center; font: 500 28px/1.2 var(--serif); color: var(--brand-900); background: color-mix(in oklch, var(--brand-100) 92%, transparent); border: 2px dashed var(--brand-600); border-radius: var(--r); z-index: 10; pointer-events: none; }
 
 /* Lo secundario se pliega: una línea hasta que se pide */
@@ -338,8 +320,6 @@ input.formal, #proof-constants { width: 100%; }
 
 .story-head { display: flex; align-items: center; justify-content: space-between; gap: var(--s4); }
 @media (max-width: 900px) {
-  .modes { order: 3; width: 100%; margin: var(--s2) 0 0; }
-  .mode { flex: 1; }
   .batch-item { grid-template-columns: 22px minmax(0, 1fr); }
   .batch-item .chip, .batch-note { grid-column: 2; justify-self: start; }
 }
@@ -388,22 +368,17 @@ input.formal, #proof-constants { width: 100%; }
 .icon { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .icon .fill { fill: currentColor; stroke: none; }
 .button:has(.icon) { display: inline-flex; align-items: center; justify-content: center; gap: var(--s2); }
-.mode .short { display: none; }
 
 /* Píldora deslizante (Slide Tabs): una sola forma que viaja hasta la opción activa */
-.modes, .subtabs, .filters { position: relative; }
 .pill { display: none; }
 .has-pill > .pill { display: block; position: absolute; left: 0; top: 0; z-index: 0; pointer-events: none; border-radius: 99px;
   width: var(--w); height: var(--h); transform: translate(var(--x), var(--y)); }
 .pill-ready > .pill { transition: transform .42s var(--spring), width .42s var(--spring), height .3s var(--out); }
-.mode, .subtab, .filter { position: relative; z-index: 1; }
-.modes.has-pill > .pill { background: var(--brand-50); }
-.modes.has-pill > .mode[aria-selected=true] { background: transparent; }
 .filters.has-pill > .pill { background: var(--brand-800); }
 .filters.has-pill > .filter[aria-pressed=true] { background: transparent; border-color: transparent; }
 
 /* Onda desde el punto de contacto y presión con rebote */
-.button, .key, .mode, .subtab, .filter { overflow: hidden; isolation: isolate; }
+.button, .key, .subtab, .filter { overflow: hidden; isolation: isolate; }
 .ripple { position: absolute; z-index: -1; border-radius: 50%; background: currentColor; opacity: .2; transform: scale(0); pointer-events: none; animation: ripple .6s var(--out) forwards; }
 @keyframes ripple { to { transform: scale(1); opacity: 0; } }
 .key { transition: background-color .1s ease-out, border-color .1s ease-out, transform .3s var(--spring); }
@@ -518,17 +493,6 @@ label.check input:checked + svg .tick { stroke-dashoffset: 0; }
 /* ══════════ Teléfono (≤ 720 px) ══════════ */
 @media (max-width: 720px) {
   /* Cabecera compacta: marca e íconos en una fila, pestañas cortas debajo */
-  .topbar { display: grid; grid-template-columns: 1fr auto; gap: var(--s2) var(--s3); padding: var(--s2) var(--s4) var(--s3); }
-  .wordmark { font-size: 22px; align-self: center; }
-  .wordmark span { display: none; }
-  .topbar-actions { grid-column: 2; grid-row: 1; margin: 0; gap: var(--s1); }
-  .topbar-actions .button { width: var(--tap); height: var(--tap); padding: 0; border-radius: 10px; }
-  .topbar-actions .button .label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-  .topbar-actions .icon { width: 20px; height: 20px; }
-  .modes { grid-column: 1 / -1; grid-row: 2; order: 0; width: 100%; margin: 0; }
-  .mode { flex: 1; min-height: 40px; padding: 8px 6px; }
-  .mode .long { display: none; }
-  .mode .short { display: inline; }
 
   /* Dos paneles → dos pestañas fijas arriba al bajar */
   .workspace { display: block; }
@@ -722,7 +686,6 @@ button.nb-cite-n:hover { background: var(--signal-300); }
 body[data-mode=notebook] .footer-notebook { display: inline; }
 
 @media (max-width: 720px) {
-  .mode { font-size: 13px; padding-inline: 4px; }
   .nb-bar { grid-template-columns: minmax(0, 1fr) auto; }
   .nb-pick { grid-column: 1; grid-row: 1; }
   .nb-name { grid-column: 1 / -1; grid-row: 2; }

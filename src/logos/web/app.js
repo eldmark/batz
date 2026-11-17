@@ -1,3 +1,6 @@
+import {ROUTES, routeFromHash, hashFor, titleFor, isKnownHash} from '/app/navigation.js';
+import {renderHome} from '/features/home/home.js';
+
 const $ = (id) => document.getElementById(id);
 const symbolsBody = $('symbols');
 const interpretationBox = $('interpretation');
@@ -26,7 +29,7 @@ const phoneLayout = () => window.matchMedia('(max-width: 720px)').matches;
 function plural(n, one, many) { return `${n} ${n === 1 ? one : many}`; }
 
 /** Aviso flotante que se va solo; también se cierra con la ×, o deslizándolo en el teléfono. */
-function toast(message, kind = 'info', timeout = 4200) {
+function toast(message, kind = 'info', timeout = 4200, action = null) {
   const host = $('toasts');
   const box = node('div', undefined, `toast ${kind}`);
   box.append(node('span', message));
@@ -41,6 +44,11 @@ function toast(message, kind = 'info', timeout = 4200) {
   let startX = null;
   box.addEventListener('pointerdown', event => { startX = event.clientX; });
   box.addEventListener('pointerup', event => { if (startX !== null && Math.abs(event.clientX - startX) > 56) dismiss(); startX = null; });
+  if (action) {
+    const again = node('button', action.label, 'toast-action'); again.type = 'button';
+    again.addEventListener('click', () => { dismiss(); action.run(); });
+    box.append(again);
+  }
   box.append(close); host.append(box);
   while (host.children.length > 3) host.firstElementChild.remove();
   if (timeout) setTimeout(dismiss, timeout);
@@ -116,12 +124,12 @@ function placePill(container) {
     requestAnimationFrame(() => container.classList.add('pill-ready'));  // sin deslizarse desde 0 al cargar
   }
 }
-const pillHosts = () => document.querySelectorAll('.modes, .subtabs, .filters');
+const pillHosts = () => document.querySelectorAll('.subtabs, .filters');
 const pillObserver = new ResizeObserver(entries => entries.forEach(entry => placePill(entry.target)));
 
 // Onda desde el punto de contacto: confirma el toque en botones, teclas y pestañas.
 document.addEventListener('pointerdown', event => {
-  const target = event.target.closest('.button, .key, .mode, .subtab, .filter');
+  const target = event.target.closest('.button, .key, .subtab, .filter');
   if (!target || target.disabled || target.getAttribute('aria-busy') === 'true' || reduceMotion()) return;
   const box = target.getBoundingClientRect();
   const size = Math.max(box.width, box.height) * 2.2;
@@ -1019,7 +1027,7 @@ async function loadFile(file) {
     if (file.size > 500000) throw Error('El archivo pesa más de 500 kB.');
     const loaded = await api('/api/load', {text: await file.text()});
     if (loaded.status !== 'ok') throw Error(loaded.errors?.[0]?.message || 'Archivo inválido.');
-    setMode('evaluate');
+    go('evaluate');
     applyPackage({signature: loaded.signature, formula: loaded.results[0]?.formula || ''}, loaded.model);
     const list = $('batch-list'); list.replaceChildren();
     loaded.results.forEach(row => list.append(batchRow(row)));
@@ -1273,7 +1281,7 @@ function valuationElement(valuation) {
 
 /** Lleva un contramodelo de Demostrar al modo Evaluar: símbolos, tablas, conclusión y entorno. */
 async function openInEvaluate(found) {
-  setMode('evaluate');
+  go('evaluate');
   await applyPackage({signature: found.signature, formula: $('proof-conclusion').value.trim()}, found.model);
   for (const select of $('assignment').querySelectorAll('select[data-variable]')) {
     const pair = found.assignment.find(([name]) => name === select.dataset.variable);
@@ -1492,7 +1500,7 @@ async function dictSave() {
   });
 }
 
-function openDictionaryWith(word) { setMode('dictionary'); $('dict-word').value = word; dictConsult(); }
+function openDictionaryWith(word) { go('dictionary'); $('dict-word').value = word; dictConsult(); }
 
 for (const [value, label] of [['', 'Todas'], ['N', 'Sustantivos'], ['ADJ', 'Adjetivos'], ['V', 'Verbos'], ['NP', 'Nombres']]) {
   const chip = node('button', label, 'filter'); chip.type = 'button'; chip.setAttribute('aria-pressed', String(value === ''));
@@ -1941,25 +1949,115 @@ $('nb-question').addEventListener('keydown', event => { if (event.key === 'Enter
 $('nb-question').addEventListener('input', () => { $('nb-answer').replaceChildren(); clearStory(); });
 confirmClick($('nb-history-clear'), '¿Vaciar la lista?', () => nbChange('clear-chat', {}, {keepAnswer: true}));
 
-// --- modos ---
+// --- navegación: rutas con hash, sidebar y encabezado ---
 const MODES = ['evaluate', 'prove', 'dictionary', 'notebook'];
+const SECTION_HELP = {
+  home: 'Elige una herramienta o empieza con uno de los tres ejercicios. Puedes volver aquí desde «Inicio».',
+  evaluate: 'Evaluar comprueba si una fórmula es verdadera en UNA interpretación: dominio, símbolos y tablas. Verdadera aquí no significa válida en todos los modelos.',
+  prove: 'Demostrar pregunta si la conclusión se sigue de las premisas en TODOS los modelos. No hay una interpretación concreta: la respuesta es una prueba o un contramodelo.',
+  notebook: 'Un cuaderno reúne fuentes en español; cada oración entendida es una premisa. Las respuestas citan de qué oración salió cada una. «Se sigue de tus fuentes» no dice que lo que dicen sea cierto.',
+  dictionary: 'El diccionario enlaza palabras y formas conjugadas con su lema, categoría y símbolo. Las palabras que añadas se guardan aparte del léxico base.',
+};
+const SAMPLE_LABEL = {evaluate: 'Ejemplo de evaluación', prove: 'Ejemplo de demostración', dictionary: 'Ejemplo de consulta', notebook: 'Cuaderno de ejemplo'};
+let currentMode = null;
+
 function setMode(mode) {
-  const changed = document.body.dataset.mode !== mode;
+  if (!['home', ...MODES].includes(mode)) mode = 'home';
+  const changed = currentMode !== mode;
+  currentMode = mode;
   document.body.dataset.mode = mode;
-  for (const name of MODES) {
-    const active = name === mode;
-    $(`mode-${name}`).hidden = !active;
-    $(`tab-${name}`).setAttribute('aria-selected', String(active));
-    $(`tab-${name}`).tabIndex = active ? 0 : -1;
+  $('mode-home').hidden = mode !== 'home';
+  for (const name of MODES) $(`mode-${name}`).hidden = name !== mode;
+  for (const route of ROUTES) {
+    const link = $(`tab-${route.id}`);
+    if (route.id === mode) link.setAttribute('aria-current', 'page'); else link.removeAttribute('aria-current');
   }
-  placePill(document.querySelector('.modes'));
+  document.title = `${titleFor(mode)} · LOGOS`;
+  $('page-title').textContent = titleFor(mode);
+  $('help-text').textContent = SECTION_HELP[mode];
+  $('help-panel').hidden = true; $('help-button').setAttribute('aria-expanded', 'false');
+  $('import-json').hidden = mode !== 'evaluate';
+  $('sample').hidden = mode === 'home';
+  if (mode !== 'home') $('sample').querySelector('.label').textContent = SAMPLE_LABEL[mode];
+  closeMenu();
   pillHosts().forEach(placePill);
-  clearStory(); $('story-section').hidden = true;
+  if (changed) { clearStory(); $('story-section').hidden = true; }
   if (mode === 'prove') checkProofSyntax();
   if (mode === 'dictionary') searchDictionary(true);
   if (mode === 'notebook') openNotebookMode();
-  if (changed && phoneLayout()) window.scrollTo({top: 0, behavior: 'auto'});
+  if (changed) {
+    window.scrollTo({top: 0, behavior: 'auto'});
+    $('page-title').focus({preventScroll: true});   // lectores de pantalla anuncian la sección nueva
+  }
 }
+
+/** Cambia de sección y deja la ruta en la URL; Atrás/Adelante vuelven por hashchange. */
+function go(mode) {
+  const hash = hashFor(mode);
+  if (location.hash !== hash) history.pushState(null, '', hash);
+  setMode(mode);
+}
+window.addEventListener('hashchange', () => {
+  if (!isKnownHash(location.hash)) history.replaceState(null, '', hashFor('home'));
+  const mode = routeFromHash(location.hash);
+  if (mode !== currentMode) setMode(mode);
+});
+
+function openMenu() {
+  document.body.classList.add('menu-open'); $('scrim').hidden = false;
+  $('menu-button').setAttribute('aria-expanded', 'true');
+  $('nav').querySelector('[aria-current=page]')?.focus();
+}
+function closeMenu({restoreFocus = false} = {}) {
+  if (!document.body.classList.contains('menu-open')) return;
+  document.body.classList.remove('menu-open'); $('scrim').hidden = true;
+  $('menu-button').setAttribute('aria-expanded', 'false');
+  if (restoreFocus) $('menu-button').focus();
+}
+$('menu-button').addEventListener('click', () => (document.body.classList.contains('menu-open') ? closeMenu({restoreFocus: true}) : openMenu()));
+$('scrim').addEventListener('click', () => closeMenu({restoreFocus: true}));
+document.addEventListener('keydown', event => { if (event.key === 'Escape' && document.body.classList.contains('menu-open')) closeMenu({restoreFocus: true}); });
+window.matchMedia('(min-width: 901px)').addEventListener('change', () => closeMenu());
+
+function setSidebarCollapsed(collapsed, remember = true) {
+  document.body.dataset.sidebar = collapsed ? 'collapsed' : 'expanded';
+  const button = $('sidebar-collapse'), label = collapsed ? 'Expandir el menú lateral' : 'Contraer el menú lateral';
+  button.setAttribute('aria-pressed', String(collapsed)); button.setAttribute('aria-label', label); button.title = label;
+  if (remember) try { localStorage.setItem('logos-sidebar', collapsed ? 'collapsed' : 'expanded'); } catch { /* sin almacenamiento */ }
+}
+$('sidebar-collapse').addEventListener('click', () => setSidebarCollapsed(document.body.dataset.sidebar !== 'collapsed'));
+try { const saved = localStorage.getItem('logos-sidebar'); if (saved) setSidebarCollapsed(saved === 'collapsed', false); } catch { /* sin almacenamiento */ }
+
+$('help-button').addEventListener('click', () => {
+  const open = $('help-panel').hidden;
+  $('help-panel').hidden = !open; $('help-button').setAttribute('aria-expanded', String(open));
+});
+
+/** Ejercicios de Inicio: abren el módulo y cargan datos coherentes; el reemplazo se anuncia y se puede deshacer. */
+async function runExercise(exercise) {
+  go(exercise.route);
+  let undo = null;
+  if (exercise.id === 'evaluate') {
+    const had = formulaBox.value.trim() !== '';
+    try { if (had && preparedSignature) undo = {kind: 'evaluate', payload: {schema_version: '1', signature: preparedSignature, interpretation: interpretation(), formula: formulaBox.value}}; } catch { /* tablas incompletas: no hay copia posible */ }
+    loadSample();
+    if (had) toast('Se reemplazó lo que había en Evaluar.', 'warning', 9000, undo && {label: 'Deshacer', run: async () => {
+      const loaded = await api('/api/load', {text: JSON.stringify(undo.payload)});
+      if (loaded.status === 'ok') applyPackage({signature: loaded.signature, formula: undo.payload.formula}, loaded.model);
+    }});
+  } else if (exercise.id === 'prove') {
+    const before = ['proof-premises', 'proof-conclusion', 'proof-constants'].map(id => $(id).value);
+    const had = before.some(value => value.trim());
+    proofSample = 0; loadProofSample();
+    if (had) toast('Se reemplazó lo que había en Demostrar.', 'warning', 9000, {label: 'Deshacer', run: () => {
+      ['proof-premises', 'proof-conclusion', 'proof-constants'].forEach((id, i) => { $(id).value = before[i]; });
+      clearStory(); $('proof-result').replaceChildren(); checkProofSyntax();
+    }});
+  } else if (exercise.id === 'notebook') {
+    await loadNotebookSample();
+  }
+}
+renderHome($('home-body'), {go, runExercise});
 
 /** Teléfono: cada modo de dos paneles se recorre en dos pestañas («1 · Modelo», «2 · Fórmula»). */
 function setPane(workspace, pane) {
@@ -1984,13 +2082,6 @@ for (const workspace of [$('mode-evaluate'), $('mode-dictionary'), $('mode-noteb
   });
 }
 $('go-question').addEventListener('click', () => { setPane($('mode-evaluate'), 'question'); $('mode-evaluate').scrollIntoView({block: 'start'}); });
-for (const name of MODES) $(`tab-${name}`).addEventListener('click', () => setMode(name));
-document.querySelector('.modes').addEventListener('keydown', event => {
-  if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
-  const at = MODES.indexOf(document.body.dataset.mode);
-  const next = MODES[(at + (event.key === 'ArrowRight' ? 1 : MODES.length - 1)) % MODES.length];
-  setMode(next); $(`tab-${next}`).focus();
-});
 $('story-close').addEventListener('click', () => {
   pauseStory(); exitStoryFullscreen(); $('story-section').hidden = true;
   document.querySelectorAll('.fitch li.current').forEach(li => li.classList.remove('current'));
@@ -1999,7 +2090,7 @@ $('story-close').addEventListener('click', () => {
 $('add-symbol').addEventListener('click', () => { addSymbol(); invalidateTables(); });
 $('prepare').addEventListener('click', prepare);
 $('domain').addEventListener('input', invalidateTables);
-$('sample').addEventListener('click', () => ({evaluate: loadSample, prove: loadProofSample, dictionary: loadDictionarySample, notebook: loadNotebookSample})[document.body.dataset.mode]());
+$('sample').addEventListener('click', () => ({evaluate: loadSample, prove: loadProofSample, dictionary: loadDictionarySample, notebook: loadNotebookSample})[currentMode]?.());
 $('evaluate').addEventListener('click', evaluateFormula);
 $('export-json').addEventListener('click', exportJSON);
 $('import-json').addEventListener('click', () => $('import-file').click());
@@ -2170,4 +2261,6 @@ pillHosts().forEach(host => { pillObserver.observe(host); placePill(host); });
 document.fonts?.ready.then(() => pillHosts().forEach(placePill));
 addSymbol('P', 'predicate', 1);
 prepare();
+if (location.hash && !isKnownHash(location.hash)) history.replaceState(null, '', hashFor('home'));
+setMode(routeFromHash(location.hash));
 $('story-pause').disabled = true;
