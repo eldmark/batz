@@ -33,9 +33,10 @@ test('quien no tiene imagen la declara null y no deja un archivo huérfano', () 
 });
 test('las que tienen imagen traen crédito, enlace y licencia no vacíos', () => {
   for (const s of withImage) {
+    const unverified = PEOPLE[s].license === 'Sin verificar';   // foto aportada sin URL de origen
     for (const k of ['credit', 'creditUrl', 'license']) {
       assert.equal(typeof PEOPLE[s][k], 'string', `${s}.${k}`);
-      assert.ok(PEOPLE[s][k].trim().length > 0, `${s}.${k} vacío`);
+      if (k !== 'creditUrl' || !unverified) assert.ok(PEOPLE[s][k].trim().length > 0, `${s}.${k} vacío`);
     }
     if (PEOPLE[s].license !== 'Sin verificar') assert.match(PEOPLE[s].creditUrl, /^https:\/\/commons\.wikimedia\.org\//, s);
   }

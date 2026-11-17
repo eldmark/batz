@@ -93,7 +93,7 @@ export const BIOS = {
     route: '#/church',
     birthplace: 'Washington D. C.',
     deathplace: null,
-    alt: '',
+    alt: 'Fotografía en blanco y negro de Alonzo Church, de perfil, con camisa y corbata, señalando con la mano una pizarra con fórmulas.',
     lede: 'Creó el cálculo lambda y demostró, en 1936, que la validez en lógica de primer orden es indecidible.',
     carousel: {
       contribution: 'Creó el cálculo lambda en los años treinta y en 1936 demostró que no hay algoritmo que decida la validez en lógica de primer orden, el mismo año que Turing.',

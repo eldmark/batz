@@ -117,7 +117,7 @@ test('retratos: el archivo existe; sin foto hay iniciales; CC exige crédito vis
     if (needsVisibleCredit(p)) { assert.ok(p.credit && /^https:\/\//.test(p.creditUrl), slug); }
   }
   assert.deepEqual([...used].filter(s => needsVisibleCredit(PEOPLE[s])).sort(), ['gentzen', 'lowenheim', 'robinson', 'tarski']);
-  assert.deepEqual([...used].filter(s => !PEOPLE[s].image).sort(), ['church', 'fitch', 'jaskowski']);
+  assert.deepEqual([...used].filter(s => !PEOPLE[s].image).sort(), ['fitch', 'jaskowski']);
 });
 test('vecinos antes/después y límites en el primero y el último', () => {
   const list = visibleMilestones(HISTORY, 'todos');

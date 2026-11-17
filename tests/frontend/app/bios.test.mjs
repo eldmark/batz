@@ -23,12 +23,13 @@ test('cada persona con página tiene sus campos obligatorios y ninguno vacío', 
     assert.ok(nonEmpty(b.carousel.contribution) && nonEmpty(b.carousel.batz));
     assert.ok(b.related.every(r => BIOS[r] && r !== slug));
     assert.ok(CONNECTIONS.some(c => c.id === b.exercise.id), `${slug} ejercicio`);
-    if (p.image) assert.ok(nonEmpty(b.alt) && nonEmpty(p.credit) && p.creditUrl.startsWith('https://commons.wikimedia.org/'), `${slug} retrato`);
+    if (p.image) assert.ok(nonEmpty(b.alt) && nonEmpty(p.credit) && (p.license === 'Sin verificar' || p.creditUrl.startsWith('https://commons.wikimedia.org/')), `${slug} retrato`);
   }
 });
-test('Church no tiene imagen: nunca se inventa una', () => {
-  assert.equal(PEOPLE.church.image, null);
-  assert.equal(person('church').credit, '');
+test('Church: la foto es aportada por el usuario y se declara sin verificar', () => {
+  assert.equal(PEOPLE.church.image, '/img/people/church.jpg');
+  assert.equal(PEOPLE.church.license, 'Sin verificar');
+  assert.match(person('church').credit, /sin verificar/i);
 });
 test('los años de la ficha coinciden con people.js', () => {
   for (const slug of BIO_SLUGS) {
