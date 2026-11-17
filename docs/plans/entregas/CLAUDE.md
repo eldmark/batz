@@ -164,3 +164,11 @@ Archivos: `features/home/home.js` (estructura), `features/home/motion.js` (nuevo
 Cifras de «33 tarjetas · 18 hitos · 50 ejercicios»: las dos primeras salen de `features/learn/data.js` (`CARDS`, `HISTORY`) y no pueden desfasarse; los 50 ejercicios son la constante `PRACTICE_COUNT` de `home.js`, igual a `len(practice_bank.EXERCISES)`: actualizarla si cambia el banco. Los contadores suben una vez; el texto ya trae la cifra final.
 
 Movimiento: solo `transform`, `opacity` y `clip-path`. Con `prefers-reduced-motion: reduce` no se añade ningún estado oculto, no hay observadores ni animaciones ni transformaciones, y los cambios de hover y foco son instantáneos. El foco de luz solo existe con puntero fino; con teclado la tarjeta se resalta con borde y foco visible.
+
+## Retratos
+
+Rama `rediseno/imagenes`. Retratos locales de 19 de las 22 personas de la historia de la lógica en `src/logos/web/img/people/<slug>.jpg` (escala de grises, hasta 480 px, menos de 150 kB), con licencia verificada en Commons (dominio público, CC BY-SA 2.0 DE/3.0/4.0). Sin imagen verificable libre, y por tanto con iniciales: Church, Jaśkowski y Fitch. `godel.jpg` y `turing.jpg` siguen también en `img/` porque el banner actual las usa.
+
+Fuente única de datos: `features/people/people.js` (`PEOPLE`, `PEOPLE_ORDER`, `person(slug)`, más `initials` y `lifespan`). Cada entrada trae nombre, años, `image` (ruta o `null`), `credit`, `creditUrl` y `license`. Quien use un retrato con licencia CC BY-SA (Löwenheim, Tarski, Gentzen, Robinson) debe mostrar el `credit` de forma visible; el resto, de dominio público, lo muestra igualmente como cortesía. Tabla completa con autor, licencia, URL y fecha en `img/CREDITOS.md`.
+
+`do_GET` registra cada imagen existente y `people.js` en su lista controlada; no hay servicio de archivos por ruta (`/img/people/../../server.py` devuelve 404). Si se añade un retrato: archivo + fila en `CREDITOS.md` + entrada en `people.js` + línea en `do_GET`. Prueba: `node --test tests/frontend/app/people.test.mjs`.
