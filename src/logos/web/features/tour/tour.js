@@ -87,6 +87,7 @@ export function createTour({go, openMenu = () => {}, closeMenu = () => {}, stora
     // Si se navega a otra sección, el recorrido (que habla de Inicio) se cierra sin bloquear nada.
     onHash = () => close('omitido', {restoreFocus: false});
     win.addEventListener('hashchange', onHash);
+    win.addEventListener('logos-route', onHash);   // go() cambia de sección con pushState: no hay hashchange
     render();
   }
 
@@ -95,6 +96,7 @@ export function createTour({go, openMenu = () => {}, closeMenu = () => {}, stora
     if (!root) return;
     doc.removeEventListener('keydown', onKey, true);
     win.removeEventListener('hashchange', onHash);
+    win.removeEventListener('logos-route', onHash);
     root.remove(); root = null;
     clearTarget(); closeMenu();
     // Reabrirlo desde Ayuda no borra un «completado» previo con un «omitido».

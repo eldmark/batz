@@ -2101,6 +2101,7 @@ function go(mode) {
   const hash = hashFor(mode);
   if (location.hash !== hash) history.pushState(null, '', hash);
   setMode(mode);
+  window.dispatchEvent(new Event('logos-route'));
 }
 window.addEventListener('hashchange', () => {
   if (!isKnownHash(location.hash)) history.replaceState(null, '', hashFor('home'));
