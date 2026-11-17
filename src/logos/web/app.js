@@ -1959,10 +1959,11 @@ $('nb-question').addEventListener('input', () => { $('nb-answer').replaceChildre
 confirmClick($('nb-history-clear'), '¿Vaciar la lista?', () => nbChange('clear-chat', {}, {keepAnswer: true}));
 
 // --- navegación: rutas con hash, sidebar y encabezado ---
-const MODES = ['evaluate', 'prove', 'dictionary', 'notebook'];
+const MODES = ['evaluate', 'prove', 'practice', 'dictionary', 'notebook'];
 const SECTION_HELP = {
   home: 'Elige una herramienta o empieza con uno de los tres ejercicios. Puedes volver aquí desde «Inicio».',
   evaluate: 'Evaluar comprueba si una fórmula es verdadera en UNA interpretación: dominio, símbolos y tablas. Verdadera aquí no significa válida en todos los modelos.',
+  practice: 'Practicar propone ejercicios progresivos de demostración. Cada jugada se comprueba con el verificador; puedes pedir una pista o ver la solución.',
   prove: 'Demostrar pregunta si la conclusión se sigue de las premisas en TODOS los modelos. No hay una interpretación concreta: la respuesta es una prueba o un contramodelo.',
   notebook: 'Un cuaderno reúne fuentes en español; cada oración entendida es una premisa. Las respuestas citan de qué oración salió cada una. «Se sigue de tus fuentes» no dice que lo que dicen sea cierto.',
   dictionary: 'El diccionario enlaza palabras y formas conjugadas con su lema, categoría y símbolo. Las palabras que añadas se guardan aparte del léxico base.',
@@ -1986,7 +1987,7 @@ function setMode(mode) {
   $('help-text').textContent = SECTION_HELP[mode];
   $('help-panel').hidden = true; $('help-button').setAttribute('aria-expanded', 'false');
   $('import-json').hidden = mode !== 'evaluate';
-  $('sample').hidden = mode === 'home';
+  $('sample').hidden = mode === 'home' || mode === 'practice';
   if (mode !== 'home') $('sample').querySelector('.label').textContent = SAMPLE_LABEL[mode];
   closeMenu();
   pillHosts().forEach(placePill);
@@ -1994,6 +1995,7 @@ function setMode(mode) {
   if (mode === 'prove') checkProofSyntax();
   if (mode === 'dictionary') searchDictionary(true);
   if (mode === 'notebook') openNotebookMode();
+  if (mode === 'practice') window.dispatchEvent(new Event('logos-practice'));
   if (changed) {
     window.scrollTo({top: 0, behavior: 'auto'});
     $('page-title').focus({preventScroll: true});   // lectores de pantalla anuncian la sección nueva

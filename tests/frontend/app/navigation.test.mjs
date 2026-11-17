@@ -12,3 +12,8 @@ test('barra final tolerada, hash desconocido no es conocido', () => {
   assert.equal(routeFromHash('#/evaluar/'), 'evaluate');
   assert.equal(isKnownHash('#/nada'), false);
 });
+test('Practicar tiene ruta y el enlace anterior #practicar sigue funcionando', () => {
+  assert.equal(routeFromHash('#/practicar'), 'practice');
+  assert.equal(routeFromHash('#practicar'), 'practice');
+  assert.ok(isKnownHash('#practicar'));
+});

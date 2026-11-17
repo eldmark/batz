@@ -42,7 +42,50 @@ docker compose up --build      # detener: docker compose down
 
 La interfaz queda en `http://127.0.0.1:8765/`, publicada solo en este equipo. Otro puerto: `LOGOS_PORT=9000 docker compose up --build`.
 
-Abre `http://127.0.0.1:8765/` y pulsa «Ejemplo» (carga uno del modo en que estás), o «Cargar archivo» con uno de `ejemplos/*.logos`. La barra superior cambia entre cuatro modos: evaluar una fórmula en un modelo, demostrar una consecuencia, el diccionario y el cuaderno. La explicación se construye desde una traza verificada; cada nodo tiene un resumen, detalles desplegables y posición en la fórmula. Guía de defensa: `docs/DEFENSA.md`.
+Abre `http://127.0.0.1:8765/` y pulsa «Ejemplo» (carga uno del modo en que estás), o «Cargar archivo» con uno de `ejemplos/*.logos`. La barra superior cambia entre cinco modos: evaluar una fórmula en un modelo, demostrar una consecuencia, el diccionario, el cuaderno y practicar demostraciones. La explicación se construye desde una traza verificada; cada nodo tiene un resumen, detalles desplegables y posición en la fórmula. Guía de defensa: `docs/DEFENSA.md`.
+
+### Practicar: 50 demostraciones interactivas
+
+Abre `http://127.0.0.1:8765/#practicar` o pulsa **Practicar**. Son 50 ejercicios fijos, sin temática ni tiempo límite, divididos en tres categorías con sus propios contadores de progreso:
+
+| Categoría | Niveles | Recorrido |
+|---|---|---|
+| Introducción | 01–10 | Pruebas de uno o dos pasos: conectores, hipótesis, particularización, testigos e igualdad. |
+| Desafío | 11–40 | Contraposición, casos anidados, De Morgan, testigos nuevos, unicidad, funciones y primera inducción. |
+| Modo Leyenda | 41–50 | Peirce, principio del bebedor, alcance de cuantificadores, funciones inyectivas/sobreyectivas y lemas por inducción. |
+
+Las tres categorías están siempre disponibles. La dificultad aumenta por la combinación de estrategias y el control de dependencias, además de la extensión de las pruebas. La última demostración construye la conmutatividad de la suma en 49 pasos propios y tres inducciones; sus dos lemas también deben demostrarse.
+
+1. Elige un ejercicio. El objetivo y cada línea tienen su lectura española encima de la fórmula.
+2. Selecciona una regla; la ayuda explica cuántas referencias requiere y en qué orden.
+3. Escribe las referencias o toca los números de las líneas. Escribe la nueva fórmula con el teclado o los botones de símbolos. Completa el término, la variable o la plantilla si la regla los pide.
+4. Pulsa **Comprobar paso** (también Ctrl/⌘ + Enter). Un error conserva tu entrada. **Deshacer** elimina el último paso.
+5. El objetivo solo se completa si su prueba no depende de hipótesis ajenas a las premisas. Las hipótesis pendientes se pueden desplegar en cada línea. No son cajas Fitch: son las dependencias formales de cada derivación.
+
+Hay tres pistas por ejercicio y una solución de referencia desplegable. Leerla no completa el ejercicio. Se aceptan otras pruebas correctas y están disponibles todas las reglas, con las recomendadas primero. Los pasos, el borrador y las pistas se guardan en este navegador; al recargar se vuelven a verificar las pruebas guardadas. Si no hay almacenamiento local, se puede jugar durante la sesión.
+
+Los ejercicios aritméticos usan la notación funcional que admite el núcleo: `cero` representa 0, `s(t)` el sucesor, `suma(t,u)` la suma y `producto(t,u)` la multiplicación. Los axiomas y las instancias del esquema de inducción son premisas explícitas; no se evalúa la aritmética de Peano como si tuviera un modelo finito.
+
+Al actualizar desde la versión de diez ejercicios se conservan y revalidan las pruebas compatibles. Los antiguos 05, 06 y 10 se sustituyeron por ejercicios introductorios; sus borradores se archivan en el registro `previous` del progreso local. Los temas más avanzados reaparecen en Desafío. Una revisión matemática por ejercicio permite detectar futuros cambios de enunciado sin atribuir una solución antigua al nuevo problema.
+
+El banco y las pistas están en `src/logos/practice_bank.py`; el tutor y la API están en `src/logos/practice.py`. El servidor recalcula todos los contextos y comprueba los prefijos con el checker independiente; nunca confía en contextos o marcas de éxito del cliente. Al terminar verifica el certificado contra las premisas reales del ejercicio. Las pruebas se ejecutan con:
+
+```powershell
+$env:PYTHONPATH = "src;tests"
+python -m unittest discover -s tests -p test_practice.py -v
+```
+
+La validación opcional de navegador está en `scripts/validate_practice_browser.cjs`; requiere una instalación externa de Playwright y un servidor LOGOS activo. No se necesitan dependencias nuevas para ejecutar el juego. Para exportar sus fixtures desde la raíz del repositorio:
+
+```powershell
+$env:PYTHONPATH = "src"
+python -c "import json; from pathlib import Path; from logos.practice import EXERCISES; Path('practice-fixtures.json').write_text(json.dumps(EXERCISES), encoding='utf-8')"
+$env:LOGOS_PRACTICE_FIXTURES = "$PWD\practice-fixtures.json"
+# Opcional: PLAYWRIGHT_MODULE apunta al paquete playwright o playwright-core existente.
+# Opcional: PLAYWRIGHT_CHROMIUM_EXECUTABLE apunta a un Chromium ya instalado.
+# Opcional: LOGOS_BASE_URL cambia http://127.0.0.1:8765.
+node scripts/validate_practice_browser.cjs
+```
 
 La sección «Buscar un modelo donde sea falsa» busca una interpretación estricta que falsifique una **sentencia**. Usa tamaños de dominio 1–3, hasta 5000 candidatos o 2 segundos; si no encuentra uno, devuelve `unknown` y no afirma validez universal. El hallazgo se muestra como tablas (la relación binaria, como matriz) y se puede cargar en las tablas del modelo. «Exportar JSON» guarda firma, interpretación y fórmula; «Cargar archivo» valida el modelo antes de cargarlo.
 

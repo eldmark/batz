@@ -9,7 +9,9 @@
   <link rel="stylesheet" href="/tokens.css">
   <link rel="stylesheet" href="/style.css">
   <link rel="stylesheet" href="/styles/shell.css">
+  <link rel="stylesheet" href="/practice.css">
   <script type="module" src="/app.js"></script>
+  <script defer src="/practice.js"></script>
 </head>
 <body data-mode="home">
   <a class="skip-link" href="#main">Saltar al contenido</a>
@@ -24,6 +26,7 @@
         <p class="nav-group">Razonamiento</p>
         <a id="tab-evaluate" class="nav-link" href="#/evaluar"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5 8 14.5 16 5.5"/></svg><span class="nav-label">Evaluar modelo</span></a>
         <a id="tab-prove" class="nav-link" href="#/demostrar"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 5h12M4 10h8M4 15h10"/></svg><span class="nav-label">Demostrar</span></a>
+        <a id="tab-practice" class="nav-link" href="#/practicar"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3.5v3M10 13.5v3M3.5 10h3M13.5 10h3M10 7.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z"/></svg><span class="nav-label">Practicar</span></a>
         <p class="nav-group">Conocimiento</p>
         <a id="tab-notebook" class="nav-link" href="#/cuadernos"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 3.5h9a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H5zM8 3.5v13"/></svg><span class="nav-label">Cuadernos</span></a>
         <a id="tab-dictionary" class="nav-link" href="#/diccionario"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 4.5h6a2 2 0 0 1 2 2V16a2 2 0 0 0-2-2H4zM16 4.5h-4"/></svg><span class="nav-label">Diccionario</span></a>
@@ -48,6 +51,10 @@
         <h2 id="home-heading" class="home-question">¿Qué quieres aprender o comprobar hoy?</h2>
         <div id="home-body"></div>
       </section>
+  <section id="mode-practice" class="practice" aria-label="Practicar" hidden>
+    <div id="practice-root"><p class="pr-loading" role="status">Preparando tus ejercicios…</p></div>
+  </section>
+
   <section id="mode-evaluate" class="workspace" aria-label="Evaluar modelo" data-pane="model">
     <div class="subtabs" role="tablist" aria-label="Paso del modo Evaluar">
       <span class="pill" aria-hidden="true"></span>

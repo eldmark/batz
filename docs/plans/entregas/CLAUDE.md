@@ -18,6 +18,9 @@ Estado: en curso
   el contraste de motores es un `<details>` tras el veredicto (abierto solo si hay discrepancia real);
   las respuestas de Evaluar/Demostrar se descartan si las entradas cambiaron mientras llegaban (`evalInputs`, `proofInputs`).
 
+- Integración de `origin/main` (PR #3, juego «Practicar»): ruta `#/practicar` (el enlace anterior `#practicar` sigue valiendo),
+  entrada en la barra lateral bajo Razonamiento; `practice.js` arranca también al abrir la ruta directamente.
+
 ## Archivos
 
 Nuevos: `web/app/navigation.js`, `web/features/home/home.js`, `web/styles/shell.css`,
@@ -27,7 +30,7 @@ Nuevos: `web/app/navigation.js`, `web/features/home/home.js`, `web/styles/shell.
 
 ## Verificación
 
-- `PYTHONPATH=src:tests python3 -m unittest discover -s tests`, `node --test tests/frontend/app/`.
+- `PYTHONPATH=src:tests python3 -m unittest discover -s tests`, `node --test tests/frontend/app/navigation.test.mjs`.
 - Playwright (Chromium) a 1440 y 390 px: navegación, Atrás/Adelante, borrador conservado, hash
   desconocido, recarga, ejercicio 1 con aviso y Deshacer, sin errores de consola ni desborde horizontal.
 
