@@ -1,32 +1,32 @@
 ﻿<#
 .SYNOPSIS
-    Instala la voz local de LOGOS (whisper.cpp) para el usuario actual, sin administrador.
+    Instala la voz local de Bat’z (whisper.cpp) para el usuario actual, sin administrador.
 
 .DESCRIPTION
     1. ffmpeg con winget (paquete portátil Gyan.FFmpeg, por usuario), si no está ya.
     2. whisper.cpp 1.9.5 para Windows x64 (CPU): zip oficial de GitHub con SHA-256 fijado.
     3. El modelo ggml-base.bin (u otro con -Modelo) de Hugging Face, con tamaño y SHA-256 fijados.
 
-    whisper y el modelo quedan en %LOCALAPPDATA%\LOGOS\voz, donde LOGOS los encuentra sin
+    whisper y el modelo quedan en %LOCALAPPDATA%\Batz\voz, donde Bat’z los encuentra sin
     variables de entorno y sin reiniciarse. Cada descarga y cada extracción usan una carpeta
     temporal nueva, y nada se instala sin comprobar antes su SHA-256. Se puede repetir: lo que
     ya está instalado y verificado se salta.
 
     Ejecutar:  powershell -ExecutionPolicy Bypass -File scripts\instalar_voz.ps1
-    Quitar:    Remove-Item -Recurse -Force "$env:LOCALAPPDATA\LOGOS\voz"
+    Quitar:    Remove-Item -Recurse -Force "$env:LOCALAPPDATA\Batz\voz"
                winget uninstall --id Gyan.FFmpeg -e
 
 .PARAMETER Modelo
     base (por defecto, 142 MiB), small (466 MiB: más preciso y más lento) o tiny (75 MiB).
 
 .PARAMETER Destino
-    Otra carpeta. LOGOS solo la usa si defines LOGOS_WHISPER_CLI y LOGOS_WHISPER_MODEL.
+    Otra carpeta. Bat’z solo la usa si defines BATZ_WHISPER_CLI y BATZ_WHISPER_MODEL.
 #>
 [CmdletBinding()]
 param(
     [ValidateSet('base', 'small', 'tiny')]
     [string] $Modelo = 'base',
-    [string] $Destino = (Join-Path $env:LOCALAPPDATA 'LOGOS\voz')
+    [string] $Destino = (Join-Path $env:LOCALAPPDATA 'Batz\voz')
 )
 
 Set-StrictMode -Version 2.0
@@ -48,7 +48,7 @@ $Modelos = @{
     small = @{ Bytes = 487601967; Sha256 = '1be3a9b2063867b937e64e2ec7483364a79917e157fa98c5d94b5c1fffea987b' }
     tiny  = @{ Bytes = 77691713;  Sha256 = 'be07e048e1e599ad46341c8d2a135645097a538221678b7acdd1b1919c6e1b21' }
 }
-$Habitual = Join-Path $env:LOCALAPPDATA 'LOGOS\voz'
+$Habitual = Join-Path $env:LOCALAPPDATA 'Batz\voz'
 $Destino = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Destino)
 $Temporales = New-Object System.Collections.Generic.List[string]
 
@@ -62,7 +62,7 @@ function Get-Sha256([string] $ruta) {
 function New-CarpetaTemporal {
     # GetTempPath da la ruta larga: $env:TEMP puede ser un nombre corto 8.3 (perfiles con acentos)
     # que algunos cmdlets de PowerShell 5.1 rechazan.
-    $ruta = Join-Path ([IO.Path]::GetTempPath()) ('logos-voz-' + [guid]::NewGuid().ToString('N').Substring(0, 12))
+    $ruta = Join-Path ([IO.Path]::GetTempPath()) ('batz-voz-' + [guid]::NewGuid().ToString('N').Substring(0, 12))
     New-Item -ItemType Directory -Path $ruta | Out-Null
     $Temporales.Add($ruta)
     $ruta
@@ -176,7 +176,7 @@ function Get-VersionWhisper([string] $cli) {
 }
 
 try {
-    Write-Host "Voz local de LOGOS en $Destino"
+    Write-Host "Voz local de Bat’z en $Destino"
     $admin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(
         [Security.Principal.WindowsBuiltInRole]::Administrator)
     if ($admin) { Write-Warning 'No hace falta ser administrador: esto instala solo para el usuario actual.' }
@@ -218,14 +218,14 @@ try {
     Nota (Get-VersionWhisper $cli)
 
     Write-Host ''
-    Write-Host 'Listo. LOGOS usa esta voz local sin variables de entorno y sin reiniciarse.' -ForegroundColor Green
+    Write-Host 'Listo. Bat’z usa esta voz local sin variables de entorno y sin reiniciarse.' -ForegroundColor Green
     if ($Destino.TrimEnd('\') -ne $Habitual.TrimEnd('\')) {
-        Nota 'Esta no es la carpeta habitual: define estas variables antes de abrir LOGOS:'
-        Nota "  `$env:LOGOS_WHISPER_CLI = '$cli'"
-        Nota "  `$env:LOGOS_WHISPER_MODEL = '$modeloDestino'"
+        Nota 'Esta no es la carpeta habitual: define estas variables antes de abrir Bat’z:'
+        Nota "  `$env:BATZ_WHISPER_CLI = '$cli'"
+        Nota "  `$env:BATZ_WHISPER_MODEL = '$modeloDestino'"
     }
-    if ($env:LOGOS_WHISPER_CLI -or $env:LOGOS_WHISPER_MODEL) {
-        Nota 'Aviso: LOGOS_WHISPER_CLI o LOGOS_WHISPER_MODEL están definidas y mandan sobre esta carpeta.'
+    if ($env:BATZ_WHISPER_CLI -or $env:BATZ_WHISPER_MODEL) {
+        Nota 'Aviso: BATZ_WHISPER_CLI o BATZ_WHISPER_MODEL están definidas y mandan sobre esta carpeta.'
     }
     $otro = Get-Command whisper-cli.exe -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
     if ($otro) { Nota "Aviso: el whisper-cli del PATH ($($otro.Source)) tiene prioridad sobre esta carpeta." }

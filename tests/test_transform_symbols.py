@@ -1,7 +1,7 @@
 import random
 import unittest
 
-from logos import (And, Const, Eq, Exists, Forall, Func, Implies, LogosError, Not,
+from batz import (And, Const, Eq, Exists, Forall, Func, Implies, BatzError, Not,
                    Pred, Signature, Var, alpha_equiv, alpha_rename, bound_vars, check,
                    free_vars, is_closed, parse, parse_checked, rename_bound_canonical,
                    substitute, to_string)
@@ -101,7 +101,7 @@ class SubstitutionProperties(unittest.TestCase):
             f = rand_formula(rng, 3)
             t = rand_term(rng, 2)
             g = substitute(f, {"x": t})
-            from logos.transform import term_vars
+            from batz.transform import term_vars
             fv = free_vars(f)
             expected = (fv - {"x"}) | (term_vars(t) if "x" in fv else frozenset())
             self.assertEqual(free_vars(g), expected, (to_string(f), to_string(t)))
@@ -119,21 +119,21 @@ class SubstitutionProperties(unittest.TestCase):
 
 class SymbolTests(unittest.TestCase):
     def test_arity_mismatch_predicate(self):
-        with self.assertRaises(LogosError) as cm:
+        with self.assertRaises(BatzError) as cm:
             parse_checked("P(x) ∧ P(x, y)")
         e = cm.exception
         self.assertEqual((e.stage, e.code), ("semantic", "arity_mismatch"))
         self.assertEqual(e.span.start, 7)
 
     def test_arity_mismatch_function(self):
-        with self.assertRaises(LogosError) as cm:
+        with self.assertRaises(BatzError) as cm:
             parse_checked("Q(f(x)) ∧ Q(f(x, y))")
         self.assertEqual(cm.exception.code, "arity_mismatch")
 
     def test_declared_signature(self):
         sig = Signature(constants={"a"}, predicates={"P": 1}, functions={"f": 2})
         parse_checked("P(f(a, a))", sig, strict=True)
-        with self.assertRaises(LogosError) as cm:
+        with self.assertRaises(BatzError) as cm:
             parse_checked("P(a, a)", sig)
         self.assertEqual(cm.exception.code, "arity_mismatch")
 
@@ -141,12 +141,12 @@ class SymbolTests(unittest.TestCase):
         sig = Signature(constants={"a"}, predicates={"P": 1})
         for text in ["Q(a)", "P(f(a))"]:
             with self.subTest(text=text):
-                with self.assertRaises(LogosError) as cm:
+                with self.assertRaises(BatzError) as cm:
                     parse_checked(text, sig, strict=True)
                 self.assertEqual(cm.exception.code, "undeclared_symbol")
 
     def test_kind_clash(self):
-        with self.assertRaises(LogosError) as cm:
+        with self.assertRaises(BatzError) as cm:
             parse_checked("P(f) ∧ Q(f(x))")
         self.assertEqual(cm.exception.code, "symbol_kind_clash")
 

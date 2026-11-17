@@ -1,7 +1,7 @@
 """Utilidades de prueba: generador aleatorio de fórmulas (property-based sin dependencias)."""
 import random
 
-from logos import (And, Bottom, Const, Eq, Exists, Forall, Func, Iff, Implies, Not, Or,
+from batz import (And, Bottom, Const, Eq, Exists, Forall, Func, Iff, Implies, Not, Or,
                    Pred, Var)
 
 VARS = ["x", "y", "z", "w"]
@@ -39,7 +39,7 @@ def rand_formula(rng, depth, vars_=VARS):
 # --- modelos ----------------------------------------------------------------
 import itertools
 
-from logos import FiniteModel, free_vars
+from batz import FiniteModel, free_vars
 
 
 def rand_model(rng, max_size=3):
@@ -57,7 +57,7 @@ def rand_model(rng, max_size=3):
 
 def close(f):
     """Cierra una fórmula cuantificando universalmente sus variables libres."""
-    from logos import Forall
+    from batz import Forall
     for v in sorted(free_vars(f), reverse=True):
         f = Forall(v, f)
     return f

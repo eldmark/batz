@@ -5,12 +5,12 @@ import time
 import unittest
 from pathlib import Path
 
-os.environ["LOGOS_LEXICON"] = str(Path(tempfile.mkdtemp()) / "lexico_usuario.tsv")
-os.environ["LOGOS_NOTEBOOKS"] = tempfile.mkdtemp()
+os.environ["BATZ_LEXICON"] = str(Path(tempfile.mkdtemp()) / "lexico_usuario.tsv")
+os.environ["BATZ_NOTEBOOKS"] = tempfile.mkdtemp()
 
-from logos import FiniteModel, LogosError, is_true, parse
-from logos import notebook
-from logos.server import handle_api
+from batz import FiniteModel, BatzError, is_true, parse
+from batz import notebook
+from batz.server import handle_api
 
 CLASS = """Apuntes de la clase.
 - Todo estudiante que estudia aprueba.
@@ -141,7 +141,7 @@ class Questions(unittest.TestCase):
         self.assertEqual(chosen["answer"], "undecided")
 
     def test_a_question_outside_the_grammar_is_an_error(self):
-        with self.assertRaises(LogosError):
+        with self.assertRaises(BatzError):
             self.ask("¿Aprueba Juan?")
 
     def test_question_lead_ins_are_dropped(self):
@@ -169,7 +169,7 @@ class Choices(unittest.TestCase):
         # deshacer la elección la saca otra vez
         book = call("choose", id=book["id"], source=source["id"], sentence=pending["i"], formula=None)["notebook"]
         self.assertEqual(book["sources"][0]["sentences"][pending["i"]]["status"], "choose")
-        with self.assertRaises(LogosError):
+        with self.assertRaises(BatzError):
             call("choose", id=book["id"], source=source["id"], sentence=pending["i"], formula="P(a)")
 
     def test_a_disabled_source_is_not_used(self):
@@ -237,23 +237,23 @@ class Storage(unittest.TestCase):
         self.assertIn((book["id"], "Semana 3"), [(n["id"], n["title"]) for n in call("list")["notebooks"]])
         call("delete", id=book["id"])
         self.assertNotIn(book["id"], [n["id"] for n in call("list")["notebooks"]])
-        with self.assertRaises(LogosError):
+        with self.assertRaises(BatzError):
             call("get", id=book["id"])
 
     def test_invalid_input_is_rejected(self):
         book = new_notebook()
         for bad_id in ("../secreto", "c123", 7, None, "c00000000000g"):
-            with self.subTest(id=bad_id), self.assertRaises(LogosError):
+            with self.subTest(id=bad_id), self.assertRaises(BatzError):
                 call("get", id=bad_id)
         for text in ("", "   ", "…", "x" * (notebook.MAX_TEXT + 1), None):
-            with self.subTest(text=str(text)[:10]), self.assertRaises(LogosError):
+            with self.subTest(text=str(text)[:10]), self.assertRaises(BatzError):
                 call("source-add", id=book["id"], title="A", text=text)
         for package in (None, [], {"sources": "no"}, {"sources": [{"title": "A"}]}):
-            with self.subTest(package=package), self.assertRaises(LogosError):
+            with self.subTest(package=package), self.assertRaises(BatzError):
                 call("import", notebook=package)
-        with self.assertRaises(LogosError):
+        with self.assertRaises(BatzError):
             call("no-existe", id=book["id"])
-        with self.assertRaises(LogosError):
+        with self.assertRaises(BatzError):
             call("source-remove", id=book["id"], source="f9")
         self.assertEqual(len(list(notebook.folder().glob("*.tmp"))), 0)
 

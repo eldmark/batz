@@ -5,9 +5,9 @@
     python scripts/auditar_lexico.py --confianza alta         # solo los avisos de confianza alta
     python scripts/auditar_lexico.py --formato markdown       # tabla con columna de visto bueno
     python scripts/auditar_lexico.py --formato tsv            # una fila por aviso (hoja de cálculo)
-    python scripts/auditar_lexico.py src/logos/lexicon.tsv datos/lexico_usuario.tsv   # varios archivos juntos
+    python scripts/auditar_lexico.py src/batz/lexicon.tsv datos/lexico_usuario.tsv   # varios archivos juntos
 
-Las entradas se cargan con `logos.lexicon` y se revisa lo que el generador produce de verdad
+Las entradas se cargan con `batz.lexicon` y se revisa lo que el generador produce de verdad
 (plural, femenino y las seis formas verbales). Esas formas se comparan con reglas escritas aquí
 aparte, con listas de excepciones conocidas y con las palabras que ya trae la gramática
 (`spanish_grammar.txt`). Cada aviso dice lema, categoría, regla, formas generadas, arreglo
@@ -30,9 +30,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
-from logos import lexicon  # noqa: E402
-from logos.spanish_cyk import GRAMMAR  # noqa: E402
-from logos.spanish_tagger import TAGS, plain  # noqa: E402
+from batz import lexicon  # noqa: E402
+from batz.spanish_cyk import GRAMMAR  # noqa: E402
+from batz.spanish_tagger import TAGS, plain  # noqa: E402
 
 CONFIANZAS = ("alta", "media", "baja")
 REGLAS = {
@@ -451,7 +451,7 @@ class Auditoria:
             self.formato(fila)
             try:
                 self.formas[id(e)] = formas_de(e)
-            except Exception as exc:          # el generador puede lanzar LogosError, KeyError…
+            except Exception as exc:          # el generador puede lanzar BatzError, KeyError…
                 self.avisar(fila, "alta", "formato", f"no se puede flexionar: {exc}", "corregir la fila")
                 continue
             for value in self.formas[id(e)].values():
@@ -925,7 +925,7 @@ def informe_tsv(avisos):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Señala errores probables del léxico del español.")
-    ap.add_argument("archivos", nargs="*", type=Path, help="TSV a revisar juntos (por defecto, src/logos/lexicon.tsv)")
+    ap.add_argument("archivos", nargs="*", type=Path, help="TSV a revisar juntos (por defecto, src/batz/lexicon.tsv)")
     ap.add_argument("--confianza", default="alta,media,baja",
                     help="confianzas a mostrar, separadas por comas (p. ej. «alta» o «media,baja»)")
     ap.add_argument("--formato", choices=("texto", "markdown", "tsv"), default="texto")

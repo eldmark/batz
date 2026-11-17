@@ -4,10 +4,10 @@ import tempfile
 import unittest
 from pathlib import Path
 
-os.environ["LOGOS_LEXICON"] = str(Path(tempfile.mkdtemp()) / "lexico_usuario.tsv")
+os.environ["BATZ_LEXICON"] = str(Path(tempfile.mkdtemp()) / "lexico_usuario.tsv")
 
-from logos import lexicon, translate_spanish
-from logos.lexicon import _derived, _read
+from batz import lexicon, translate_spanish
+from batz.lexicon import _derived, _read
 
 
 class Derived(unittest.TestCase):

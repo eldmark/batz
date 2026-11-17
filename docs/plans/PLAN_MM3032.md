@@ -55,7 +55,7 @@ Fuera del PDF y ya hecho: buscador de pruebas, checker independiente, decisor pr
 Pantallas (una sola vista con 4 pasos):
 1. **Lenguaje:** tabla editable de símbolos (nombre, tipo constante/función/predicado, aridad).
 2. **Interpretación:** dominio como lista; por cada símbolo, una tabla (funciones: celda por cada `D^n`; predicados: casillas marcables para cada tupla). Se bloquea «Evaluar» si hay relación vacía o celda sin llenar.
-3. **Fórmula:** campo de texto + botones `¬ ∧ ∨ → ∀ ∃ ( )` (+ `↔`, `=`, `⊥`) que insertan en el cursor; el teclado funciona igual (alias ASCII ya soportados). Errores subrayados con el span del `LogosError`.
+3. **Fórmula:** campo de texto + botones `¬ ∧ ∨ → ∀ ∃ ( )` (+ `↔`, `=`, `⊥`) que insertan en el cursor; el teclado funciona igual (alias ASCII ya soportados). Errores subrayados con el span del `BatzError`.
 4. **Entorno y resultado:** lista de variables libres con selector de `D`; badge Verdadero/Falso y árbol de explicación de M2.
 
 Criterios: ninguna entrada inválida muestra Verdadero/Falso; mensajes en español; flujo completo con teclado.
@@ -125,7 +125,7 @@ Deben estar implementados, probados y justificados; elegir **dos o tres**, no to
 
 ## 9. Diccionario del español (2026-11-12)
 
-- **Léxico base** `src/logos/lexicon.tsv`: unos 1500 lemas (sustantivos con género, adjetivos, verbos con su uso y nombres propios). De cada lema se generan sus formas: plural, femenino y seis formas verbales (presente, subjuntivo y pasado, singular y plural). Lo generó un modelo de lenguaje fuera de la aplicación y está **pendiente de revisión humana**; se corrige editando el archivo.
+- **Léxico base** `src/batz/lexicon.tsv`: unos 1500 lemas (sustantivos con género, adjetivos, verbos con su uso y nombres propios). De cada lema se generan sus formas: plural, femenino y seis formas verbales (presente, subjuntivo y pasado, singular y plural). Lo generó un modelo de lenguaje fuera de la aplicación y está **pendiente de revisión humana**; se corrige editando el archivo.
 - **Verbos irregulares**: tres mecanismos, del más barato al más explícito. Reglas ortográficas (`buscar → busque`, `proteger → proteja`, `crecer → crezca`, `construir → construye`), cambio de raíz declarado (`cambio=ue|ie|i`: `dormir → duerme, durmió`) y, para los del todo irregulares, las seis formas escritas (`formas=tiene,tienen,tenga,tengan,tuvo,tuvieron`). El símbolo lógico es siempre el infinitivo: `duermen → Dormir`.
 - **Sustantivos**: el género no se deduce de la terminación (`problema` es masculino, `mano` femenino); se guarda en el diccionario, con `C` para los que valen para los dos (`artista`). Para una palabra que no está, el modelo propone género usando el determinante de la frase y la gramática descarta lo que no concuerda.
 - **Página «Diccionario»** (tercer modo): buscar por lema o por cualquier forma, ver formas y símbolo, y añadir palabras. Al consultar una palabra que no está, el etiquetador propone categoría, género o uso y lema; la persona corrige y guarda. Las altas van a `datos/lexico_usuario.tsv` (volumen en Docker) y sirven de inmediato.
@@ -175,7 +175,7 @@ Deben estar implementados, probados y justificados; elegir **dos o tres**, no to
 
 ## 13. Visor de árboles (2026-11-16)
 
-Cada fórmula se puede ver como árbol (`src/logos/tree.py`, visor SVG en `app.js`, sin dependencias):
+Cada fórmula se puede ver como árbol (`src/batz/tree.py`, visor SVG en `app.js`, sin dependencias):
 
 - **Al evaluar** (también las del archivo cargado, al abrirlas): el resultado tiene un selector «Razones | Árbol». El árbol tiene dos vistas: **Evaluación** (valor V/F en cada nodo, una rama por elemento de D bajo cada cuantificador, y para cada átomo la tupla y si pertenece a la relación) y **Estructura** (el árbol sintáctico).
 - **En cada lectura del español** («Ver árbol») y **en cada premisa y conclusión del modo Demostrar** («Árbol»): solo estructura, porque ahí no hay modelo. En lógica proposicional las letras salen como las escribió la persona (`p`, `q`).

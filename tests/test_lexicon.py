@@ -4,11 +4,11 @@ import tempfile
 import unittest
 from pathlib import Path
 
-os.environ["LOGOS_LEXICON"] = str(Path(tempfile.mkdtemp()) / "lexico_usuario.tsv")
+os.environ["BATZ_LEXICON"] = str(Path(tempfile.mkdtemp()) / "lexico_usuario.tsv")
 
-from logos import LogosError, lexicon, translate_spanish
-from logos.lexicon import Entry, conjugate, feminine, plural
-from logos.server import handle_api
+from batz import BatzError, lexicon, translate_spanish
+from batz.lexicon import Entry, conjugate, feminine, plural
+from batz.server import handle_api
 
 
 class Inflection(unittest.TestCase):
@@ -80,16 +80,16 @@ class ConditionalWithImplicitSubject(unittest.TestCase):
         self.assertEqual([r.text for r in translate_spanish("Si Juan estudia, aprueba").readings], ["Estudiar(juan) → Aprobar(juan)"])
 
     def test_gender_disagreement_suggests_the_fix(self):
-        with self.assertRaises(LogosError) as ctx:
+        with self.assertRaises(BatzError) as ctx:
             translate_spanish("si una persona es humano entonces es mortal")
         self.assertIn("humana", ctx.exception.message)
         self.assertEqual((ctx.exception.span.start, ctx.exception.span.end), (18, 24))
-        with self.assertRaises(LogosError) as ctx:
+        with self.assertRaises(BatzError) as ctx:
             translate_spanish("María es alto")                 # la especificación sigue rechazándola
         self.assertIn("alta", ctx.exception.message)
 
     def test_bare_article_explains_itself(self):
-        with self.assertRaises(LogosError) as ctx:
+        with self.assertRaises(BatzError) as ctx:
             translate_spanish("Los políticos mienten")
         self.assertIn("todos los", ctx.exception.message)
 
@@ -125,7 +125,7 @@ class UserWords(unittest.TestCase):
                         {"lemma": "correr", "category": "V", "feature": "I", "extra": "formas=a,b"},
                         {"lemma": "perro", "category": "N", "feature": "M"}]:
             with self.subTest(payload=payload):
-                with self.assertRaises(LogosError):
+                with self.assertRaises(BatzError):
                     handle_api("/api/lexicon/add", payload)
         self.assertFalse(lexicon.user_path().is_file())
 

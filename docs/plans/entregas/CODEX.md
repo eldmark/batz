@@ -35,12 +35,12 @@ dominio usan el color de texto existente para mejorar contraste sobre el fondo c
 
 | Ruta web que debe servir Python | Archivo | MIME |
 |---|---|---|
-| `/features/explanation-player/index.js` | `src/logos/web/features/explanation-player/index.js` | `text/javascript; charset=utf-8` |
-| `/features/explanation-player/events.js` | `src/logos/web/features/explanation-player/events.js` | `text/javascript; charset=utf-8` |
-| `/features/explanation-player/fullscreen.js` | `src/logos/web/features/explanation-player/fullscreen.js` | `text/javascript; charset=utf-8` |
-| `/features/explanation-player/player.css` | `src/logos/web/features/explanation-player/player.css` | `text/css; charset=utf-8` |
+| `/features/explanation-player/index.js` | `src/batz/web/features/explanation-player/index.js` | `text/javascript; charset=utf-8` |
+| `/features/explanation-player/events.js` | `src/batz/web/features/explanation-player/events.js` | `text/javascript; charset=utf-8` |
+| `/features/explanation-player/fullscreen.js` | `src/batz/web/features/explanation-player/fullscreen.js` | `text/javascript; charset=utf-8` |
+| `/features/explanation-player/player.css` | `src/batz/web/features/explanation-player/player.css` | `text/css; charset=utf-8` |
 
-Se modificó también `src/logos/web/story3d.js`, conservando su URL. Mantener las
+Se modificó también `src/batz/web/story3d.js`, conservando su URL. Mantener las
 rutas existentes de GLB, vendor y fuentes. No servir `tests/frontend/player/`
 desde producción. El componente no necesita npm, CDN, framework ni compilación.
 
@@ -148,7 +148,7 @@ Resultados obtenidos:
 Comando del navegador en este equipo (con el servidor de demo activo):
 
 ```bash
-NODE_PATH=/tmp/logos-player-browser/node_modules LOGOS_BROWSER=/home/dmark123/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome node tests/frontend/player/check.cjs
+NODE_PATH=/tmp/logos-player-browser/node_modules BATZ_BROWSER=/home/dmark123/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome node tests/frontend/player/check.cjs
 ```
 
 Capturas revisadas en `/tmp/logos-player-verification/escritorio-3d.png` y

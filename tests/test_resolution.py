@@ -2,11 +2,11 @@
 import random
 import unittest
 
-from logos import And, Implies, Not, Or, Iff, Pred, Bottom, parse
-from logos.propositional import atoms, valuations, value
-from logos.resolution import ResolutionConfig, contrast, resolve, resolve_text
-from logos.resolution.clausify import Clausifier, clause_text
-from logos.resolution.prover import normalize, unify
+from batz import And, Implies, Not, Or, Iff, Pred, Bottom, parse
+from batz.propositional import atoms, valuations, value
+from batz.resolution import ResolutionConfig, contrast, resolve, resolve_text
+from batz.resolution.clausify import Clausifier, clause_text
+from batz.resolution.prover import normalize, unify
 from helpers import close, rand_formula
 from proof_corpus import INVALID, VALID
 from semantic_helpers import countermodel, small_models

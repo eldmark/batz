@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readdirSync, readFileSync, statSync} from 'node:fs';
 import {join} from 'node:path';
 
-const WEB = new URL('../../../src/logos/web/', import.meta.url).pathname;
+const WEB = new URL('../../../src/batz/web/', import.meta.url).pathname;
 const files = dir => readdirSync(dir).flatMap(name => {
   const path = join(dir, name);
   return statSync(path).isDirectory() ? (name === 'vendor' || name === 'fonts' ? [] : files(path)) : path.endsWith('.css') ? [path] : [];

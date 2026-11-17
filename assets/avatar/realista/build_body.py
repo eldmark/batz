@@ -1,4 +1,4 @@
-"""Cuerpo: esqueleto de LOGOS ajustado a la malla, pesos automáticos, ropa (polo, pantalón, zapatos), boca y GLB.
+"""Cuerpo: esqueleto de Bat’z ajustado a la malla, pesos automáticos, ropa (polo, pantalón, zapatos), boca y GLB.
 blender -b rig_src.blend --python build_body.py -- <dir>/ out.blend out.glb"""
 import bpy, bmesh, json, sys, math, numpy as np
 from mathutils import Vector

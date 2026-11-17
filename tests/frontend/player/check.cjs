@@ -4,8 +4,8 @@ const {mkdir} = require('node:fs/promises');
 const path = require('node:path');
 const {chromium} = require('playwright');
 
-const base = process.env.LOGOS_PLAYER_URL || 'http://127.0.0.1:8877';
-const artifacts = process.env.LOGOS_PLAYER_ARTIFACTS || '/tmp/logos-player-verification';
+const base = process.env.BATZ_PLAYER_URL || 'http://127.0.0.1:8877';
+const artifacts = process.env.BATZ_PLAYER_ARTIFACTS || '/tmp/logos-player-verification';
 const stubScene = `
 window.sceneStats ||= {created: 0, disposed: 0, events: [], live: 0};
 export function createStoryScene(host, model, options) {
@@ -36,13 +36,13 @@ async function speechMock() {
 (async () => {
   await mkdir(artifacts, {recursive:true});
   const browser = await chromium.launch({
-    executablePath: process.env.LOGOS_BROWSER || undefined,
+    executablePath: process.env.BATZ_BROWSER || undefined,
     headless: true,
     args: ['--no-sandbox', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'],
   });
   let count = 0;
   async function check(name, task, {stub=true, mockSpeech=false, setup=null} = {}) {
-    if (process.env.LOGOS_PLAYER_FILTER && !name.includes(process.env.LOGOS_PLAYER_FILTER)) return;
+    if (process.env.BATZ_PLAYER_FILTER && !name.includes(process.env.BATZ_PLAYER_FILTER)) return;
     const context = await browser.newContext({viewport:{width:1440,height:1000}});
     const page = await context.newPage(), errors = [], external = [];
     page.on('pageerror', error => errors.push(error.message));

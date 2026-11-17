@@ -1,6 +1,6 @@
 # Arquitectura de Bat’z
 
-> Estado: actualizado a la rama de entrega. Todos los módulos de la tabla existen y tienen pruebas. Este documento es la vista de diseño (flujo, reglas de dependencia, dos caminos de prueba); el recorrido por el código, con funciones y límites, está en [`docs/ARQUITECTURA.md`](../ARQUITECTURA.md). El proyecto se llamaba LOGOS antes del renombrado a Bat’z; el paquete Python es `batz` (`src/batz/`).
+> Estado: actualizado a la rama de entrega. Todos los módulos de la tabla existen y tienen pruebas. Este documento es la vista de diseño (flujo, reglas de dependencia, dos caminos de prueba); el recorrido por el código, con funciones y límites, está en [`docs/ARQUITECTURA.md`](../ARQUITECTURA.md). El proyecto se llamaba Bat’z antes del renombrado a Bat’z; el paquete Python es `batz` (`src/batz/`).
 
 ## 1. Flujo de datos
 
@@ -23,7 +23,7 @@ Todos existen. «Hecho» significa con código y pruebas en `tests/`.
 | Módulo | Estado | Responsabilidad | Depende de |
 |---|---|---|---|
 | `ast.py` | hecho | Nodos inmutables; los constructores rechazan nodos mal formados | — |
-| `errors.py` | hecho | `LogosError` (nombre conservado del código anterior) y el contrato `Diagnostic` | — |
+| `errors.py` | hecho | `BatzError` (nombre conservado del código anterior) y el contrato `Diagnostic` | — |
 | `lexer.py`, `parser.py` | hecho | Tokens con offsets; parser descendente; modo opcional `propositional` | ast, errors |
 | `printer.py` | hecho | Texto canónico Unicode/ASCII, `parse(print(f)) == f` | ast |
 | `transform.py` | hecho | Libres/ligadas, alfa-equivalencia, sustitución sin captura | ast |

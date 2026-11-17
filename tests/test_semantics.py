@@ -3,8 +3,8 @@ import itertools
 import random
 import unittest
 
-from logos import (And, Bottom, Const, Eq, Exists, FiniteModel, Forall, Func, Iff, Implies,
-                   LogosError, Not, Or, Pred, Var, check_trace, evaluate, holds,
+from batz import (And, Bottom, Const, Eq, Exists, FiniteModel, Forall, Func, Iff, Implies,
+                   BatzError, Not, Or, Pred, Var, check_trace, evaluate, holds,
                    is_countermodel, is_true, parse, to_string)
 from helpers import all_models, close, rand_formula, rand_model
 
@@ -15,7 +15,7 @@ def m(domain, preds=None, consts=None, funcs=None):
 
 
 def code_of(fn, *a, **k):
-    with unittest.TestCase().assertRaises(LogosError) as cm:
+    with unittest.TestCase().assertRaises(BatzError) as cm:
         fn(*a, **k)
     return cm.exception.code
 
@@ -196,7 +196,7 @@ class ModelAndSymbolErrors(unittest.TestCase):
         self.assertEqual(code_of(is_true, model, parse("∃x P(f(x))")), "missing_interpretation")
 
     def test_missing_symbol_has_span(self):
-        with self.assertRaises(LogosError) as cm:
+        with self.assertRaises(BatzError) as cm:
             is_true(m([0], {"P": (1, [])}), parse("∃x Q(x)"))
         self.assertEqual(cm.exception.span.start, 3)
 

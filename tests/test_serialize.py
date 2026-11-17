@@ -3,8 +3,8 @@ import json
 import random
 import unittest
 
-from logos import LogosError, parse, to_string
-from logos.serialize import formula_from_dict, formula_to_dict
+from batz import BatzError, parse, to_string
+from batz.serialize import formula_from_dict, formula_to_dict
 from helpers import rand_formula
 
 
@@ -60,7 +60,7 @@ class FormulaJson(unittest.TestCase):
         ]
         for d in bad:
             with self.subTest(d=d):
-                with self.assertRaises(LogosError) as cm:
+                with self.assertRaises(BatzError) as cm:
                     formula_from_dict(d)
                 self.assertEqual(cm.exception.code, "invalid_ast")
 
@@ -71,8 +71,8 @@ if __name__ == "__main__":
 
 class ResultEnvelope(unittest.TestCase):
     def test_envelopes_are_json_and_reload(self):
-        from logos import FiniteModel, decide
-        from logos.proof import ProofCertificate, SearchConfig, prove_text, verify
+        from batz import FiniteModel, decide
+        from batz.proof import ProofCertificate, SearchConfig, prove_text, verify
         r = prove_text(["p → q", "p"], "q", propositional=True)
         d = json.loads(json.dumps(r.to_dict()))
         self.assertEqual(d["status"], "proved")
@@ -84,5 +84,5 @@ class ResultEnvelope(unittest.TestCase):
         bad = prove_text(["A ∧"], "A").to_dict()
         self.assertEqual((bad["status"], bad["diagnostic"]["stage"]), ("invalid_input", "syntactic"))
         self.assertEqual(prove_text([], "A").to_dict()["status"], "unknown")
-        from logos.serialize import result_to_dict
+        from batz.serialize import result_to_dict
         self.assertRaises(ValueError, result_to_dict, "maybe")

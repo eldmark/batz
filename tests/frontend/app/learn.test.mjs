@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {HISTORY, HISTORY_TOPICS, CARDS, CARD_TOPICS} from '../../../src/logos/web/features/learn/data.js';
-import {PEOPLE, person, initials} from '../../../src/logos/web/features/people/people.js';
-import {visibleMilestones, clampIndex, stepIndex, neighbors, isFirst, isLast, indexAfterFilter, nearestIndex, swipeDelta, trackYear, peopleOf, unknownSlugs, needsVisibleCredit, announce} from '../../../src/logos/web/features/learn/timeline.js';
-import {shuffle, filterCards, emptyProgress, sanitizeProgress, loadProgress, saveProgress, clearProgress, mark, statusOf, summary, buildQueue, step, STORAGE_KEY} from '../../../src/logos/web/features/learn/deck.js';
+import {HISTORY, HISTORY_TOPICS, CARDS, CARD_TOPICS} from '../../../src/batz/web/features/learn/data.js';
+import {PEOPLE, person, initials} from '../../../src/batz/web/features/people/people.js';
+import {visibleMilestones, clampIndex, stepIndex, neighbors, isFirst, isLast, indexAfterFilter, nearestIndex, swipeDelta, trackYear, peopleOf, unknownSlugs, needsVisibleCredit, announce} from '../../../src/batz/web/features/learn/timeline.js';
+import {shuffle, filterCards, emptyProgress, sanitizeProgress, loadProgress, saveProgress, clearProgress, mark, statusOf, summary, buildQueue, step, STORAGE_KEY} from '../../../src/batz/web/features/learn/deck.js';
 
 const seeded = seed => () => (seed = (seed * 1664525 + 1013904223) % 4294967296) / 4294967296;
 const memory = () => { const m = new Map(); return {getItem: k => m.get(k) ?? null, setItem: (k, v) => m.set(k, String(v)), removeItem: k => m.delete(k)}; };
@@ -113,7 +113,7 @@ test('retratos: el archivo existe; sin foto hay iniciales; CC exige crédito vis
   const used = new Set(HISTORY.flatMap(h => h.slugs));
   for (const slug of used) {
     const p = PEOPLE[slug];
-    if (p.image) assert.ok(existsSync(new URL('../../../src/logos/web' + p.image, import.meta.url)), slug); else assert.ok(initials(slug).length >= 2, slug);
+    if (p.image) assert.ok(existsSync(new URL('../../../src/batz/web' + p.image, import.meta.url)), slug); else assert.ok(initials(slug).length >= 2, slug);
     if (needsVisibleCredit(p)) { assert.ok(p.credit && /^https:\/\//.test(p.creditUrl), slug); }
   }
   assert.deepEqual([...used].filter(s => needsVisibleCredit(PEOPLE[s])).sort(), ['gentzen', 'lowenheim', 'robinson', 'tarski']);

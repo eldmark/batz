@@ -7,7 +7,7 @@ Estado: en curso
 ## Completado
 
 - F1 (shell, navegación, Inicio): sidebar de 240 px colapsable (preferencia en `localStorage`
-  `logos-sidebar`; se contrae sola entre 901 y 1100 px), menú móvil con botón, fondo, Escape y
+  `batz-sidebar`; se contrae sola entre 901 y 1100 px), menú móvil con botón, fondo, Escape y
   foco; encabezado con título, Importar modelo (solo Evaluar), ejemplo rotulado por módulo y Ayuda
   contextual; rutas `#/inicio|evaluar|demostrar|cuadernos|diccionario`, hash desconocido → Inicio;
   Atrás/Adelante/recarga; un único `main`; borradores conservados al navegar (las secciones solo se ocultan).
@@ -58,7 +58,7 @@ Rama `rediseno/recorrido`. Diálogo de 3 pasos (barra lateral, Razonamiento/Cono
 opcional y sin velo: es una tarjeta flotante (`role="dialog"`, `aria-modal="false"`) que resalta el elemento con un contorno
 y deja usable la aplicación con el ratón. Mientras está abierto atrapa el foco (Tab / Shift+Tab); Escape u «Omitir» lo
 cierra y devuelve el foco a quien lo abrió. Se ofrece solo en la primera visita y solo en Inicio. La clave `localStorage`
-`logos-recorrido` guarda `completado` u `omitido` (sin almacenamiento, se recuerda solo en la sesión). Se reabre con
+`batz-recorrido` guarda `completado` u `omitido` (sin almacenamiento, se recuerda solo en la sesión). Se reabre con
 «Ver el recorrido» en el panel de Ayuda (lleva a Inicio; reabrirlo no degrada un `completado`). En ≤900 px el paso 1 abre el
 menú lateral y lo cierra al salir; navegar a otra sección cierra el recorrido.
 
@@ -144,7 +144,7 @@ Rama `rediseno/aprender`. Sección nueva `#/aprender` (id de modo `learn`, enlac
 
 - `features/learn/data.js`: solo datos. 18 hitos históricos (año, personas, aporte, «dónde lo ves en Batz» con enlace interno) y 33 tarjetas en 5 temas (lenguaje, semántica, sintaxis y pruebas, metateoría, errores comunes).
 - `features/learn/deck.js`: lógica pura (barajar, filtrar, cola de estudio, progreso, almacenamiento tolerante a fallos). Probada en `tests/frontend/app/learn.test.mjs`.
-- `features/learn/learn.js` y `styles/learn.css`: interfaz. La historia es una `<ol>` con `<details>` por hito sobre un hilo vertical con nudos; filtros por tema y «Abrir/Cerrar todos». Las tarjetas se voltean con clic, Enter o Espacio (botón con `aria-pressed`), flechas izquierda/derecha para pasar, filtros por tema, modo Estudiar (baraja, «La sabía» / «Repasar», ronda con cierre, opción de omitir las sabidas), progreso en `localStorage['logos-tarjetas']` y reinicio con confirmación. Con `prefers-reduced-motion` no hay giro 3D: la cara cambia al instante. Hay una alternativa en texto (`<details>` con todas las tarjetas).
+- `features/learn/learn.js` y `styles/learn.css`: interfaz. La historia es una `<ol>` con `<details>` por hito sobre un hilo vertical con nudos; filtros por tema y «Abrir/Cerrar todos». Las tarjetas se voltean con clic, Enter o Espacio (botón con `aria-pressed`), flechas izquierda/derecha para pasar, filtros por tema, modo Estudiar (baraja, «La sabía» / «Repasar», ronda con cierre, opción de omitir las sabidas), progreso en `localStorage['batz-tarjetas']` y reinicio con confirmación. Con `prefers-reduced-motion` no hay giro 3D: la cara cambia al instante. Hay una alternativa en texto (`<details>` con todas las tarjetas).
 - Criterio de rigor: solo fechas y atribuciones comprobables. Se omitió, por no poder verificarlas aquí, la autoría de los símbolos ∀ y ∃, la fecha exacta de «Löwenheim–Skolem» fuera de 1915/1920 y cualquier cita textual de Leibniz o Hilbert.
 
 ## Logotipo Bat’z
@@ -167,7 +167,7 @@ Movimiento: solo `transform`, `opacity` y `clip-path`. Con `prefers-reduced-moti
 
 ## Retratos
 
-Rama `rediseno/imagenes`. Retratos locales de 19 de las 22 personas de la historia de la lógica en `src/logos/web/img/people/<slug>.jpg` (escala de grises, hasta 480 px, menos de 150 kB), con licencia verificada en Commons (dominio público, CC BY-SA 2.0 DE/3.0/4.0). Sin imagen verificable libre, y por tanto con iniciales: Church, Jaśkowski y Fitch. `godel.jpg` y `turing.jpg` siguen también en `img/` porque el banner actual las usa.
+Rama `rediseno/imagenes`. Retratos locales de 19 de las 22 personas de la historia de la lógica en `src/batz/web/img/people/<slug>.jpg` (escala de grises, hasta 480 px, menos de 150 kB), con licencia verificada en Commons (dominio público, CC BY-SA 2.0 DE/3.0/4.0). Sin imagen verificable libre, y por tanto con iniciales: Church, Jaśkowski y Fitch. `godel.jpg` y `turing.jpg` siguen también en `img/` porque el banner actual las usa.
 
 Fuente única de datos: `features/people/people.js` (`PEOPLE`, `PEOPLE_ORDER`, `person(slug)`, más `initials` y `lifespan`). Cada entrada trae nombre, años, `image` (ruta o `null`), `credit`, `creditUrl` y `license`. Quien use un retrato con licencia CC BY-SA (Löwenheim, Tarski, Gentzen, Robinson) debe mostrar el `credit` de forma visible; el resto, de dominio público, lo muestra igualmente como cortesía. Tabla completa con autor, licencia, URL y fecha en `img/CREDITOS.md`.
 
@@ -208,7 +208,7 @@ En `app.js` solo la conexión: sección `#mode-person`, título, foco al h1 y ay
 
 ## Voces en Linux y selector de voz; foto de Church
 
-Causa de que no se oyera: el reproductor usa `speechSynthesis` del navegador y solo acepta voces españolas **locales**. En Windows/macOS el navegador las trae del sistema; en Linux solo las ve si hay `speech-dispatcher` con un sintetizador, y suele no haber ninguna. Solución: (1) `src/logos/voice_output.py` genera el audio en el propio equipo con `espeak-ng` si está instalado (WAV por `POST /api/voice/speak`; voces por `POST /api/voice/voices`; texto ≤600 caracteres, id de voz validado contra la lista instalada, sin shell, caché de 64 entradas, el texto no sale de la máquina); (2) el reproductor tiene un selector «Voz» (Automática, voces del navegador, voces del equipo), un botón «Probar voz» y guarda la elección en `localStorage['logos-voz']`; con voz del equipo la boca del avatar se reparte en la duración real del audio; (3) sin ninguna voz, el reproductor explica cómo instalar `espeak-ng` y sigue funcionando sin audio. Probado con un `espeak-ng` simulado (9 pruebas Python y 4 de Node) y en Chromium con y sin voces; **no probado con un espeak-ng real ni oyendo el audio**, porque la máquina de desarrollo no lo tiene instalado.
+Causa de que no se oyera: el reproductor usa `speechSynthesis` del navegador y solo acepta voces españolas **locales**. En Windows/macOS el navegador las trae del sistema; en Linux solo las ve si hay `speech-dispatcher` con un sintetizador, y suele no haber ninguna. Solución: (1) `src/batz/voice_output.py` genera el audio en el propio equipo con `espeak-ng` si está instalado (WAV por `POST /api/voice/speak`; voces por `POST /api/voice/voices`; texto ≤600 caracteres, id de voz validado contra la lista instalada, sin shell, caché de 64 entradas, el texto no sale de la máquina); (2) el reproductor tiene un selector «Voz» (Automática, voces del navegador, voces del equipo), un botón «Probar voz» y guarda la elección en `localStorage['batz-voz']`; con voz del equipo la boca del avatar se reparte en la duración real del audio; (3) sin ninguna voz, el reproductor explica cómo instalar `espeak-ng` y sigue funcionando sin audio. Probado con un `espeak-ng` simulado (9 pruebas Python y 4 de Node) y en Chromium con y sin voces; **no probado con un espeak-ng real ni oyendo el audio**, porque la máquina de desarrollo no lo tiene instalado.
 Foto de Alonzo Church: aportada por el usuario; procedencia y licencia **sin verificar** (ver `img/CREDITOS.md`); el pie de foto lo dice.
 
 ## Corrección: llave sin cerrar en `thread.css`

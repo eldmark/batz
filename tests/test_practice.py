@@ -2,9 +2,9 @@
 import copy
 import unittest
 
-from logos.errors import LogosError
-from logos.practice import CATEGORIES, EXERCISES, api, build, catalog, step
-from logos.server import handle_api
+from batz.errors import BatzError
+from batz.practice import CATEGORIES, EXERCISES, api, build, catalog, step
+from batz.server import handle_api
 
 
 class PracticeTests(unittest.TestCase):
@@ -46,23 +46,23 @@ class PracticeTests(unittest.TestCase):
                    step('P', 'and_e1', ['1']), step('P', 'and_e1', [1, 1]),
                    step('P', 'unknown', [1])]
         for move in invalid:
-            with self.subTest(move=move), self.assertRaises(LogosError):
+            with self.subTest(move=move), self.assertRaises(BatzError):
                 build(EXERCISES[0], [move])
 
     def test_unknown_symbols_and_wrong_arities_rejected(self):
         for text in ['Z', 'P(a)', 'P ∧', '∀a P(a)']:
-            with self.subTest(text=text), self.assertRaises(LogosError):
+            with self.subTest(text=text), self.assertRaises(BatzError):
                 build(EXERCISES[0], [step(text, 'assume')])
 
     def test_universal_cannot_generalize_a_dependent_variable(self):
         moves = [step('P(y)', 'assume'), step('∀x P(x)', 'all_i', [3], var='y')]
-        with self.assertRaises(LogosError):
+        with self.assertRaises(BatzError):
             build(EXERCISES[6], moves)
 
     def test_equality_template_is_checked(self):
         move = copy.deepcopy(EXERCISES[8]['solution'][0])
         move['params']['template'] = 'P(a)'
-        with self.assertRaises(LogosError):
+        with self.assertRaises(BatzError):
             build(EXERCISES[8], [move])
 
     def test_disjunction_requires_both_cases(self):
@@ -82,10 +82,10 @@ class PracticeTests(unittest.TestCase):
 
     def test_input_limits_and_http_dispatch(self):
         for moves in [None, {}, [step('P','assume')] * 101]:
-            with self.assertRaises(LogosError):
+            with self.assertRaises(BatzError):
                 build(EXERCISES[0], moves)
         for data in [{'exercise':'missing'}, {'exercise':'01', 'moves':[None]}]:
-            with self.assertRaises(LogosError):
+            with self.assertRaises(BatzError):
                 api('check', data)
         response = handle_api('/api/practice/check', {'exercise':'01', 'moves':EXERCISES[0]['solution']})
         self.assertEqual(response['status'], 'ok')
@@ -109,7 +109,7 @@ class PracticeTests(unittest.TestCase):
         # De ∃x P(x) no se puede elegir libremente P(u) como conclusión.
         ex = EXERCISES[26]
         moves = [step('P(u)', 'assume'), step('P(u)', 'ex_e', [2, 3], var='u')]
-        with self.assertRaises(LogosError):
+        with self.assertRaises(BatzError):
             build(ex, moves)
 
     def test_final_legend_constructs_its_lemmas(self):

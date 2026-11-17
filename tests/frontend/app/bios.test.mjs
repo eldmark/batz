@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {BIOS, BIO_SLUGS, bio} from '../../../src/logos/web/features/people/bios.js';
-import {PEOPLE, person} from '../../../src/logos/web/features/people/people.js';
-import {CONNECTIONS} from '../../../src/logos/web/features/home/home.js';
-import {SLIDES, stepIndex, swipeDelta, keyIndex} from '../../../src/logos/web/features/home/carousel.js';
+import {BIOS, BIO_SLUGS, bio} from '../../../src/batz/web/features/people/bios.js';
+import {PEOPLE, person} from '../../../src/batz/web/features/people/people.js';
+import {CONNECTIONS} from '../../../src/batz/web/features/home/home.js';
+import {SLIDES, stepIndex, swipeDelta, keyIndex} from '../../../src/batz/web/features/home/carousel.js';
 
 const nonEmpty = (v) => typeof v === 'string' && v.trim().length > 0;
 

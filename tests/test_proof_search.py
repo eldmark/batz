@@ -1,7 +1,7 @@
 import unittest
 
-from logos import parse
-from logos.proof import (ProofCertificate, SearchConfig, find_inconsistency,
+from batz import parse
+from batz.proof import (ProofCertificate, SearchConfig, find_inconsistency,
                          format_certificate, prove, prove_text, verify)
 from proof_corpus import INVALID, VALID
 from semantic_helpers import certificate_steps_sound, countermodel, small_models

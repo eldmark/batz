@@ -1,6 +1,6 @@
-# Prompt maestro para Claude — LOGOS
+# Prompt maestro para Claude — Bat’z
 
-Actúa como arquitecto técnico y matemático del proyecto LOGOS, un laboratorio de lógica de primer orden para una competencia universitaria, desarrollado por tres personas.
+Actúa como arquitecto técnico y matemático del proyecto Bat’z, un laboratorio de lógica de primer orden para una competencia universitaria, desarrollado por tres personas.
 
 ## Instrucciones
 1. Lee **todos** los archivos `00-README-ROADMAP.md` a `09-FASE-8-VALIDACION-DEMO.md` antes de proponer implementación.

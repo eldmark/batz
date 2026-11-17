@@ -1,6 +1,6 @@
 # Avatar realista: cómo se construye
 
-El avatar de la vista 3D (`src/logos/web/avatar/logos.glb`) se arma en Blender 5.2 sin interfaz y sin servicios externos. Todo corre en la máquina local. La foto de referencia no está en el repositorio; solo su proyección aparece, ya horneada, dentro del GLB.
+El avatar de la vista 3D (`src/batz/web/avatar/logos.glb`) se arma en Blender 5.2 sin interfaz y sin servicios externos. Todo corre en la máquina local. La foto de referencia no está en el repositorio; solo su proyección aparece, ya horneada, dentro del GLB.
 
 ## Entradas
 

@@ -5,10 +5,10 @@ import unittest
 from pathlib import Path
 
 # El diccionario del usuario no debe influir en las pruebas ni ensuciarse con ellas.
-os.environ["LOGOS_LEXICON"] = str(Path(tempfile.mkdtemp()) / "lexico_usuario.tsv")
+os.environ["BATZ_LEXICON"] = str(Path(tempfile.mkdtemp()) / "lexico_usuario.tsv")
 
-from logos import LogosError, parse_checked, translate_spanish
-from logos import spanish_semantics, spanish_tagger as tagger
+from batz import BatzError, parse_checked, translate_spanish
+from batz import spanish_semantics, spanish_tagger as tagger
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -46,7 +46,7 @@ class Tagger(unittest.TestCase):
     def test_grammar_still_rejects_nonsense_with_unknown_words(self):
         for phrase in ("Tlacuaches los todos barritan", "Todos los tlacuaches barrita", "Zzz qqq www"):
             with self.subTest(phrase=phrase):
-                with self.assertRaises(LogosError):
+                with self.assertRaises(BatzError):
                     translate_spanish(phrase)
 
     def test_singular_and_plural_share_the_predicate(self):
@@ -63,7 +63,7 @@ class Tagger(unittest.TestCase):
             try:
                 got = [r.text for r in translate_spanish(phrase).readings]
                 good += expected in got
-            except LogosError:
+            except BatzError:
                 good += expected == "RECHAZA"
         self.assertGreaterEqual(good, len(rows) - 2, f"{good}/{len(rows)}")
 

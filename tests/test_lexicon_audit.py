@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from logos.lexicon import Entry
+from batz.lexicon import Entry
 
 ROOT = Path(__file__).resolve().parents[1]
 _spec = importlib.util.spec_from_file_location("auditar_lexico", ROOT / "scripts" / "auditar_lexico.py")

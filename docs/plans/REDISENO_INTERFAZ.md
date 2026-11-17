@@ -26,7 +26,7 @@ Conservar:
   y resaltados; verdadero y falso también deben llevar texto o símbolos.
 - Literata para títulos, IBM Plex Sans para interfaz y explicaciones, JetBrains
   Mono NL para expresiones formales. Fuentes, Three.js y recursos locales.
-- `assets/avatar/logos-avatar.blend` y `src/logos/web/avatar/logos.glb`, con sus
+- `assets/avatar/logos-avatar.blend` y `src/batz/web/avatar/logos.glb`, con sus
   animaciones, boca y parpadeo. Se puede ajustar el encuadre y el escenario.
 - Evaluación por archivos, variables libres, entrada española y por voz,
   elección de lecturas, árboles, Fitch, contramodelos y edición del léxico.
@@ -39,15 +39,15 @@ generativo, cambiar el avatar, añadir cuentas o migrar el stack.
 
 | Pieza actual | Uso en el rediseño |
 |---|---|
-| `src/logos/web/index.html` | Cuatro módulos y una sección global de paso a paso; añadir Inicio y el nuevo contenedor de aplicación. |
-| `src/logos/web/app.js` | Estado, renderizado y eventos concentrados; extraer por responsabilidades de manera gradual. |
-| `src/logos/web/style.css` | Estilos globales y móviles; separar layout y estilos por función. |
-| `src/logos/web/story3d.js` | Escena, avatar, selección, labios y parpadeo; reutilizar. |
-| `src/logos/story.py`, `proof_story.py` | Eventos derivados de trazas o certificados verificados; conservar contrato. |
-| `src/logos/countermodels.py` | Relato de búsqueda, premisas y comprobación; preservar sus diferencias. |
-| `src/logos/notebook.py` | Fuentes, lecturas, preguntas, citas, pruebas y contramodelos ya implementados. |
-| `src/logos/tree.py` | Árbol de estructura y evaluación; conservar todas sus entradas de interfaz. |
-| `src/logos/server.py:Handler.do_GET` | Lista explícita de recursos; registrar los nuevos módulos y estilos. |
+| `src/batz/web/index.html` | Cuatro módulos y una sección global de paso a paso; añadir Inicio y el nuevo contenedor de aplicación. |
+| `src/batz/web/app.js` | Estado, renderizado y eventos concentrados; extraer por responsabilidades de manera gradual. |
+| `src/batz/web/style.css` | Estilos globales y móviles; separar layout y estilos por función. |
+| `src/batz/web/story3d.js` | Escena, avatar, selección, labios y parpadeo; reutilizar. |
+| `src/batz/story.py`, `proof_story.py` | Eventos derivados de trazas o certificados verificados; conservar contrato. |
+| `src/batz/countermodels.py` | Relato de búsqueda, premisas y comprobación; preservar sus diferencias. |
+| `src/batz/notebook.py` | Fuentes, lecturas, preguntas, citas, pruebas y contramodelos ya implementados. |
+| `src/batz/tree.py` | Árbol de estructura y evaluación; conservar todas sus entradas de interfaz. |
+| `src/batz/server.py:Handler.do_GET` | Lista explícita de recursos; registrar los nuevos módulos y estilos. |
 
 Punto de control anterior al rediseño: suite de 297 pruebas correcta, dos omitidas
 en esa ejecución; las cuatro pruebas de `test_project_integration.LocalHTTP`
@@ -56,7 +56,7 @@ pasaron también fuera del sandbox. Volver a verificar sobre cada entrega.
 ## 3. Navegación y estado
 
 ```text
-LOGOS · Laboratorio de lógica
+Bat’z · Laboratorio de lógica
 Inicio
 RAZONAMIENTO
   Evaluar modelo
@@ -213,7 +213,7 @@ El contrato ejecutable previsto se define en
 ## 10. Estructura técnica prevista
 
 ```text
-src/logos/web/
+src/batz/web/
   app.js                         # arranque y composición
   app/{shell,navigation}.js
   features/

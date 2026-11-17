@@ -12,8 +12,8 @@ from unittest import mock
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
-from logos import voice_output
-from logos.server import Handler, handle_api
+from batz import voice_output
+from batz.server import Handler, handle_api
 
 FAKE = '''#!{python}
 import sys, wave, io, os, json

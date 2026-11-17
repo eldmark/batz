@@ -1,11 +1,11 @@
 # Auditoría del léxico del español
 
-> Revisión asistida por máquina de `src/logos/lexicon.tsv` (1499 lemas: 639 N, 283 ADJ, 329 V, 248 NP), hecha el 2026-11-13 sobre el commit `d47980d`.
+> Revisión asistida por máquina de `src/batz/lexicon.tsv` (1499 lemas: 639 N, 283 ADJ, 329 V, 248 NP), hecha el 2026-11-13 sobre el commit `d47980d`.
 > **La revisión humana sigue haciendo falta.** El script aplica reglas y listas de excepciones; no sabe más español que esas listas, y que una palabra no salga señalada no garantiza que esté bien. El léxico sigue «pendiente de revisión humana» hasta que una persona firme la tabla de dudas de abajo.
 
 ## Qué se revisó
 
-`scripts/auditar_lexico.py` carga las entradas con `logos.lexicon` y revisa **lo que el generador produce de verdad** (plural, femenino y las seis formas verbales), comparándolo con reglas escritas aparte: acentuación y silabeo para los plurales, terminaciones y excepciones conocidas para el género, listas de verbos irregulares, de cambio de raíz y de hiato, y el uso con o sin objeto de verbos muy comunes. También cruza el léxico con las palabras que ya trae `spanish_grammar.txt`: `spanish_cyk.py` deja que esas palabras conserven su categoría por encima del diccionario y `spanish_semantics.py` conserva sus símbolos, así que una forma del léxico que coincide con una de ellas se pierde.
+`scripts/auditar_lexico.py` carga las entradas con `batz.lexicon` y revisa **lo que el generador produce de verdad** (plural, femenino y las seis formas verbales), comparándolo con reglas escritas aparte: acentuación y silabeo para los plurales, terminaciones y excepciones conocidas para el género, listas de verbos irregulares, de cambio de raíz y de hiato, y el uso con o sin objeto de verbos muy comunes. También cruza el léxico con las palabras que ya trae `spanish_grammar.txt`: `spanish_cyk.py` deja que esas palabras conserven su categoría por encima del diccionario y `spanish_semantics.py` conserva sus símbolos, así que una forma del léxico que coincide con una de ellas se pierde.
 
 Cada aviso trae lema, categoría, línea, regla, formas generadas, arreglo sugerido y confianza:
 **alta** = error gramatical claro (forma mal escrita o mal flexionada); **media** = problema probable que pide criterio; **baja** = punto para revisar.
@@ -19,7 +19,7 @@ python scripts/auditar_lexico.py                         # informe completo
 python scripts/auditar_lexico.py --confianza alta        # solo errores claros
 python scripts/auditar_lexico.py --formato markdown      # la tabla de dudas de abajo, con columna de visto bueno
 python scripts/auditar_lexico.py --formato tsv > auditoria.tsv            # para una hoja de cálculo
-python scripts/auditar_lexico.py src/logos/lexicon.tsv datos/lexico_usuario.tsv   # base y altas del usuario juntas
+python scripts/auditar_lexico.py src/batz/lexicon.tsv datos/lexico_usuario.tsv   # base y altas del usuario juntas
 PYTHONPATH="src;tests" python -m unittest tests.test_lexicon_audit       # en Linux/macOS, "src:tests"
 ```
 
@@ -62,7 +62,7 @@ Efecto visible: «Todos los crímenes son malos», «Todos los robots trabajan»
 
 ## Error claro que el TSV no podía corregir: arreglado en el generador
 
-**`español` (ADJ, línea 902).** El femenino es «española», pero el generador daba «español» y el formato no tiene una opción para un femenino irregular: «María es español» se aceptaba y «María es española» pasaba por el etiquetador con el símbolo `Españolo`. **Arreglado (2026-11-13)** en `src/logos/lexicon.py`: los adjetivos en -ol forman el femenino en -ola, como los gentilicios en -és y -án que ya estaban. «María es española» da `Español(maria)` sin supuestos, «María es español» se rechaza sugiriendo «española», y `tests/test_lexicon.py` lo cubre. `español` es el único adjetivo del léxico en -ol. La fila 1 de la tabla queda resuelta; si se vuelve a correr el script, ya no aparece.
+**`español` (ADJ, línea 902).** El femenino es «española», pero el generador daba «español» y el formato no tiene una opción para un femenino irregular: «María es español» se aceptaba y «María es española» pasaba por el etiquetador con el símbolo `Españolo`. **Arreglado (2026-11-13)** en `src/batz/lexicon.py`: los adjetivos en -ol forman el femenino en -ola, como los gentilicios en -és y -án que ya estaban. «María es española» da `Español(maria)` sin supuestos, «María es español» se rechaza sugiriendo «española», y `tests/test_lexicon.py` lo cubre. `español` es el único adjetivo del léxico en -ol. La fila 1 de la tabla queda resuelta; si se vuelve a correr el script, ya no aparece.
 
 ## Decisiones tomadas (2026-11-13)
 

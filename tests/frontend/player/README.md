@@ -31,16 +31,16 @@ NODE_PATH=/tmp/logos-player-browser/node_modules node tests/frontend/player/chec
 ```
 
 Si Chromium no está instalado para esa versión de Playwright, instalarlo con
-su CLI o señalar un ejecutable existente mediante `LOGOS_BROWSER`.
+su CLI o señalar un ejecutable existente mediante `BATZ_BROWSER`.
 
 Variables opcionales:
 
 | Variable | Uso |
 |---|---|
-| `LOGOS_PLAYER_URL` | URL de la demo; por defecto `http://127.0.0.1:8877`. |
-| `LOGOS_BROWSER` | Ruta absoluta del ejecutable Chromium disponible. |
-| `LOGOS_PLAYER_ARTIFACTS` | Directorio de capturas; por defecto `/tmp/logos-player-verification`. |
-| `LOGOS_PLAYER_FILTER` | Ejecutar solo recorridos cuyo nombre contenga ese texto. |
+| `BATZ_PLAYER_URL` | URL de la demo; por defecto `http://127.0.0.1:8877`. |
+| `BATZ_BROWSER` | Ruta absoluta del ejecutable Chromium disponible. |
+| `BATZ_PLAYER_ARTIFACTS` | Directorio de capturas; por defecto `/tmp/logos-player-verification`. |
+| `BATZ_PLAYER_FILTER` | Ejecutar solo recorridos cuyo nombre contenga ese texto. |
 
 La suite usa escenas y voces controladas para probar carreras y cancelaciones,
 y escenas reales con el GLB para comprobar carga, formas de boca, movimiento

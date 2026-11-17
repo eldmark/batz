@@ -1,9 +1,9 @@
 """Árboles para el visor: estructura y evaluación, sin lógica propia (se leen de la traza verificada)."""
 import unittest
 
-from logos import FiniteModel, evaluate, parse
-from logos.server import handle_api
-from logos.tree import MAX_NODES, semantic_tree, syntax_tree
+from batz import FiniteModel, evaluate, parse
+from batz.server import handle_api
+from batz.tree import MAX_NODES, semantic_tree, syntax_tree
 
 SIG = {"constants": [], "functions": {"s": 1}, "predicates": {"P": 1, "R": 2}}
 MODEL = {"domain": [0, 1], "functions": {"s": {"arity": 1, "table": [[[0], 1], [[1], 0]]}},

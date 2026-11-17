@@ -6,9 +6,9 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from logos import voice_input
-from logos.server import handle_api
-from logos.voice_input import VoiceInputError, availability, transcribe
+from batz import voice_input
+from batz.server import handle_api
+from batz.voice_input import VoiceInputError, availability, transcribe
 
 
 def _tool(path: Path) -> Path:
@@ -42,7 +42,7 @@ def _fake_run(calls):
 def isolated(folder: Path, on_path=None, winget=None, env=None):
     """Sin variables ni instalación real: PATH simulado, carpeta de voz y carpeta de winget de prueba."""
     on_path = on_path or {}
-    with patch.dict(os.environ, {"LOGOS_WHISPER_CLI": "", "LOGOS_WHISPER_MODEL": "", **(env or {})}), \
+    with patch.dict(os.environ, {"BATZ_WHISPER_CLI": "", "BATZ_WHISPER_MODEL": "", **(env or {})}), \
          patch.object(voice_input, "voice_dir", return_value=folder), \
          patch.object(voice_input, "_winget_dir", return_value=winget), \
          patch.object(voice_input.shutil, "which", side_effect=on_path.get):
@@ -64,9 +64,9 @@ class LocalVoice(unittest.TestCase):
             binary, model = Path(temp) / "whisper-cli", Path(temp) / "ggml-base.bin"
             binary.touch(); model.touch()
             calls = []
-            with patch.dict(os.environ, {"LOGOS_WHISPER_CLI": str(binary), "LOGOS_WHISPER_MODEL": str(model)}):
-                with patch("logos.voice_input.shutil.which", return_value="/usr/bin/ffmpeg"):
-                    with patch("logos.voice_input.subprocess.run", side_effect=_fake_run(calls)):
+            with patch.dict(os.environ, {"BATZ_WHISPER_CLI": str(binary), "BATZ_WHISPER_MODEL": str(model)}):
+                with patch("batz.voice_input.shutil.which", return_value="/usr/bin/ffmpeg"):
+                    with patch("batz.voice_input.subprocess.run", side_effect=_fake_run(calls)):
                         self.assertEqual(transcribe(b"a" * 200), "Juan lee.")
             self.assertIn("es", calls[1])
             self.assertEqual(len(calls), 2)
@@ -135,7 +135,7 @@ class Discovery(unittest.TestCase):
                    "ffmpeg": str(_tool(self.root / "bin" / voice_input._exe("ffmpeg")))}
         _tool(self.voz / voice_input._exe("whisper-cli")); _model(self.voz / "ggml-small.bin")
         with isolated(self.voz, on_path=on_path,
-                      env={"LOGOS_WHISPER_CLI": str(cli), "LOGOS_WHISPER_MODEL": str(model)}):
+                      env={"BATZ_WHISPER_CLI": str(cli), "BATZ_WHISPER_MODEL": str(model)}):
             self.assertEqual(availability()["model"], "mi-modelo.bin")
             calls = self.run_transcription()
         self.assertEqual(calls[1][:3], [str(cli), "-m", str(model)])
@@ -143,7 +143,7 @@ class Discovery(unittest.TestCase):
     def test_env_var_pointing_nowhere_is_not_replaced(self):
         _tool(self.voz / voice_input._exe("whisper-cli")); _tool(self.voz / voice_input._exe("ffmpeg"))
         _model(self.voz / "ggml-base.bin")
-        with isolated(self.voz, env={"LOGOS_WHISPER_MODEL": str(self.root / "no-existe.bin")}):
+        with isolated(self.voz, env={"BATZ_WHISPER_MODEL": str(self.root / "no-existe.bin")}):
             status = availability()
             with self.assertRaises(VoiceInputError) as cm: transcribe(b"a" * 200)
         self.assertEqual((status["available"], status["missing"]), (False, ["model"]))
@@ -165,10 +165,10 @@ class Discovery(unittest.TestCase):
     def test_install_folder_per_platform(self):
         with patch.object(voice_input, "_WINDOWS", True), \
              patch.dict(os.environ, {"LOCALAPPDATA": str(self.root)}):
-            self.assertEqual(voice_input.voice_dir(), self.root / "LOGOS" / "voz")
+            self.assertEqual(voice_input.voice_dir(), self.root / "Batz" / "voz")
             self.assertEqual(voice_input._winget_dir(), self.root / "Microsoft" / "WinGet")
         with patch.object(voice_input, "_WINDOWS", False):
-            self.assertEqual(voice_input.voice_dir(), Path.home() / ".local" / "share" / "logos" / "voz")
+            self.assertEqual(voice_input.voice_dir(), Path.home() / ".local" / "share" / "batz" / "voz")
             self.assertIsNone(voice_input._winget_dir())
 
 
@@ -182,7 +182,7 @@ class NonAsciiPaths(unittest.TestCase):
 
     def test_model_path_relative_to_work_folder(self):
         model = _model(self.root / "Lázaro" / "voz" / "ggml-base.bin")
-        work = self.root / "Lázaro" / "Temp" / "logos-voz-1"
+        work = self.root / "Lázaro" / "Temp" / "batz-voz-1"
         with patch.object(voice_input, "_WINDOWS", True):
             self.assertEqual(voice_input._whisper_arg(model, work), os.path.join("..", "..", "voz", "ggml-base.bin"))
         with patch.object(voice_input, "_WINDOWS", False):  # fuera de Windows la ruta UTF-8 funciona tal cual

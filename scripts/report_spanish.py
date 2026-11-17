@@ -8,8 +8,8 @@ import argparse
 import sys
 from pathlib import Path
 
-from logos import LogosError, parse_checked, translate_spanish
-from logos.spanish_cyk import parse
+from batz import BatzError, parse_checked, translate_spanish
+from batz.spanish_cyk import parse
 
 ROOT = Path(__file__).resolve().parents[1]
 CASES = ROOT / "docs/specs/espanol/casos_borde.txt"
@@ -25,7 +25,7 @@ def run_case(expected, phrase):
             # cada lectura debe volver a leerse como fórmula bien formada con su propia firma
             assert parse_checked(r.text, r.signature, strict=True) == r.formula
             row["readings"].append((r.text, r.note))
-    except LogosError as exc:
+    except BatzError as exc:
         row["error"] = exc.message
     if expected == 0:
         row["ok"] = not trees and row["error"] is not None and not row["readings"]

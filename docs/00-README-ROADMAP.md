@@ -1,4 +1,4 @@
-# LOGOS — Laboratorio de lógica de primer orden
+# Bat’z — Laboratorio de lógica de primer orden
 
 ## Rediseño de interfaz (2026-11-16)
 

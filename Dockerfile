@@ -6,13 +6,13 @@ ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PORT=8765
 RUN apt-get update \
  && apt-get install -y --no-install-recommends espeak-ng \
  && rm -rf /var/lib/apt/lists/* \
- && useradd --create-home logos
+ && useradd --create-home batz
 WORKDIR /app
 COPY evaluador.py ./
 COPY src ./src
 # aquí se guardan las palabras que la persona añade al diccionario (se monta como volumen)
-RUN mkdir -p /app/datos && chown logos /app/datos
-USER logos
+RUN mkdir -p /app/datos && chown batz /app/datos
+USER batz
 
 EXPOSE 8765
 HEALTHCHECK --interval=10s --timeout=3s --retries=3 \

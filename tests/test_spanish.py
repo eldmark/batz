@@ -1,6 +1,6 @@
 import unittest
 
-from logos import LogosError, evaluar, parse_checked, translate_spanish
+from batz import BatzError, evaluar, parse_checked, translate_spanish
 
 
 class ControlledSpanish(unittest.TestCase):
@@ -70,7 +70,7 @@ class ControlledSpanish(unittest.TestCase):
     def test_outside_fragment_rejected(self):
         for text in ("", "El estudiante lee", "Juan lea", "Todos los estudiantes lee", "Juan lee 😊", "Juan, lee"):
             with self.subTest(text=text):
-                with self.assertRaises(LogosError) as cm:
+                with self.assertRaises(BatzError) as cm:
                     translate_spanish(text)
                 self.assertEqual(cm.exception.code, "unsupported_spanish")
 
@@ -79,7 +79,7 @@ class ControlledSpanish(unittest.TestCase):
         accepted = translate_spanish("Juan barrita")
         self.assertEqual([a["word"] for a in accepted.assumptions], ["barrita"])
         # Si ni con la categoría propuesta hay análisis, se señala la palabra desconocida.
-        with self.assertRaises(LogosError) as cm:
+        with self.assertRaises(BatzError) as cm:
             translate_spanish("Juan barrita los")
         self.assertEqual((cm.exception.span.start, cm.exception.span.end), (5, 12))
 

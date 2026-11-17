@@ -1,9 +1,9 @@
 import dataclasses
 import unittest
 
-from logos import parse
-from logos.proof import ProofError, prove_text
-from logos.proof_story import build_proof_narration
+from batz import parse
+from batz.proof import ProofError, prove_text
+from batz.proof_story import build_proof_narration
 
 
 class ProofNarrationTests(unittest.TestCase):

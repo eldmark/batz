@@ -1,9 +1,9 @@
 """Ejercicios reales de clase (ver docs/testing/ACCEPTANCE_FIXTURES.md)."""
 import unittest
 
-from logos import decide, kalmar_sequent, parse, to_string
-from logos.proof import SearchConfig, format_certificate, prove_text, verify
-from logos.proof.kalmar import kalmar_prove
+from batz import decide, kalmar_sequent, parse, to_string
+from batz.proof import SearchConfig, format_certificate, prove_text, verify
+from batz.proof.kalmar import kalmar_prove
 from proof_corpus import CLASS_KALMAR, CLASS_SEQUENTS
 
 CFG = SearchConfig(max_depth=8, timeout=10)

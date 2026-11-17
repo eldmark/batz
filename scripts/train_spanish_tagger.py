@@ -5,10 +5,10 @@
     PYTHONPATH=src python3 scripts/train_spanish_tagger.py --quick    # rejilla reducida
 
 Datos: frases generadas con las plantillas de abajo a partir de los lemas del diccionario base
-(`src/logos/lexicon.tsv`). Las etiquetas son correctas por construcción. La partición es **por lema**:
+(`src/batz/lexicon.tsv`). Las etiquetas son correctas por construcción. La partición es **por lema**:
 validación y prueba usan palabras que el modelo nunca vio, que es justo el caso de uso.
 Las frases de clase (`docs/specs/espanol/frases_clase.tsv`) solo se usan como prueba final.
-Necesita numpy para entrenar; la inferencia (`logos.spanish_tagger`) no.
+Necesita numpy para entrenar; la inferencia (`batz.spanish_tagger`) no.
 """
 import argparse
 import json
@@ -20,16 +20,16 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
-from logos.spanish_cyk import grammar  # noqa: E402
-from logos.spanish_tagger import TAGS, features  # noqa: E402
+from batz.spanish_cyk import grammar  # noqa: E402
+from batz.spanish_tagger import TAGS, features  # noqa: E402
 
-OUT = ROOT / "src/logos/spanish_tagger.json"
+OUT = ROOT / "src/batz/spanish_tagger.json"
 REPORT = ROOT / "docs/validation/ETIQUETADOR-ESPANOL.md"
 CLASS = ROOT / "docs/specs/espanol/frases_clase.tsv"
 
 def lexemes():
     """Lemas del diccionario base con sus formas etiquetadas: {clase: [ {etiqueta: [formas]} ]}."""
-    from logos import lexicon
+    from batz import lexicon
     lex = {"NM": [], "NF": [], "ADJ": [], "VI": [], "VT": [], "PM": [], "PF": []}
     for e in lexicon._read(lexicon.BASE, "base"):
         forms = e.forms()
@@ -215,8 +215,8 @@ def main():
           f"(categoría gruesa {coarse_acc:.3f}); {len(weights)} rasgos con peso")
 
     # ── frases de clase: prueba final de extremo a extremo ──
-    from logos import LogosError, translate_spanish
-    from logos.spanish_tagger import _model
+    from batz import BatzError, translate_spanish
+    from batz.spanish_tagger import _model
     _model.cache_clear()
     class_rows = []
     if CLASS.is_file():
@@ -230,7 +230,7 @@ def main():
                 assumed = "; ".join(f"{a['word']}→{a['tag']} ({a['probability']:.0%})" for a in result.assumptions)
                 ok = expected in got if expected else bool(got)
                 class_rows.append((phrase, expected, " / ".join(got), assumed, ok))
-            except LogosError as exc:
+            except BatzError as exc:
                 class_rows.append((phrase, expected, f"rechazada: {exc.message}", "", expected == "RECHAZA"))
     lines = ["# Etiquetador de palabras fuera del léxico", "",
              "> Documento generado por `scripts/train_spanish_tagger.py`. No se edita a mano.", "",

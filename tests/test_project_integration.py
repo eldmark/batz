@@ -7,8 +7,8 @@ from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 from http.server import ThreadingHTTPServer
 
-from logos import Signature, evaluar
-from logos.server import Handler
+from batz import Signature, evaluar
+from batz.server import Handler
 
 
 class ProjectFixtures(unittest.TestCase):

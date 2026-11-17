@@ -3,9 +3,9 @@ import copy
 import json
 from pathlib import Path
 
-from logos import parse
-from logos.countermodels import find_consequence_countermodel
-from logos.server import handle_api
+from batz import parse
+from batz.countermodels import find_consequence_countermodel
+from batz.server import handle_api
 
 
 def fixtures():

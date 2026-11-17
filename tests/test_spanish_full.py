@@ -2,8 +2,8 @@
 import unittest
 from pathlib import Path
 
-from logos import LogosError, parse_checked, translate_spanish
-from logos.spanish_cyk import parse
+from batz import BatzError, parse_checked, translate_spanish
+from batz.spanish_cyk import parse
 
 
 CASES = Path(__file__).resolve().parents[1] / "docs/specs/espanol/casos_borde.txt"
@@ -21,7 +21,7 @@ class SpanishFullCorpus(unittest.TestCase):
                 if int(expected): self.assertGreaterEqual(len(trees), int(expected))
                 else: self.assertEqual(len(trees), 0)
                 if not trees:
-                    with self.assertRaises(LogosError): translate_spanish(phrase)
+                    with self.assertRaises(BatzError): translate_spanish(phrase)
                     continue
                 result = translate_spanish(phrase)
                 self.assertTrue(result.readings)

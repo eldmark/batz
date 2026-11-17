@@ -130,7 +130,7 @@ campos opcionales como opcionales y conservar campos desconocidos.
 | Búsqueda | `kind: 'search'`, `phase`, `size` y demás campos disponibles en el guion real | Progreso acotado de búsqueda; no rotularlo como una inferencia verificada. |
 | Premisas de un contramodelo | `kind: 'premise'` y campos del guion real | Comprobación de premisas antes de la conclusión; conservar rutas distintas. |
 
-Referencias de implementación: `src/logos/story.py`, `proof_story.py` y
+Referencias de implementación: `src/batz/story.py`, `proof_story.py` y
 `countermodels.py`. Para fixtures usar salidas reales de las API, no asumir que
 un evento de búsqueda contiene todos los campos de un evento semántico.
 

@@ -2,9 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {fileURLToPath} from 'node:url';
-import {PEOPLE, PEOPLE_ORDER, person} from '../../../src/logos/web/features/people/people.js';
+import {PEOPLE, PEOPLE_ORDER, person} from '../../../src/batz/web/features/people/people.js';
 
-const web = (p) => fileURLToPath(new URL('../../../src/logos/web' + p, import.meta.url));
+const web = (p) => fileURLToPath(new URL('../../../src/batz/web' + p, import.meta.url));
 const withImage = PEOPLE_ORDER.filter((s) => PEOPLE[s].image);
 const without = PEOPLE_ORDER.filter((s) => !PEOPLE[s].image);
 

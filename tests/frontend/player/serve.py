@@ -5,7 +5,7 @@ from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
 HERE = Path(__file__).resolve().parent
-WEB = HERE.parents[2] / "src/logos/web"
+WEB = HERE.parents[2] / "src/batz/web"
 
 
 class Handler(SimpleHTTPRequestHandler):

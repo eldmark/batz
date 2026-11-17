@@ -1,9 +1,9 @@
 """Buscador de modelos por instanciación: lo que devuelve satisface las fórmulas; None no afirma nada."""
 import unittest
 
-from logos import Not, is_true, parse
-from logos.countermodels import find_consequence_countermodel
-from logos.modelfinder import find_model
+from batz import Not, is_true, parse
+from batz.countermodels import find_consequence_countermodel
+from batz.modelfinder import find_model
 
 
 def formulas(texts, constants=()):

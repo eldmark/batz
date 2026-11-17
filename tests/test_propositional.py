@@ -1,11 +1,11 @@
 import random
 import unittest
 
-from logos import (And, Bottom, FiniteModel, Iff, Implies, LogosError, Not, Or, Pred,
+from batz import (And, Bottom, FiniteModel, Iff, Implies, BatzError, Not, Or, Pred,
                    decide, is_countermodel, is_propositional, is_true, kalmar_sequent, parse,
                    truth_table)
-from logos.proof import SearchConfig, prove, verify
-from logos.propositional import atoms, valuations, value
+from batz.proof import SearchConfig, prove, verify
+from batz.propositional import atoms, valuations, value
 
 
 def rand_prop(rng, depth, names="ABC"):
@@ -23,7 +23,7 @@ class TruthTables(unittest.TestCase):
         self.assertTrue(is_propositional(parse("A → (B ∨ ¬C) ∧ ⊥")))
         for text in ["P(x)", "∀x A", "a = b", "A ∧ ∃x B"]:
             self.assertFalse(is_propositional(parse(text)), text)
-        self.assertRaises(LogosError, truth_table, parse("P(x)"))
+        self.assertRaises(BatzError, truth_table, parse("P(x)"))
 
     def test_known_tables(self):
         def col(text):
@@ -70,7 +70,7 @@ class Decide(unittest.TestCase):
         self.assertFalse(self.d(["⊥"], "A").premises_satisfiable)
 
     def test_not_propositional_and_limits(self):
-        self.assertRaises(LogosError, self.d, ["∀x P(x)"], "A")
+        self.assertRaises(BatzError, self.d, ["∀x P(x)"], "A")
         big = [Pred(f"A{i}") for i in range(20)]
         v = decide([], Or(big[0], Not(big[0])), max_atoms=0)
         self.assertEqual((v.status, v.reason), ("unknown", "too_many_atoms"))
@@ -116,7 +116,7 @@ class KalmarProver(unittest.TestCase):
     """Segundo camino: algoritmo de Kalmár, completo y determinista, contra el buscador."""
 
     def test_every_tautological_consequence_gets_a_checked_certificate(self):
-        from logos.proof.kalmar import kalmar_prove
+        from batz.proof.kalmar import kalmar_prove
         rng = random.Random(404)
         proved = 0
         for _ in range(500):
@@ -125,7 +125,7 @@ class KalmarProver(unittest.TestCase):
             valid = all(value(concl, v) for v in valuations(atoms(concl) | set().union(*map(atoms, prem), set()))
                         if all(value(p, v) for p in prem))
             if not valid:
-                with self.assertRaises(LogosError) as cm:
+                with self.assertRaises(BatzError) as cm:
                     kalmar_prove(prem, concl)
                 self.assertEqual(cm.exception.code, "not_a_consequence")
                 continue
@@ -135,7 +135,7 @@ class KalmarProver(unittest.TestCase):
         self.assertGreater(proved, 150)
 
     def test_both_methods_agree_on_the_class_exercises(self):
-        from logos.proof.kalmar import kalmar_prove
+        from batz.proof.kalmar import kalmar_prove
         cases = [(["p → q"], "¬q → ¬p"), (["p ∨ q", "p → r", "q → r"], "r"),
                  ([], "(p → q) ∨ (q → p)"), ([], "((p → q) → p) → p"), (["p ↔ ¬p"], "q"), ([], "¬(p ∨ q) ↔ ¬p ∧ ¬q")]
         for prem, concl in cases:
@@ -155,13 +155,13 @@ class KalmarProver(unittest.TestCase):
         verify(v.certificate)
 
     def test_limits(self):
-        from logos.proof.kalmar import kalmar_prove
+        from batz.proof.kalmar import kalmar_prove
         self.assertEqual(self._code(kalmar_prove, [], parse("∀x A")), "not_propositional")
         self.assertEqual(self._code(kalmar_prove, [], parse("A ∨ ¬A"), max_atoms=0), "too_many_atoms")
 
     @staticmethod
     def _code(fn, *a, **k):
-        with unittest.TestCase().assertRaises(LogosError) as cm:
+        with unittest.TestCase().assertRaises(BatzError) as cm:
             fn(*a, **k)
         return cm.exception.code
 

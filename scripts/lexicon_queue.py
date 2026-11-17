@@ -20,9 +20,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
-from logos import LogosError, lexicon  # noqa: E402
-from logos import spanish_tagger as tagger  # noqa: E402
-from logos.spanish_cyk import grammar  # noqa: E402
+from batz import BatzError, lexicon  # noqa: E402
+from batz import spanish_tagger as tagger  # noqa: E402
+from batz.spanish_cyk import grammar  # noqa: E402
 
 QUEUE = ROOT / "datos" / "cola_lexico.txt"
 PROPOSALS = ROOT / "datos" / "propuestas.tsv"
@@ -157,13 +157,13 @@ def cmd_accept(args):
                 entry = lexicon._validate(lemma, category, feature or "-", extra)
                 key = (entry.lemma.casefold(), entry.category, entry.feature, entry.symbol)
                 if key in fresh or any((e.lemma.casefold(), e.category, e.feature, e.symbol) == key for e in lexicon.entries()):
-                    raise LogosError("semantic", "duplicate_lexicon", "ya está")
+                    raise BatzError("semantic", "duplicate_lexicon", "ya está")
                 fresh.add(key)
                 base_lines.append("\t".join((entry.lemma, entry.category, entry.feature, entry.extra)))
             else:
                 lexicon.add(lemma, category, feature or "-", extra)
             done.add((source or lemma).casefold())
-        except LogosError as exc:
+        except BatzError as exc:
             failed += 1
             done.add((source or lemma).casefold()) if exc.code == "duplicate_lexicon" else None
             print(f"  no se añadió «{lemma}»: {exc.message}")

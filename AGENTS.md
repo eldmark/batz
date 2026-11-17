@@ -13,7 +13,7 @@ Estos tres documentos siguen siendo la referencia de sus criterios y contratos.
 Cada agente debe identificar su frente antes de editar y respetar la propiedad
 de archivos del protocolo. No lanzar agentes adicionales por iniciativa propia.
 
-Conservar la paleta de `src/logos/web/tokens.css`, las fuentes locales y el avatar
+Conservar la paleta de `src/batz/web/tokens.css`, las fuentes locales y el avatar
 de `main` integrado en `40e636a`. No sustituir el GLB ni el archivo Blender.
 Reutilizar los motores, árboles y eventos verificados existentes. Una búsqueda
 inconclusa nunca equivale a falsedad ni a una demostración.
@@ -26,8 +26,8 @@ servicios externos como parte de este trabajo sin una nueva decisión del usuari
 
 - Corrección matemática y alcance: `docs/plans/PLAN_MM3032.md`.
 - Contratos existentes: `docs/specs/JSON_CONTRACTS.md`.
-- Guiones semánticos: `src/logos/story.py`.
-- Guiones de pruebas: `src/logos/proof_story.py`.
+- Guiones semánticos: `src/batz/story.py`.
+- Guiones de pruebas: `src/batz/proof_story.py`.
 - Pruebas: `PYTHONPATH=src:tests python3 -m unittest discover -s tests`.
 
 Los planes históricos no reflejan necesariamente la interfaz actual. Para el

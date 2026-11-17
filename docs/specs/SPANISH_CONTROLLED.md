@@ -1,6 +1,6 @@
 # Español controlado → FOL: tokenizador, gramática y casos borde
 
-> Estado (2026-11-12): **gramática completa integrada** con CYK y Aho-Corasick (`spanish_cyk.py`, `spanish_semantics.py`); los 51 casos cumplen, ver `docs/validation/ESPANOL-51-CASOS.md`. El léxico sigue cerrado y sin revisión humana. Lo que sigue en este párrafo describe el estado anterior. Estado previo: especificación amplia en revisión. Desde 2026-11-02 existe un adaptador inicial independiente en `src/logos/spanish.py`, conectado a la API y a la interfaz. Reconoce solo nombres propios con verbos del léxico acotado, cuantificadores simples, identidad, «joven» y la ambigüedad de alcance de «Todos los estudiantes leyeron un libro». El prototipo de gramática de esta carpeta aún no está integrado; sus 51 casos siguen siendo la meta de la fase completa, no una cobertura del adaptador inicial.
+> Estado (2026-11-12): **gramática completa integrada** con CYK y Aho-Corasick (`spanish_cyk.py`, `spanish_semantics.py`); los 51 casos cumplen, ver `docs/validation/ESPANOL-51-CASOS.md`. El léxico sigue cerrado y sin revisión humana. Lo que sigue en este párrafo describe el estado anterior. Estado previo: especificación amplia en revisión. Desde 2026-11-02 existe un adaptador inicial independiente en `src/batz/spanish.py`, conectado a la API y a la interfaz. Reconoce solo nombres propios con verbos del léxico acotado, cuantificadores simples, identidad, «joven» y la ambigüedad de alcance de «Todos los estudiantes leyeron un libro». El prototipo de gramática de esta carpeta aún no está integrado; sus 51 casos siguen siendo la meta de la fase completa, no una cobertura del adaptador inicial.
 
 ## 1. Principio: no tirar información
 
@@ -21,7 +21,7 @@ texto ─► tokens (span, superficie, normalizado, banderas)
 
 No se reutiliza `tokenize_sentence` de TDLC. Esa función pierde información que aquí necesitamos:
 
-| `tokenize_sentence` (TDLC) | Problema para LOGOS |
+| `tokenize_sentence` (TDLC) | Problema para Bat’z |
 |---|---|
 | Pasa todo a minúsculas | Ya no se distingue el nombre propio "Rosa" del sustantivo "rosa" |
 | Elimina `, ; : .` | La coma delimita el "si A, B" y las listas, y el punto separa premisas |
@@ -147,7 +147,7 @@ Para que las ambigüedades no se multipliquen sin necesidad, hay **dos únicos c
 La gramática además evita lecturas falsas con estas reglas:
 
 - **Islas de alcance**: un cuantificador que está dentro de una relativa o del antecedente de un "si" no sale de ahí. Por eso "Si algún estudiante lee, Juan aprueba" da `(∃x(E∧L))→A(j)` y nada más.
-- **Implementado (2026-11-13)**: el alcance se invierte para cualquier par de cuantificadores del sujeto y del objeto directo de la oración principal («todo/cada», «algún/un», numerales), no solo para ∀ sujeto con ∃ objeto. "Algún profesor admira a cada estudiante" da `∃x(P∧∀y(E→A))` y `∀y(E→∃x(P∧A))`. No se pregunta cuando los dos cuantificadores son el mismo cuantificador simple (∀∀, ∃∃: las dos órdenes son equivalentes) ni con «ningún». Cada lectura lleva una paráfrasis determinista («Un mismo objeto sirve para todos», «Cada objeto puede tener un miembro distinto»…). Código: `_inverse_scope` en `src/logos/spanish_semantics.py`.
+- **Implementado (2026-11-13)**: el alcance se invierte para cualquier par de cuantificadores del sujeto y del objeto directo de la oración principal («todo/cada», «algún/un», numerales), no solo para ∀ sujeto con ∃ objeto. "Algún profesor admira a cada estudiante" da `∃x(P∧∀y(E→A))` y `∀y(E→∃x(P∧A))`. No se pregunta cuando los dos cuantificadores son el mismo cuantificador simple (∀∀, ∃∃: las dos órdenes son equivalentes) ni con «ningún». Cada lectura lleva una paráfrasis determinista («Un mismo objeto sirve para todos», «Cada objeto puede tener un miembro distinto»…). Código: `_inverse_scope` en `src/batz/spanish_semantics.py`.
 - La concordancia negativa ("no… ningún") cuenta como **una** negación y no genera lecturas extra.
 - También hay límites de lecturas por alcance (n! permutaciones) y de árboles, ambos configurables. Si se superan, se pide reformular.
 

@@ -1,12 +1,12 @@
 import unittest
 
-from logos import (And, Const, Eq, Exists, Forall, Func, Iff, Implies, LogosError,
+from batz import (And, Const, Eq, Exists, Forall, Func, Iff, Implies, BatzError,
                    Not, Or, Pred, Var, parse, parse_term)
-from logos.lexer import tokenize
+from batz.lexer import tokenize
 
 
 def err(text, **kw):
-    with unittest.TestCase().assertRaises(LogosError) as cm:
+    with unittest.TestCase().assertRaises(BatzError) as cm:
         parse(text, **kw)
     return cm.exception
 
@@ -95,7 +95,7 @@ class ParserTests(unittest.TestCase):
 
     def test_parse_term(self):
         self.assertEqual(parse_term("f(x, a)", constants={"a"}), Func("f", (Var("x"), Const("a"))))
-        self.assertRaises(LogosError, parse_term, "f(x) y")
+        self.assertRaises(BatzError, parse_term, "f(x) y")
 
     def test_spans(self):
         f = parse("P(x) ∧ (Q ∨ R)")
@@ -137,7 +137,7 @@ if __name__ == "__main__":
 
 class BottomTests(unittest.TestCase):
     def test_bottom_parses_in_both_syntaxes(self):
-        from logos import Bottom, to_string
+        from batz import Bottom, to_string
         self.assertEqual(parse("⊥"), Bottom())
         self.assertEqual(parse("_|_"), Bottom())
         self.assertEqual(parse("P → ⊥"), Implies(Pred("P"), Bottom()))
@@ -157,7 +157,7 @@ class PropositionalModeTests(unittest.TestCase):
         self.assertEqual(parse("¬(p ∧ q) ∨ r1", propositional=True), parse("¬(P ∧ Q) ∨ R1"))
 
     def test_collision_p_and_P(self):
-        with self.assertRaises(LogosError) as cm:
+        with self.assertRaises(BatzError) as cm:
             parse("p → P", propositional=True)
         self.assertEqual((cm.exception.stage, cm.exception.code), ("semantic", "letter_collision"))
 

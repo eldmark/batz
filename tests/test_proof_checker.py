@@ -5,9 +5,9 @@ import pathlib
 import random
 import unittest
 
-from logos import Var, parse, parse_term
-from logos.proof import ProofCertificate, ProofError, ProofStep, is_valid, verify
-from logos.proof.certificate import RULES
+from batz import Var, parse, parse_term
+from batz.proof import ProofCertificate, ProofError, ProofStep, is_valid, verify
+from batz.proof.certificate import RULES
 from proof_corpus import VALID
 from semantic_helpers import certificate_steps_sound, countermodel, small_models
 
@@ -231,7 +231,7 @@ class NegativeCertificates(unittest.TestCase):
 
 class IndependenceAndFuzz(unittest.TestCase):
     def test_checker_does_not_import_search(self):
-        path = pathlib.Path(__file__).parent.parent / "src/logos/proof/checker.py"
+        path = pathlib.Path(__file__).parent.parent / "src/batz/proof/checker.py"
         tree = pyast.parse(path.read_text(encoding="utf-8"))
         mods = set()
         for node in pyast.walk(tree):
@@ -243,7 +243,7 @@ class IndependenceAndFuzz(unittest.TestCase):
 
     def test_accepted_mutants_are_always_semantically_sound(self):
         """Si el checker acepta un certificado alterado, la conclusión debe seguirse de las premisas."""
-        from logos.proof import prove_text
+        from batz.proof import prove_text
         rng = random.Random(1234)
         base = []
         for prem, concl, consts in VALID[::3]:

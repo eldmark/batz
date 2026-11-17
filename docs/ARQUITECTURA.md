@@ -11,9 +11,9 @@ Nombre: el producto se llama **Bat’z** («hilo» en k’iche’). El paquete P
 `batz` (`src/batz/`), el servidor se lanza con `python -m batz.server` o con
 `python3 evaluador.py`, las variables de entorno son `BATZ_*` y las claves de
 `localStorage` empiezan por `batz-`. Antes de ese renombrado el proyecto se
-llamaba LOGOS (`logos`, `LOGOS_*`, `logos-*`); los documentos históricos de
+llamaba LOGOS (`logos`, `BATZ_*`, `batz-*`); los documentos históricos de
 `docs/` pueden conservar ese nombre. Siguen con el nombre antiguo, a propósito:
-el error `LogosError`, la extensión de los archivos de modelo `.logos`, el avatar
+el error `BatzError`, la extensión de los archivos de modelo `.logos`, el avatar
 `avatar/logos.glb` y su fuente `logos-avatar.blend`.
 
 Convenciones: «motor A» es la deducción natural (`proof/`), «motor B» es la
@@ -117,7 +117,7 @@ falla, hay que pasar los archivos.
 | `lexer.py` | `tokenize(text)` devuelve tokens con offsets. Admite Unicode y ASCII (`¬ ~ !`, `∧ & /\`, `∨ \| \/`, `→ ->`, `↔ <->`, `∀ forall`, `∃ exists`, `≠ !=`, `⊥ _\|_`). Los símbolos más largos van primero en la tabla. Un identificador sin mayúscula ni minúscula (`caseless_identifier`) es error léxico. |
 | `parser.py` | Descendente recursivo, clase `_Parser`. Precedencia de menor a mayor: `↔` (no asociativo, encadenarlo es `non_associative`), `→` (asocia a la derecha), `∨`, `∧` (a la izquierda), unarios `¬ ∀ ∃`. Un cuantificador liga solo el siguiente unario (`∀x P(x) ∧ Q` es `(∀x P(x)) ∧ Q`). Un nombre en minúscula es variable salvo que esté en `constants` (parámetro de `parse`) o en un cuantificador. Cuantificar una constante es `quantified_constant`. `modo propositional=True`: una minúscula suelta en posición de fórmula (`p`) se lee como el predicado 0-ario `P`; `p` y `P` en la misma entrada dan `letter_collision`. |
 | `printer.py` | `to_string(f, ascii=False)`: texto canónico con el mínimo de paréntesis según la tabla de precedencias. Round-trip `parse(to_string(f)) == f` (probado en `test_printer_roundtrip.py`). |
-| `errors.py` | `LogosError(stage, code, message, span, source)` con `to_diagnostic()` → `{schema_version, status:"invalid_input", stage, code, message, span, line, column}`. `stage`: `lexical`, `syntactic`, `semantic`. `ProofError` (en `proof/certificate.py`) hereda de él y añade `step`. |
+| `errors.py` | `BatzError(stage, code, message, span, source)` con `to_diagnostic()` → `{schema_version, status:"invalid_input", stage, code, message, span, line, column}`. `stage`: `lexical`, `syntactic`, `semantic`. `ProofError` (en `proof/certificate.py`) hereda de él y añade `step`. |
 
 ### 2.2 Símbolos y firmas: `symbols.py`, `interpretation.py`
 
@@ -220,7 +220,7 @@ de `alpha_equiv`, `free_vars` y `substitute`.
 | `checker.py` | **Checker independiente**. Solo importa `ast`, `transform` y `certificate` (no el buscador). `verify(cert)` recalcula el contexto de cada paso con `_apply` (una función por regla, comparando salvo alfa-equivalencia) y exige que coincida con el declarado (`context_mismatch`); los ids deben ser 1..n consecutivos; las refs apuntan solo hacia atrás; el último paso debe ser la conclusión y no puede quedar abierta ninguna hipótesis que no sea premisa (`open_assumption`). Condiciones de variable propia en `∀I` y `∃E` (`eigenvariable`). Un error trae el `step` culpable. |
 | `search.py` | Buscador dirigido por la meta (motor A). Construye `Deriv` y los linealiza (`linearize`) a certificado. `SearchConfig(max_depth=6, max_nodes=200_000, timeout=10.0)`; `search()` hace profundización iterativa sobre la profundidad de «decisiones con elección», memoriza fallos (`failed`) por (hechos, meta, profundidad), satura hechos, y como máximo 14 términos candidatos para instanciar. Devuelve `(certificado|None, motivo, nodos)`; motivos `depth` o `budget`. Es incompleto a propósito. No usa el checker. |
 | `__init__.py` | `prove`, `prove_text`, `find_inconsistency`. `_run` **verifica el certificado** antes de devolver `proved`/`inconsistent`; si el checker lo rechaza, `unknown` con `reason="checker_rejected"`. `prove_text(..., propositional=True)` parsea todas las fórmulas juntas para detectar colisiones `p`/`P`. |
-| `kalmar.py` | `kalmar_prove`: prueba proposicional completa y determinista. `kal(f, v)` deriva `f` o `¬f` desde los literales de `v` por inducción en `f`; una rama por valuación se combina con `p ∨ ¬p` (`_lem`) y `∨E`. El certificado crece como 2ⁿ, por eso `max_atoms` (10 por defecto; el servidor usa 6). Lanza `LogosError` si no es proposicional, hay demasiadas letras o no es consecuencia. No hay búsqueda: el resultado igual pasa por el checker. |
+| `kalmar.py` | `kalmar_prove`: prueba proposicional completa y determinista. `kal(f, v)` deriva `f` o `¬f` desde los literales de `v` por inducción en `f`; una rama por valuación se combina con `p ∨ ¬p` (`_lem`) y `∨E`. El certificado crece como 2ⁿ, por eso `max_atoms` (10 por defecto; el servidor usa 6). Lanza `BatzError` si no es proposicional, hay demasiadas letras o no es consecuencia. No hay búsqueda: el resultado igual pasa por el checker. |
 | `fitch.py` | Vista Fitch: `fitch_layout(cert)` reordena y renumera el certificado en líneas con cajas (una por hipótesis descargada por `→I`, `¬I`, RAA, `∨E`, `∃E`; `∀I` marca la variable nueva). `check_layout` comprueba que la disposición es fiel al certificado. **No leí el cuerpo del algoritmo de disposición**, solo su cabecera y la interfaz (`FitchLine`, `discharged`). |
 | `render.py` | `format_certificate`: texto plano para depurar; `RULE_SYMBOLS` (∧I, →E…). |
 
@@ -290,7 +290,7 @@ individuo distinto, después permite coincidencias. Rechaza símbolos de funció
 `parse_checked(strict=True)` → validar el entorno (valores `int|str`; que las
 claves sean variables y no símbolos declarados) → `evaluate` → `explain` y
 `build_story` (ambos verifican la traza). Devuelve `Resultado(status, value,
-trace, explanation, story, model, errors)`; ante un `LogosError` devuelve
+trace, explanation, story, model, errors)`; ante un `BatzError` devuelve
 `status="invalid_input"` y **ningún valor** ni traza.
 
 ### 2.12 Serialización: `serialize.py`
@@ -494,7 +494,7 @@ los únicos archivos de `web/` no servidos son `img/CREDITOS.md` y los tres
 4. El código HTTP es 200 si `response["status"]` ∈ `ok, found, unknown, single,
    ambiguous, proved, refuted` y 400 en otro caso (`invalid_input`).
 5. Se capturan `VoiceOutputError` y `VoiceInputError` (503 si `voice_unavailable`, si no 400),
-   `json.JSONDecodeError`, `LogosError` (incluye `ProofError`), `TypeError`,
+   `json.JSONDecodeError`, `BatzError` (incluye `ProofError`), `TypeError`,
    `ValueError` (esta incluye `UnicodeDecodeError`). Todos devuelven 400 con
    `{schema_version, status:"invalid_input", errors:[diagnóstico]}`.
    **No se captura** `AssertionError` (los bugs detectados por reverificación),
@@ -532,7 +532,7 @@ Independiente del transporte (las pruebas lo llaman directamente). Exige que
    (guarda cómo escribió cada letra en `letters`). Si no, devuelve el primer error.
    Con la lectura en primer orden decide `mode`: `propositional` si todas lo son,
    `first_order` si no. Después `check` por fórmula con una firma compartida
-   (aridad coherente). Un `LogosError` da `invalid_input`.
+   (aridad coherente). Un `BatzError` da `invalid_input`.
 3. `second = resolve(ps, c, ResolutionConfig(timeout=2))`: **el motor B siempre
    se ejecuta** como segunda opinión; nunca convierte `unknown` en `proved`.
 4. `_prove_propositional` (≤ 12 letras): recorre la tabla de verdad; si halla

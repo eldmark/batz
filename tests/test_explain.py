@@ -2,7 +2,7 @@ import dataclasses
 import random
 import unittest
 
-from logos import FiniteModel, LogosError, evaluate, explain, holds, parse
+from batz import FiniteModel, BatzError, evaluate, explain, holds, parse
 from helpers import close, rand_formula, rand_model
 
 
@@ -61,7 +61,7 @@ class ExplainTests(unittest.TestCase):
         e = self.explain_text("P(x)", {"x": 0})
         self.assertTrue(e.value)
         trace = evaluate(MODEL, parse("P(a)", {"a"}))
-        with self.assertRaises(LogosError) as cm:
+        with self.assertRaises(BatzError) as cm:
             explain(MODEL, dataclasses.replace(trace, value=False))
         self.assertEqual(cm.exception.code, "invalid_trace")
 

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {browserSpanishVoices, chooseVoice, wordTimings, readVoicePref, saveVoicePref} from '../../../src/logos/web/features/explanation-player/events.js';
+import {browserSpanishVoices, chooseVoice, wordTimings, readVoicePref, saveVoicePref} from '../../../src/batz/web/features/explanation-player/events.js';
 
 const voice = (name, lang, local = true) => ({name, lang, voiceURI: name, localService: local});
 const synthesis = list => ({getVoices: () => list});
@@ -34,7 +34,7 @@ test('la preferencia se guarda y tolera un almacenamiento roto', () => {
   const broken = {getItem() { throw Error('no'); }, setItem() { throw Error('no'); }};
   assert.equal(readVoicePref(broken), 'auto'); saveVoicePref(broken, 'x');
 });
-import {noVoiceHelp} from '../../../src/logos/web/features/explanation-player/events.js';
+import {noVoiceHelp} from '../../../src/batz/web/features/explanation-player/events.js';
 test('el mensaje sin voz distingue servidor antiguo, sin servidor y sin motor', () => {
   assert.match(noVoiceHelp('servidor-antiguo'), /versión anterior/);
   assert.match(noVoiceHelp('sin-servidor'), /No se pudo consultar/);

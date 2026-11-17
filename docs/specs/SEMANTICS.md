@@ -1,6 +1,6 @@
-# Semántica de LOGOS (lógica de primer orden clásica)
+# Semántica de Bat’z (lógica de primer orden clásica)
 
-> Estado: **borrador para revisión** (Fase 0). Implementada en `src/logos/model.py` y `src/logos/semantics.py`. La sintaxis está en `FORMAL_LANGUAGE.md`.
+> Estado: **borrador para revisión** (Fase 0). Implementada en `src/batz/model.py` y `src/batz/semantics.py`. La sintaxis está en `FORMAL_LANGUAGE.md`.
 
 ## 1. Estructuras
 

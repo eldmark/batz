@@ -1,7 +1,7 @@
 import random
 import unittest
 
-from logos import (And, Const, Eq, Exists, Forall, Func, Iff, Implies, Not, Or, Pred,
+from batz import (And, Const, Eq, Exists, Forall, Func, Iff, Implies, Not, Or, Pred,
                    Var, alpha_equiv, parse, to_string)
 from helpers import CONSTS, rand_formula
 

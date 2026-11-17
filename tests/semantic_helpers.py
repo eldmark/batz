@@ -2,7 +2,7 @@
 import itertools
 import random
 
-from logos import FiniteModel, check, free_vars, holds
+from batz import FiniteModel, check, free_vars, holds
 
 
 def signature_of(formulas):

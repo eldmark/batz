@@ -6,10 +6,10 @@ import tempfile
 import unittest
 from pathlib import Path
 
-os.environ["LOGOS_LEXICON"] = str(Path(tempfile.mkdtemp()) / "lexico_usuario.tsv")
+os.environ["BATZ_LEXICON"] = str(Path(tempfile.mkdtemp()) / "lexico_usuario.tsv")
 
-from logos import LogosError, lexicon, translate_spanish
-from logos.server import handle_api
+from batz import BatzError, lexicon, translate_spanish
+from batz.server import handle_api
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -74,7 +74,7 @@ class Senses(unittest.TestCase):
         try:
             self.assertEqual({r.text for r in translate_spanish("Toda zampoña es grande").readings},
                              {"∀x (Zampoña_herramienta(x) → Grande(x))", "∀x (Zampoña_crustaceo(x) → Grande(x))"})
-            with self.assertRaises(LogosError):        # el mismo sentido dos veces no se admite
+            with self.assertRaises(BatzError):        # el mismo sentido dos veces no se admite
                 handle_api("/api/lexicon/add", {"lemma": "zampoña", "category": "N", "feature": "F", "extra": "sentido=herramienta"})
         finally:
             lexicon.remove("zampoña", "N")

@@ -2,9 +2,9 @@
 services:
   evaluador:
     build: .
-    image: logos-evaluador-mm3032
+    image: batz-evaluador-mm3032
     ports:
-      - "127.0.0.1:${LOGOS_PORT:-8765}:8765"
+      - "127.0.0.1:${BATZ_PORT:-8765}:8765"
     volumes:
       - ./datos:/app/datos        # diccionario del usuario: sobrevive a reconstruir la imagen
     restart: unless-stopped

@@ -29,7 +29,7 @@ el trabajo. Los comandos son instrucciones, no constancia de que se ejecutaron:
 ```bash
 git status --short --branch
 git add AGENTS.md README.md docs/00-README-ROADMAP.md docs/plans/REDISENO_INTERFAZ.md docs/plans/REDISENO_PARALELO.md docs/specs/EXPLANATION_PLAYER.md
-git commit -m "Documenta el rediseño de LOGOS y el trabajo paralelo"
+git commit -m "Documenta el rediseño de Bat’z y el trabajo paralelo"
 git rev-parse HEAD
 ```
 
@@ -54,16 +54,16 @@ no borrarlos ni recrearlos a la fuerza.
 
 | Propietario | Archivos o directorios que puede editar |
 |---|---|
-| Claude | `src/logos/web/index.html`, `app.js`, `style.css`; nuevos `web/app/`, `web/shared/`, `web/styles/`; `web/features/home/`, `evaluator/`, `prover/`, `notebooks/`, `dictionary/`. |
-| Claude | `src/logos/server.py`, exclusivamente servicio de recursos estáticos necesario para el frontend; pruebas HTTP asociadas. |
+| Claude | `src/batz/web/index.html`, `app.js`, `style.css`; nuevos `web/app/`, `web/shared/`, `web/styles/`; `web/features/home/`, `evaluator/`, `prover/`, `notebooks/`, `dictionary/`. |
+| Claude | `src/batz/server.py`, exclusivamente servicio de recursos estáticos necesario para el frontend; pruebas HTTP asociadas. |
 | Claude | Nuevas pruebas en `tests/frontend/app/`; `docs/plans/entregas/CLAUDE.md`. |
-| Codex | Nuevo `src/logos/web/features/explanation-player/`; `src/logos/web/story3d.js`. |
+| Codex | Nuevo `src/batz/web/features/explanation-player/`; `src/batz/web/story3d.js`. |
 | Codex | Nuevas pruebas, fixtures y demo en `tests/frontend/player/`; `docs/plans/entregas/CODEX.md`. |
 | Coordinador / Claude al integrar | Ajustes de conexión del reproductor, registro de todos sus recursos y `docs/plans/entregas/INTEGRACION.md`. |
 | Congelados para ambos | Valores de `tokens.css`, `.blend`, `.glb`, fuentes, vendor, motores y APIs lógicas Python. |
 | Contratos compartidos | Este protocolo, el plan, `EXPLANATION_PLAYER.md` y `AGENTS.md`: no editarlos unilateralmente durante el paralelo. |
 
-`web/` en esta tabla abrevia `src/logos/web/`. Codex no extrae borrando código
+`web/` en esta tabla abrevia `src/batz/web/`. Codex no extrae borrando código
 de `app.js`; lo lee como referencia y desarrolla su módulo en sus propios archivos.
 Claude retira el reproductor antiguo al conectar el nuevo durante integración.
 
@@ -165,8 +165,8 @@ Comandos de referencia desde la raíz de cada worktree:
 ```bash
 PYTHONPATH=src:tests python3 -m unittest discover -s tests
 PYTHONPATH=src:tests python3 -m unittest test_project_integration.LocalHTTP
-node --input-type=module --check < src/logos/web/app.js
-node --input-type=module --check < src/logos/web/features/explanation-player/index.js
+node --input-type=module --check < src/batz/web/app.js
+node --input-type=module --check < src/batz/web/features/explanation-player/index.js
 git diff --check
 ```
 
@@ -187,7 +187,7 @@ No repetir un pull sobre un merge pendiente sin revisar primero `git status`.
 
 ### Para Claude
 
-> Implementa el frente Claude del rediseño de LOGOS en esta rama/worktree.
+> Implementa el frente Claude del rediseño de Bat’z en esta rama/worktree.
 > Lee AGENTS.md, docs/plans/REDISENO_INTERFAZ.md,
 > docs/specs/EXPLANATION_PLAYER.md y docs/plans/REDISENO_PARALELO.md.
 > Eres responsable de shell, Inicio, navegación, Evaluar, Demostrar, Cuadernos,
@@ -200,11 +200,11 @@ No repetir un pull sobre un merge pendiente sin revisar primero `git status`.
 
 ### Para Codex
 
-> Implementa el frente Codex del rediseño de LOGOS en esta rama/worktree.
+> Implementa el frente Codex del rediseño de Bat’z en esta rama/worktree.
 > Lee AGENTS.md, docs/plans/REDISENO_INTERFAZ.md,
 > docs/specs/EXPLANATION_PLAYER.md y docs/plans/REDISENO_PARALELO.md.
 > Eres responsable del reproductor transversal en
-> src/logos/web/features/explanation-player/ y de story3d.js. Cumple la API
+> src/batz/web/features/explanation-player/ y de story3d.js. Cumple la API
 > createExplanationPlayer documentada. Conserva el avatar de main, eventos
 > verificados, animaciones y labios. Incluye 2D, controles, voz opcional,
 > velocidad, minimización, invalidación y pantalla completa. No edites app.js,

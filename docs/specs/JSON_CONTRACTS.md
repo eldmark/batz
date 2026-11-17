@@ -1,6 +1,6 @@
 # Contratos JSON de Bat’z (versión 1)
 
-> Estado: actualizado contra el código de la rama de entrega (leyendo `server.py` y los módulos, y ejecutando `handle_api` sobre casos reales). Todos los contratos de este documento están **[implementado]**. `schema_version` actual: `"1"`. Un consumidor debe rechazar cualquier otra versión. El proyecto se llamaba LOGOS antes de llamarse Bat’z; el paquete es `batz`.
+> Estado: actualizado contra el código de la rama de entrega (leyendo `server.py` y los módulos, y ejecutando `handle_api` sobre casos reales). Todos los contratos de este documento están **[implementado]**. `schema_version` actual: `"1"`. Un consumidor debe rechazar cualquier otra versión. El proyecto se llamaba Bat’z antes de llamarse Bat’z; el paquete es `batz`.
 
 Hay **dos vocabularios de resultado** que no deben mezclarse: el de `serialize.result_to_dict` (§7, sobre «de biblioteca»: `counterexample`, `diagnostic`) y el de la API local (§8: `refuted`, `errors`, `found`, `ok`).
 

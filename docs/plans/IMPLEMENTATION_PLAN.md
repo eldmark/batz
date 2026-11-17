@@ -98,7 +98,7 @@ Son estimaciones gruesas para decidir qué recortar si falta tiempo. **Recorte r
 
 ## 6. Estado del motor B (2026-11-12)
 
-Implementado en `src/logos/resolution/` con el diseño de §3: clausificación (forma normal negativa, Skolem, distribución con cota), unificación con comprobación de ocurrencia, resolución binaria con factorización, selección por peso con turnos por antigüedad, y axiomas de igualdad cuando la fórmula usa `=`. Las variables libres del secuente se tratan como constantes arbitrarias, igual que en el motor A.
+Implementado en `src/batz/resolution/` con el diseño de §3: clausificación (forma normal negativa, Skolem, distribución con cota), unificación con comprobación de ocurrencia, resolución binaria con factorización, selección por peso con turnos por antigüedad, y axiomas de igualdad cuando la fórmula usa `=`. Las variables libres del secuente se tratan como constantes arbitrarias, igual que en el motor A.
 
 Evidencia (`tests/test_resolution.py`):
 

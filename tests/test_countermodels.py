@@ -1,9 +1,9 @@
 import unittest
 
-from logos import (CountermodelConfig, LogosError, Signature, build_interpretation,
+from batz import (CountermodelConfig, BatzError, Signature, build_interpretation,
                    find_countermodel, is_countermodel, parse)
-from logos.countermodels import find_consequence_countermodel
-from logos.semantics import holds
+from batz.countermodels import find_consequence_countermodel
+from batz.semantics import holds
 
 
 class CountermodelTests(unittest.TestCase):
@@ -44,7 +44,7 @@ class CountermodelTests(unittest.TestCase):
             (Signature(), "Q(a)", "undeclared_symbol"),
         ]:
             with self.subTest(text=text):
-                with self.assertRaises(LogosError) as cm:
+                with self.assertRaises(BatzError) as cm:
                     find_countermodel(sig, text)
                 self.assertEqual(cm.exception.code, code)
 

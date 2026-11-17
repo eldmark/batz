@@ -2,10 +2,10 @@
 import unittest
 from pathlib import Path
 
-from logos import FiniteModel, is_countermodel, parse
-from logos.errors import LogosError
-from logos.modelfile import parse_model_file
-from logos.server import handle_api
+from batz import FiniteModel, is_countermodel, parse
+from batz.errors import BatzError
+from batz.modelfile import parse_model_file
+from batz.server import handle_api
 
 ROOT = Path(__file__).resolve().parents[1]
 TEXT = """
@@ -43,7 +43,7 @@ class ModelFile(unittest.TestCase):
                                ("dominio: 0\nformula: P(x) | x", "línea 2"),
                                ("dominio: 0\nformula: P(x) | espera: quizá", "línea 2")]:
             with self.subTest(text=text):
-                with self.assertRaises(LogosError) as ctx:
+                with self.assertRaises(BatzError) as ctx:
                     parse_model_file(text)
                 self.assertIn(fragment, ctx.exception.message)
 
@@ -57,9 +57,9 @@ class ModelFile(unittest.TestCase):
         self.assertNotIn("value", rows[2])            # entrada inválida: sin valor de verdad
 
     def test_load_rejects_invalid_models(self):
-        with self.assertRaises(LogosError):           # relación vacía
+        with self.assertRaises(BatzError):           # relación vacía
             handle_api("/api/load", {"text": "dominio: 0\npredicado P/1:\n"})
-        with self.assertRaises(LogosError):           # función parcial
+        with self.assertRaises(BatzError):           # función parcial
             handle_api("/api/load", {"text": "dominio: 0, 1\nfuncion f/1: 0 -> 1\n"})
 
     def test_json_export_round_trip(self):

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {TOUR_KEY, STEPS, readTourState, writeTourState, shouldOfferTour} from '../../../src/logos/web/features/tour/tour.js';
+import {TOUR_KEY, STEPS, readTourState, writeTourState, shouldOfferTour} from '../../../src/batz/web/features/tour/tour.js';
 
 const memory = () => { const m = new Map(); return {getItem: k => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, v)}; };
 

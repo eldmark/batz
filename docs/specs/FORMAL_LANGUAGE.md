@@ -1,4 +1,4 @@
-# Lenguaje formal de LOGOS (fragmento para Fase 1)
+# Lenguaje formal de Bat’z (fragmento para Fase 1)
 
 > Estado: **borrador mínimo para desbloquear la Fase 1**. Cubre solo sintaxis, precedencia y reglas de símbolos. La semántica (`SEMANTICS.md`), el cálculo de pruebas y los contratos JSON siguen pendientes de Fase 0. Las decisiones marcadas **[D]** necesitan aprobación del equipo.
 

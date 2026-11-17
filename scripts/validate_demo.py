@@ -1,4 +1,4 @@
-"""Ensayo local reproducible de LOGOS MM3032.
+"""Ensayo local reproducible de Bat’z MM3032.
 
 Ejecutar con PYTHONPATH=src python3 scripts/validate_demo.py --seed 20261102.
 Solo usa HTTP local y la biblioteca estándar.
@@ -18,7 +18,7 @@ from time import perf_counter
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
-from logos.server import Handler
+from batz.server import Handler
 
 
 class QuietHandler(Handler):
@@ -28,7 +28,7 @@ class QuietHandler(Handler):
 
 def source_digest():
     root = Path(__file__).resolve().parents[1]
-    paths = [p for p in (root / "src" / "logos").rglob("*")
+    paths = [p for p in (root / "src" / "batz").rglob("*")
              if p.is_file() and p.suffix in {".py", ".js", ".css", ".html"}]
     paths.append(Path(__file__).resolve())
     digest = hashlib.sha256()
@@ -79,7 +79,7 @@ def run(seed):
         model = {"domain": [0, 1, 2], "constants": {"a": 0, "b": 2},
                  "predicates": {"P": {"arity": 1, "tuples": [[0], [2]]},
                                 "Q": {"arity": 1, "tuples": [[1], [2]]}}}
-        for path, marker in (("/", b"LOGOS"), ("/app.js", b"searchCountermodel"),
+        for path, marker in (("/", b"Bat’z"), ("/app.js", b"searchCountermodel"),
                              ("/style.css", b".verdict"), ("/", b"mode-prove"), ("/tokens.css", b"--emph-5-bg"), ("/story3d.js", b"createStoryScene"), ("/vendor/GLTFLoader.js", b"GLTFLoader"), ("/avatar/logos.glb", b"glTF"),
                              ("/vendor/three.module.js", b"three.core.js"),
                              ("/vendor/three.core.js", b"Vector3")):

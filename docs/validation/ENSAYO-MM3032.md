@@ -1,4 +1,4 @@
-# Ensayo final de LOGOS para MM3032
+# Ensayo final de Bat’z para MM3032
 
 ## Qué comprobé
 

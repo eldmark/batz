@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Instala la voz local de LOGOS (whisper.cpp) en Linux o macOS para el usuario actual.
+# Instala la voz local de Bat’z (whisper.cpp) en Linux o macOS para el usuario actual.
 #
 # SIN PROBAR en un Linux o macOS reales. Se probó en WSL (Ubuntu) con cmake simulado: clon y
 # verificación del commit, descarga y SHA-256 del modelo, repetición sin cambios. No se probaron
@@ -9,17 +9,17 @@
 #   2. whisper.cpp v1.9.5 compilado con cmake desde el repositorio oficial (commit verificado).
 #   3. El modelo ggml-base.bin (u otro) de Hugging Face, con tamaño y SHA-256 comprobados.
 #
-# whisper-cli y el modelo quedan en ~/.local/share/logos/voz, donde LOGOS los encuentra sin
+# whisper-cli y el modelo quedan en ~/.local/share/batz/voz, donde Bat’z los encuentra sin
 # variables de entorno y sin reiniciarse. Se puede repetir: lo ya instalado y verificado se salta.
 #
 # Uso:    bash scripts/instalar_voz.sh [base|small|tiny] [carpeta]
 #         base: 142 MiB (por defecto); small: 466 MiB, más preciso y más lento; tiny: 75 MiB.
-#         Con otra carpeta, LOGOS solo la usa si defines LOGOS_WHISPER_CLI y LOGOS_WHISPER_MODEL.
-# Quitar: rm -rf ~/.local/share/logos/voz   (y ffmpeg con apt o brew si nada más lo usa)
+#         Con otra carpeta, Bat’z solo la usa si defines BATZ_WHISPER_CLI y BATZ_WHISPER_MODEL.
+# Quitar: rm -rf ~/.local/share/batz/voz   (y ffmpeg con apt o brew si nada más lo usa)
 set -euo pipefail
 
 MODELO="${1:-base}"
-HABITUAL="$HOME/.local/share/logos/voz"
+HABITUAL="$HOME/.local/share/batz/voz"
 DESTINO="${2:-$HABITUAL}"
 WHISPER_TAG="v1.9.5"
 WHISPER_COMMIT="d1be6fde11ac6e0407606b4e42fe72d34add8037"
@@ -58,11 +58,11 @@ SUDO=""
 if [ "$(id -u)" -ne 0 ]; then SUDO="sudo"; fi
 NUCLEOS="$(getconf _NPROCESSORS_ONLN 2>/dev/null || echo 2)"
 # Cada descarga va a una carpeta temporal nueva y vacía; se borra al terminar, también si algo falla.
-TRABAJO="$(mktemp -d "${TMPDIR:-/tmp}/logos-voz.XXXXXX")"
+TRABAJO="$(mktemp -d "${TMPDIR:-/tmp}/batz-voz.XXXXXX")"
 trap 'rm -rf "$TRABAJO"' EXIT
 mkdir -p "$DESTINO"
 DESTINO="$(cd "$DESTINO" && pwd)"
-printf 'Voz local de LOGOS en %s\n' "$DESTINO"
+printf 'Voz local de Bat’z en %s\n' "$DESTINO"
 
 paso "1/3 ffmpeg"
 if hay ffmpeg; then
@@ -139,14 +139,14 @@ paso "Comprobación"
 VERSION="$("$CLI" --version 2>&1)" || falla "whisper-cli no arranca: $VERSION"
 nota "$VERSION"
 
-printf '\nListo. LOGOS usa esta voz local sin variables de entorno y sin reiniciarse.\n'
+printf '\nListo. Bat’z usa esta voz local sin variables de entorno y sin reiniciarse.\n'
 if [ "$DESTINO" != "$HABITUAL" ]; then
-  nota "Esta no es la carpeta habitual: define estas variables antes de abrir LOGOS:"
-  nota "  export LOGOS_WHISPER_CLI='$CLI'"
-  nota "  export LOGOS_WHISPER_MODEL='$MODELO_DESTINO'"
+  nota "Esta no es la carpeta habitual: define estas variables antes de abrir Bat’z:"
+  nota "  export BATZ_WHISPER_CLI='$CLI'"
+  nota "  export BATZ_WHISPER_MODEL='$MODELO_DESTINO'"
 fi
-if [ -n "${LOGOS_WHISPER_CLI:-}${LOGOS_WHISPER_MODEL:-}" ]; then
-  nota "Aviso: LOGOS_WHISPER_CLI o LOGOS_WHISPER_MODEL están definidas y mandan sobre esta carpeta."
+if [ -n "${BATZ_WHISPER_CLI:-}${BATZ_WHISPER_MODEL:-}" ]; then
+  nota "Aviso: BATZ_WHISPER_CLI o BATZ_WHISPER_MODEL están definidas y mandan sobre esta carpeta."
 fi
 if hay whisper-cli; then nota "Aviso: el whisper-cli del PATH ($(command -v whisper-cli)) tiene prioridad."; fi
 nota "Para quitarla: rm -rf '$DESTINO'"

@@ -1,21 +1,21 @@
-/* Verificación opcional de UI. Requiere Playwright externo, no es dependencia de LOGOS.
+/* Verificación opcional de UI. Requiere Playwright externo, no es dependencia de Bat’z.
    PLAYWRIGHT_MODULE: ruta al paquete playwright/playwright-core.
-   LOGOS_PRACTICE_FIXTURES: JSON de EXERCISES exportado por Python.
-   LOGOS_BASE_URL: servidor iniciado (por defecto http://127.0.0.1:8765).
+   BATZ_PRACTICE_FIXTURES: JSON de EXERCISES exportado por Python.
+   BATZ_BASE_URL: servidor iniciado (por defecto http://127.0.0.1:8765).
    PLAYWRIGHT_CHROMIUM_EXECUTABLE: opcional, navegador ya instalado.
-   LOGOS_TEST_OUTPUT: carpeta opcional de capturas.
+   BATZ_TEST_OUTPUT: carpeta opcional de capturas.
 */
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
 const {chromium} = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
-const base = process.env.LOGOS_BASE_URL || 'http://127.0.0.1:8765';
-const output = process.env.LOGOS_TEST_OUTPUT || path.join(os.tmpdir(), 'logos-practice');
+const base = process.env.BATZ_BASE_URL || 'http://127.0.0.1:8765';
+const output = process.env.BATZ_TEST_OUTPUT || path.join(os.tmpdir(), 'batz-practice');
 
 (async () => {
   fs.mkdirSync(output, {recursive:true});
-  const exercises = JSON.parse(fs.readFileSync(process.env.LOGOS_PRACTICE_FIXTURES, 'utf8'));
+  const exercises = JSON.parse(fs.readFileSync(process.env.BATZ_PRACTICE_FIXTURES, 'utf8'));
   const browser = await chromium.launch({headless:true, executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE || undefined});
   try {
     const context = await browser.newContext({viewport:{width:1440,height:1050}});
@@ -95,14 +95,14 @@ const output = process.env.LOGOS_TEST_OUTPUT || path.join(os.tmpdir(), 'logos-pr
     await m.screenshot({path:path.join(output,'mobile-legend.png'),fullPage:true});
     // La actualización preserva las pruebas compatibles y archiva las reemplazadas.
     const migration = await browser.newContext();
-    await migration.addInitScript(() => localStorage.setItem('logos.practice.v1',JSON.stringify({
+    await migration.addInitScript(() => localStorage.setItem('batz.practice.v1',JSON.stringify({
       '01':{moves:[{formula:'P',rule:'and_e1',refs:[1],params:{}}],complete:true,hints:1},
       '05':{moves:[{formula:'P',rule:'assume',refs:[],params:{}}],complete:true,hints:2}
     })));
     const old = await migration.newPage(); await old.goto(`${base}/#practicar`);
     await old.locator('.pr-exercise').first().waitFor();
     assert.equal(await old.locator('.pr-exercise.is-complete').count(),1);
-    const recovered=await old.evaluate(()=>JSON.parse(localStorage.getItem('logos.practice.v1')));
+    const recovered=await old.evaluate(()=>JSON.parse(localStorage.getItem('batz.practice.v1')));
     assert.equal(recovered['05'].previous.length,1); assert.equal(recovered['05'].moves.length,0);
     assert.equal(recovered['01'].complete,true);
     assert.deepEqual(errors,[]);

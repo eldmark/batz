@@ -3,8 +3,8 @@ import copy
 import json
 import unittest
 
-from logos import Signature, build_interpretation, evaluar, libres
-from logos.errors import LogosError
+from batz import Signature, build_interpretation, evaluar, libres
+from batz.errors import BatzError
 
 
 SIG = Signature(constants={"a"}, functions={"f": 1}, predicates={"P": 1})
@@ -55,7 +55,7 @@ class StrictInterpretation(unittest.TestCase):
                 self.assertEqual(result.errors[0]["code"], "invalid_model")
 
     def test_predicate_zero_arity_rejected_at_project_boundary(self):
-        with self.assertRaises(LogosError) as cm:
+        with self.assertRaises(BatzError) as cm:
             build_interpretation(Signature(predicates={"P": 0}),
                                  {"domain": [0], "predicates": {"P": {"arity": 0, "tuples": [[]]}}})
         self.assertEqual(cm.exception.code, "invalid_model")

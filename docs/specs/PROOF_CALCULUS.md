@@ -1,6 +1,6 @@
 # Cálculo de pruebas: deducción natural clásica
 
-> Estado: **borrador para revisión** (Fase 0/3). Lo implementa el checker `src/logos/proof/checker.py`, que sigue esta tabla regla por regla. El buscador (`search.py`) no puede importar el checker ni al revés.
+> Estado: **borrador para revisión** (Fase 0/3). Lo implementa el checker `src/batz/proof/checker.py`, que sigue esta tabla regla por regla. El buscador (`search.py`) no puede importar el checker ni al revés.
 
 ## 1. Forma de los juicios
 
@@ -111,7 +111,7 @@ Nada de esto afecta la corrección: lo que el buscador devuelve se verifica de n
 
 ## Presentación en notación de Fitch (2026-11-13)
 
-El certificado usa contextos explícitos (`Γ ⊢ φ` en cada paso); la interfaz lo muestra en notación de Fitch (`src/logos/proof/fitch.py`). Solo cambia la presentación:
+El certificado usa contextos explícitos (`Γ ⊢ φ` en cada paso); la interfaz lo muestra en notación de Fitch (`src/batz/proof/fitch.py`). Solo cambia la presentación:
 
 - Las premisas van primero, una por línea, separadas del resto por una raya.
 - Cada hipótesis que una regla descarga abre una caja: →I y ¬I suponen la hipótesis, RAA supone la negación de la conclusión, ∨E abre dos cajas (una por disyunto) y ∃E una con el testigo. ∀I abre una caja sin hipótesis, marcada con su variable nueva; ∃E marca la suya junto al testigo.

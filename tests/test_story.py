@@ -1,7 +1,7 @@
 import dataclasses
 import unittest
 
-from logos import FiniteModel, LogosError, build_story, evaluate, parse
+from batz import FiniteModel, BatzError, build_story, evaluate, parse
 
 
 class StoryTests(unittest.TestCase):
@@ -21,7 +21,7 @@ class StoryTests(unittest.TestCase):
         model = FiniteModel([0], predicates={"P": (1, [(0,)])})
         trace = evaluate(model, parse("P(x)"), {"x": 0})
         forged = dataclasses.replace(trace, value=False)
-        with self.assertRaises(LogosError) as cm:
+        with self.assertRaises(BatzError) as cm:
             build_story(model, forged)
         self.assertEqual(cm.exception.code, "invalid_trace")
 

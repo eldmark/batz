@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {buildEvaluationHtml, buildProofHtml, modelHtml, fitchHtml} from '../../../src/logos/web/features/export/export.js';
+import {buildEvaluationHtml, buildProofHtml, modelHtml, fitchHtml} from '../../../src/batz/web/features/export/export.js';
 
 const model = {domain: [0, 'Ana'], constants: {a: 0}, functions: {f: {table: [[[0], 'Ana'], [['Ana'], 0]]}}, predicates: {P: {tuples: [[0]]}}};
 

@@ -2,12 +2,12 @@
 import dataclasses
 import unittest
 
-from logos import parse
-from logos.parser import parse as parse_formula
-from logos.proof import ProofError, SearchConfig, prove_text
-from logos.proof.fitch import check_layout, fitch_layout
-from logos.proof.kalmar import kalmar_prove
-from logos.propositional import decide
+from batz import parse
+from batz.parser import parse as parse_formula
+from batz.proof import ProofError, SearchConfig, prove_text
+from batz.proof.fitch import check_layout, fitch_layout
+from batz.proof.kalmar import kalmar_prove
+from batz.propositional import decide
 from proof_corpus import CLASS_KALMAR, CLASS_SEQUENTS, VALID
 
 
