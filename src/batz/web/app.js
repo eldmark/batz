@@ -5,6 +5,7 @@ import {buildEvaluationHtml, buildProofHtml, download, printHtml} from '/feature
 import {initLearn} from '/features/learn/learn.js';
 import {createExplanationPlayer} from '/features/explanation-player/index.js';
 import {EXAMPLE_GROUPS, EXAMPLES, defaultExample, examplePackage, SPANISH_PHRASES} from '/features/evaluator/examples.js';
+import {PROOF_EXAMPLE_GROUPS, PROOF_EXAMPLES} from '/features/prover/examples.js';
 import {createTour} from '/features/tour/tour.js';
 
 const $ = (id) => document.getElementById(id);
@@ -749,22 +750,16 @@ async function evaluateFormula() {
   });
 }
 
-// El botón «Ejemplo» carga uno del modo en que se está.
-const PROOF_SAMPLES = [
-  {premises: '∀x (Humano(x) → Mortal(x))\nHumano(socrates)', conclusion: 'Mortal(socrates)', constants: 'socrates',
-   note: 'Ejemplo: Sócrates es mortal. Pulsa «Buscar prueba».'},
-  {premises: '∀x ∃y Ama(x, y)', conclusion: '∃y ∀x Ama(x, y)', constants: '',
-   note: 'Ejemplo: ¿cambiar el orden de ∀ y ∃ conserva la verdad? Pulsa «Buscar prueba».'},
-  {premises: '', conclusion: '((p → q) → p) → p', constants: '',
-   note: 'Ejemplo: ley de Peirce, con letras proposicionales. Pulsa «Buscar prueba».'},
-];
-let proofSample = 0;
-function loadProofSample() {
-  const sample = PROOF_SAMPLES[proofSample++ % PROOF_SAMPLES.length];
-  $('proof-premises').value = sample.premises; $('proof-conclusion').value = sample.conclusion;
-  $('proof-constants').value = sample.constants;
-  proofInputs++; clearStory('prove'); $('proof-result').replaceChildren(); checkProofSyntax();
-  toast(sample.note);
+function loadProofSample(sample) {
+  const previous = {premises: $('proof-premises').value, conclusion: $('proof-conclusion').value, constants: $('proof-constants').value};
+  const apply = values => {
+    $('proof-premises').value = values.premises; $('proof-conclusion').value = values.conclusion;
+    $('proof-constants').value = values.constants;
+    proofInputs++; lastProof = null; clearStory('prove'); $('proof-result').replaceChildren(); checkProofSyntax();
+  };
+  apply(sample);
+  toast(`Caso cargado: ${sample.title}. ${sample.note} Pulsa «Buscar prueba».`, 'success', 8000,
+    {label: 'Deshacer', run: () => apply(previous)});
 }
 function loadDictionarySample() {
   $('dict-query').value = 'duermen'; dictShow('results'); searchDictionary(true);
@@ -891,6 +886,18 @@ function useSpanishReading(reading, box) {
 }
 
 function fillExampleSelects() {
+  const proofSelect = $('proof-example');
+  proofSelect.append(Object.assign(document.createElement('option'), {value: '', textContent: 'Elige un caso…'}));
+  for (const group of PROOF_EXAMPLE_GROUPS) {
+    const optgroup = document.createElement('optgroup'); optgroup.label = group.title;
+    for (const item of group.items) optgroup.append(Object.assign(document.createElement('option'), {value: item.id, textContent: item.title}));
+    proofSelect.append(optgroup);
+  }
+  proofSelect.addEventListener('change', () => {
+    const sample = PROOF_EXAMPLES.find(item => item.id === proofSelect.value);
+    proofSelect.value = '';
+    if (sample) loadProofSample(sample);
+  });
   for (const select of document.querySelectorAll('[data-example-select]')) {
     select.append(Object.assign(document.createElement('option'), {value: '', textContent: 'Elige un caso…'}));
     for (const group of EXAMPLE_GROUPS) {
@@ -2110,7 +2117,7 @@ function setMode(mode) {
   $('help-panel').hidden = true; $('help-button').setAttribute('aria-expanded', 'false');
   $('import-json').hidden = mode !== 'evaluate';
   if (mode === 'evaluate') setStep(wizardStep, {focus: false});
-  $('sample').hidden = mode === 'home' || !!slug || mode === 'practice' || mode === 'evaluate' || mode === 'learn';
+  $('sample').hidden = mode === 'home' || !!slug || mode === 'practice' || mode === 'evaluate' || mode === 'prove' || mode === 'learn';
   if (mode !== 'home' && SAMPLE_LABEL[mode]) $('sample').querySelector('.label').textContent = SAMPLE_LABEL[mode];
   closeMenu();
   pillHosts().forEach(placePill);
@@ -2252,7 +2259,7 @@ $('add-symbol').addEventListener('click', () => { addSymbol(); invalidateTables(
 $('prepare').addEventListener('click', prepare);
 $('domain').addEventListener('input', invalidateTables);
 for (const type of ['change', 'input']) { interpretationBox.addEventListener(type, () => { evalInputs++; }); $('assignment').addEventListener(type, () => { evalInputs++; }); }
-$('sample').addEventListener('click', () => ({evaluate: loadSample, prove: loadProofSample, dictionary: loadDictionarySample, notebook: loadNotebookSample})[currentMode]?.());
+$('sample').addEventListener('click', () => ({evaluate: loadSample, dictionary: loadDictionarySample, notebook: loadNotebookSample})[currentMode]?.());
 $('evaluate').addEventListener('click', evaluateFormula);
 $('export-json').addEventListener('click', exportJSON);
 $('import-json').addEventListener('click', () => $('import-file').click());

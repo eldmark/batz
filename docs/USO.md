@@ -45,6 +45,8 @@ Abre `http://127.0.0.1:8765/#/practicar` o pulsa **Practicar** en la barra later
 
 Las tres categorías están siempre disponibles. La dificultad aumenta por la combinación de estrategias y el control de dependencias, además de la extensión de las pruebas. La última demostración construye la conmutatividad de la suma en 49 pasos propios y tres inducciones; sus dos lemas también deben demostrarse.
 
+En el inicio de Practicar hay un panel **Cómo se juega** (las reglas del juego en cinco ideas), el botón **Reglas y chuleta** (diálogo con las reglas completas y las 22 reglas de inferencia con un ejemplo verificado de cada una; también está como botón **Reglas** dentro de cada ejercicio) y **Ver el tutorial**: «Tu primera prueba en 2 minutos», una guía paso a paso sobre el ejercicio 01 real. La primera vez aparece además un banner «¿Primera vez? Haz el tutorial». El tutorial no se abre solo, se puede omitir con Esc y, si ya tenías el ejercicio 01 completo, tu prueba se restaura al terminar.
+
 1. Elige un ejercicio. El objetivo y cada línea tienen su lectura española encima de la fórmula.
 2. Selecciona una regla; la ayuda explica cuántas referencias requiere y en qué orden.
 3. Escribe las referencias o toca los números de las líneas. Escribe la nueva fórmula con el teclado o los botones de símbolos. Completa el término, la variable o la plantilla si la regla los pide.

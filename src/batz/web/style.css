@@ -76,6 +76,7 @@ input:not([type=checkbox]), select, textarea {
 input:not([type=checkbox]):hover, select:hover, textarea:hover { border-color: var(--brand-500); }
 input:not([type=checkbox]):focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 0; border-color: var(--accent-600); }
 input:disabled, select:disabled { background: var(--surface-sunken); color: var(--text-muted); }
+#proof-example { display: block; width: 100%; min-width: 0; }
 input::placeholder, textarea::placeholder { color: var(--neutral-500); }
 input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--brand-700); cursor: pointer; }
 textarea { display: block; width: 100%; resize: vertical; }

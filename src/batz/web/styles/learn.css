@@ -1,6 +1,6 @@
 /* Aprender: historia como un hilo vertical con un nudo por hito, y tarjetas que cuelgan del mismo hilo. */
-.learn-page { padding: var(--s6) var(--gutter) var(--s7); min-width: 0; }
-.learn-page > * { max-width: 920px; }
+.learn-page { padding: var(--s6) var(--gutter) var(--s7); min-width: 0; container: learn / inline-size; }
+.learn-page > * { width: 100%; max-width: 1120px; margin-inline: auto; }
 .learn-head .actions, .learn-actions { margin-top: var(--s3); }
 .learn-block { margin-top: var(--s6); padding-top: var(--s4); border-top: var(--hair); min-width: 0; }
 .learn-block > h3 { font: 500 clamp(24px, 2.2vw, 30px)/1.15 var(--serif); letter-spacing: -.01em; text-wrap: balance; }
@@ -10,7 +10,6 @@
 .learn-count { margin-top: var(--s2); }
 
 /* ── Línea de tiempo: pista de hilo con nudos, el hito elegido en grande y sus vecinos ── */
-.learn-page > .tl2-block { max-width: 1120px; }
 .tl2 { margin-top: var(--s4); min-width: 0; }
 .tl2-track { position: relative; overflow-x: auto; overflow-y: hidden; padding: var(--s3) var(--s2) var(--s2); margin: 0 calc(-1 * var(--s2)); scrollbar-width: thin; touch-action: pan-x pan-y; cursor: grab; }
 .tl2-track.is-dragging { cursor: grabbing; user-select: none; }
@@ -108,8 +107,7 @@
 .fc-list dd { margin: 2px 0 0; overflow-wrap: anywhere; }
 .fc-list-ex, .fc-list-st { display: block; color: var(--text-muted); font-size: 13px; margin-top: 2px; }
 
-@media (max-width: 767px) {
-  .learn-page { padding-top: var(--s5); }
+@container learn (max-width: 767px) {
   /* Una sola tarjeta; el antes y el después quedan como pestañas laterales con la fecha en vertical */
   .tl2-stage { grid-template-columns: 44px minmax(0, 1fr) 44px; gap: var(--s2); align-items: stretch; }
   .tl2-side { align-self: stretch; margin-top: 0; align-items: center; justify-content: center; padding: var(--s2) 0; gap: var(--s2); }
@@ -136,6 +134,7 @@
 /* ── Bloque de tarjetas de estudio: todo centrado ── */
 #learn-cards { text-align: center; }
 #learn-cards .pane-lede { margin-inline: auto; }
+#learn-cards .learn-toolbar { justify-content: center; }
 #learn-cards .learn-filters, #learn-cards .filters, #learn-cards .fc-modes, #learn-cards .actions { justify-content: center; }
 #learn-cards .fc-stage, #learn-cards .fc-done, #learn-cards .fc-meter, #learn-cards .fc-all { margin-inline: auto; }
 #learn-cards .fc-face { text-align: left; align-items: stretch; }

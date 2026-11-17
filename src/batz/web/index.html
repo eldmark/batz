@@ -16,6 +16,7 @@
   <link rel="stylesheet" href="/styles/tour.css">
   <link rel="stylesheet" href="/styles/dictionary.css">
   <link rel="stylesheet" href="/practice.css">
+  <link rel="stylesheet" href="/styles/practice-tutorial.css">
   <link rel="stylesheet" href="/styles/responsive.css">
   <link rel="stylesheet" href="/styles/home.css">
   <link rel="stylesheet" href="/styles/learn.css">
@@ -168,6 +169,11 @@
     <section class="pane model" aria-labelledby="proof-heading">
       <h2 id="proof-heading" class="pane-title">Plantea la consecuencia</h2>
       <p class="pane-lede">Aquí no hay un modelo concreto: se pregunta si la conclusión se sigue de las premisas en <strong>todos</strong> los modelos posibles. En Evaluar, en cambio, se comprueba la verdad en una sola interpretación.</p>
+      <div class="block">
+        <label for="proof-example">Ejemplos de demostración</label>
+        <select id="proof-example" aria-describedby="proof-example-note"></select>
+        <p id="proof-example-note" class="hint">Elige un caso y pulsa «Buscar prueba». Se reemplaza el planteamiento y puedes deshacer el cambio.</p>
+      </div>
       <div class="block">
         <label for="proof-premises">Premisas, una por línea</label>
         <textarea id="proof-premises" aria-describedby="proof-check" class="formal" rows="4" spellcheck="false" placeholder="∀x (P(x) → Q(x))&#10;P(a)"></textarea>
