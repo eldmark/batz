@@ -59,3 +59,21 @@ menú lateral y lo cierra al salir; navegar a otra sección cierra el recorrido.
 Archivos: `web/features/tour/tour.js`, `web/styles/tour.css`, `tests/frontend/app/tour.test.mjs`; conexión mínima en
 `app.js` (import, instancia, botón y `maybeOffer()` tras el `setMode` inicial), `index.html` (css y botón en la ayuda)
 y `server.py` (2 rutas estáticas). Verificación: unittest, `node --test`, `--check` de `app.js` y Playwright a 1440/768/390 px.
+
+## F7 responsive y fallos
+
+Rama `rediseno/responsive` (worktree `../proyecto1-resp`). Por indicación de coordinación, Evaluar (estructura, vista móvil
+Modelo / Fórmula, «Ir a la entrada» en Evaluar) queda fuera: lo rehace otro frente.
+
+Corregido: Demostrar rotula el resultado como «Prueba verificada», «Contramodelo verificado» o «Búsqueda inconclusa»
+(esta última añade que inconcluso no significa falso); los errores de sintaxis de premisas/conclusión llevan «Ir a la
+entrada», que enfoca la premisa o la conclusión y selecciona el tramo señalado. CSS nuevo en `web/styles/responsive.css`
+(registrado en `server.py` y enlazado en `index.html`).
+
+Comprobado con Playwright (Chromium headless, emulación; sin teléfono real) en 1440, 1024, 768, 390, 360 y 844x390: sin
+desborde horizontal de la página ni elementos fuera del viewport en Inicio, Practicar, Evaluar (resultado verdadero/falso,
+árbol, lote), Demostrar (prueba, contramodelo, inconclusa), Cuadernos (fuentes, preguntas, evidencia), y con el
+reproductor abierto y en pantalla completa. Fallos simulados (WebGL nulo, GLB abortado, sin voces / sin `speechSynthesis`,
+movimiento reducido): el texto, los pasos y los controles siguen operativos; WebGL y GLB fallidos muestran el aviso y la
+vista 2D. Cero solicitudes a hosts externos. No probado: voz española real, teléfono físico, Evaluar en el modelo grande
+en móvil (fuera de alcance).
