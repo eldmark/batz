@@ -180,9 +180,12 @@ export function createStoryScene(container, model, options = {}) {
     const height = Math.max(container.clientHeight, 200);
     renderer.setSize(width, height);
     camera.aspect = width / height;
-    const span = count ? 7.6 : 4.2;                   // ancho de escena que debe caber
+    // Ancho que debe caber: del borde izquierdo del avatar al borde derecho del dominio (esferas incluidas).
+    // La cámara se centra en ese tramo, así el avatar no queda cortado en contenedores casi cuadrados.
+    const left = count ? -4.9 : -2.4, right = count ? centre.x + radius + .6 : 2.4;
+    const span = (right - left) * 1.05, middle = (left + right) / 2;
     const distance = Math.max(8.2, span / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.aspect));
-    camera.position.set(0, .35, distance); camera.lookAt(0, .1, 0);
+    camera.position.set(middle, .35, distance); camera.lookAt(middle, .1, 0);
     camera.updateProjectionMatrix();
     schedule();
   }

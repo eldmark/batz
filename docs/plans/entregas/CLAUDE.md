@@ -101,3 +101,7 @@ Rama `rediseno/diccionario` (worktree `../proyecto1-dict`). Sin framework; estil
 - Cambios mínimos fuera de la sección: se retiró `mode-dictionary` del bucle de sub-pestañas, `setMode` ya no reinicia la lista al volver al diccionario, y `server.py` sirve `/styles/dictionary.css`.
 - Verificación: `unittest` (315 pruebas OK), `node --check`, Playwright a 1440/1024/768/390/360 px (buscar, filtrar, detalle, añadir, quitar, llegada desde Evaluar y Cuadernos y regreso, sin desborde ni errores de consola).
 
+
+## Encuadre de la escena 3D
+
+`story3d.js` (archivo de Codex, editado en la integración): la cámara encuadraba solo por el ancho del dominio y cortaba el avatar y su brazo en contenedores casi cuadrados. Ahora centra y encuadra desde el borde izquierdo del avatar (con margen para el gesto) hasta el borde derecho del dominio. Comprobado con capturas a 1440, 1920 y 390 px (paso 10 de un contramodelo de 2 elementos).
