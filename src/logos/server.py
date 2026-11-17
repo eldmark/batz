@@ -335,6 +335,7 @@ class Handler(BaseHTTPRequestHandler):
                  "/story3d.js": ("story3d.js", "text/javascript; charset=utf-8"),
                  "/style.css": ("style.css", "text/css; charset=utf-8"),
                  "/styles/shell.css": ("styles/shell.css", "text/css; charset=utf-8"),
+                 "/styles/dictionary.css": ("styles/dictionary.css", "text/css; charset=utf-8"),
                  "/app/navigation.js": ("app/navigation.js", "text/javascript; charset=utf-8"),
                  "/features/home/home.js": ("features/home/home.js", "text/javascript; charset=utf-8"),
                  "/tokens.css": ("tokens.css", "text/css; charset=utf-8"),

@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="/tokens.css">
   <link rel="stylesheet" href="/style.css">
   <link rel="stylesheet" href="/styles/shell.css">
+  <link rel="stylesheet" href="/styles/dictionary.css">
   <link rel="stylesheet" href="/practice.css">
   <script type="module" src="/app.js"></script>
   <script defer src="/practice.js"></script>
@@ -150,53 +151,68 @@
     </section>
   </section>
 
-  <section id="mode-dictionary" class="workspace dictionary" aria-label="Diccionario" data-pane="model" hidden>
-    <div class="subtabs" role="tablist" aria-label="Parte del diccionario">
-      <span class="pill" aria-hidden="true"></span>
-      <button id="dict-pane-model" class="subtab" role="tab" type="button" aria-selected="true" aria-controls="dict-search-panel">Buscar</button>
-      <button id="dict-pane-question" class="subtab" role="tab" type="button" aria-selected="false" aria-controls="dict-add-panel" tabindex="-1">Añadir</button>
-    </div>
-    <section id="dict-search-panel" class="pane model" aria-labelledby="dict-heading">
-      <h2 id="dict-heading" class="pane-title">Diccionario del español</h2>
-      <p id="dict-counts" class="pane-lede"></p>
-      <div class="block">
+  <section id="mode-dictionary" class="dict-page" aria-label="Diccionario" data-view="results" hidden>
+    <header class="dict-head">
+      <div>
+        <h2 id="dict-heading" class="pane-title">Diccionario del español</h2>
+        <p id="dict-counts" class="pane-lede"></p>
+      </div>
+      <button id="dict-add-open" class="button secondary" type="button" aria-controls="dict-side">Añadir palabra</button>
+    </header>
+    <div class="dict-toolbar" role="search" aria-label="Buscar en el diccionario">
+      <div class="dict-search">
         <label for="dict-query">Busca una palabra o una forma conjugada</label>
         <input id="dict-query" spellcheck="false" placeholder="duermen, mujeres, alta…" autocomplete="off">
-        <div id="dict-filters" class="filters" role="group" aria-label="Categoría"></div>
-        <div class="table-wrap"><table class="dict-table"><thead><tr><th>Palabra</th><th>Categoría</th><th>Formas</th><th>Símbolo</th><th><span class="sr-only">Quitar</span></th></tr></thead><tbody id="dict-results"></tbody></table></div>
+      </div>
+      <div class="dict-filter-group"><span id="dict-cat-label" class="dict-filter-label">Categoría</span><div id="dict-filters" class="filters" role="group" aria-labelledby="dict-cat-label"></div></div>
+      <div class="dict-filter-group"><span id="dict-origin-label" class="dict-filter-label">Origen</span><div id="dict-sources" class="filters" role="group" aria-labelledby="dict-origin-label"></div></div>
+    </div>
+    <div class="dict-body">
+      <section id="dict-results-panel" class="dict-main" aria-labelledby="dict-results-title">
+        <h3 id="dict-results-title" class="sr-only">Resultados</h3>
+        <ul id="dict-results" class="dict-list"></ul>
         <div class="actions"><button id="dict-more" class="button secondary" type="button" hidden>Mostrar más</button><span id="dict-note" class="hint" role="status"></span></div>
-      </div>
-    </section>
-    <section id="dict-add-panel" class="pane question" aria-labelledby="dict-add-heading">
-      <div class="question-inner">
-        <h2 id="dict-add-heading" class="pane-title">Añade una palabra</h2>
-        <p class="pane-lede">Escríbela como la usarías. Si no está, el modelo propone qué es y tú lo corriges antes de guardar.</p>
-        <label for="dict-word">Palabra</label>
-        <div class="inline"><input id="dict-word" class="formal" spellcheck="false" placeholder="galopan" autocomplete="off"><button id="dict-check" class="button secondary" type="button">Consultar</button></div>
-        <p id="dict-proposal" class="hint" role="status"></p>
-        <div id="dict-form" hidden>
-          <div class="dict-fields">
-            <div><label for="dict-lemma">Lema <span class="hint">singular, o infinitivo si es verbo</span></label><input id="dict-lemma" class="formal" spellcheck="false"></div>
-            <div><label for="dict-category">Categoría</label><select id="dict-category"><option value="N">Sustantivo</option><option value="ADJ">Adjetivo</option><option value="V">Verbo</option><option value="NP">Nombre propio</option></select></div>
-            <div><label for="dict-feature" id="dict-feature-label">Género</label><select id="dict-feature"></select></div>
-          </div>
-          <details class="more"><summary>Es irregular</summary>
-            <div id="dict-irregular"></div>
-          </details>
-          <details class="more"><summary>Significado: sinónimo u otro sentido</summary>
-            <div class="dict-fields two">
-              <div><label for="dict-synonym">Es sinónimo de <span class="hint">usará el mismo símbolo</span></label><input id="dict-synonym" class="formal" spellcheck="false" placeholder="perro"></div>
-              <div><label for="dict-sense">O tiene un sentido propio <span class="hint">para palabras con varios significados</span></label><input id="dict-sense" class="formal" spellcheck="false" placeholder="asiento"></div>
-            </div>
-          </details>
-          <h3>Formas que se van a reconocer</h3>
-          <p id="dict-preview" class="dict-preview" aria-live="polite"></p>
-          <p id="dict-error" class="error" role="alert" hidden></p>
-          <div class="run"><p class="hint run-env">Se guarda en este equipo, aparte del léxico base, y queda disponible de inmediato para escribir frases.</p>
-            <div class="run-action"><button id="dict-save" class="button primary" type="button">Guardar</button></div></div>
+      </section>
+      <aside id="dict-side" class="dict-side" aria-label="Detalles y formulario">
+        <button id="dict-back" class="button secondary small dict-back" type="button">← Volver a los resultados</button>
+        <div id="dict-origin" class="dict-origin" hidden>
+          <p id="dict-origin-text"></p>
+          <button id="dict-origin-back" class="button secondary small" type="button">Volver al origen</button>
         </div>
-      </div>
-    </section>
+        <div id="dict-detail" class="dict-detail" tabindex="-1">
+          <p class="hint">Elige una palabra para ver su categoría, sus formas y el símbolo que usa en las fórmulas, o añade una nueva.</p>
+        </div>
+        <div id="dict-add-panel" class="dict-add" hidden>
+          <h3 id="dict-add-heading" tabindex="-1">Añade una palabra</h3>
+          <p class="pane-lede">Escríbela como la usarías. Si no está, el modelo propone qué es y tú lo corriges antes de guardar. Lo escrito se conserva si cambias de vista.</p>
+          <label for="dict-word">Palabra</label>
+          <div class="inline"><input id="dict-word" class="formal" spellcheck="false" placeholder="galopan" autocomplete="off"><button id="dict-check" class="button secondary" type="button">Consultar</button></div>
+          <p id="dict-proposal" class="hint" role="status"></p>
+          <div id="dict-form" hidden>
+            <div class="dict-fields">
+              <div><label for="dict-lemma">Lema <span class="hint">singular, o infinitivo si es verbo</span></label><input id="dict-lemma" class="formal" spellcheck="false"></div>
+              <div><label for="dict-category">Categoría</label><select id="dict-category"><option value="N">Sustantivo</option><option value="ADJ">Adjetivo</option><option value="V">Verbo</option><option value="NP">Nombre propio</option></select></div>
+              <div><label for="dict-feature" id="dict-feature-label">Género</label><select id="dict-feature"></select></div>
+            </div>
+            <details class="more"><summary>Es irregular</summary>
+              <div id="dict-irregular"></div>
+            </details>
+            <details class="more"><summary>Significado: sinónimo u otro sentido</summary>
+              <div class="dict-fields two">
+                <div><label for="dict-synonym">Es sinónimo de <span class="hint">usará el mismo símbolo</span></label><input id="dict-synonym" class="formal" spellcheck="false" placeholder="perro"></div>
+                <div><label for="dict-sense">O tiene un sentido propio <span class="hint">para palabras con varios significados</span></label><input id="dict-sense" class="formal" spellcheck="false" placeholder="asiento"></div>
+              </div>
+            </details>
+            <h4>Formas que se van a reconocer</h4>
+            <p id="dict-preview" class="dict-preview" aria-live="polite"></p>
+            <p id="dict-error" class="error" role="alert" hidden></p>
+            <div class="run"><p class="hint run-env">Se guarda en este equipo, aparte del léxico base, y queda disponible de inmediato para escribir frases.</p>
+              <div class="run-action"><button id="dict-save" class="button primary" type="button">Guardar</button></div></div>
+          </div>
+          <div class="actions"><button id="dict-add-close" class="button secondary small" type="button">Cerrar formulario</button><button id="dict-discard" class="button secondary small" type="button">Descartar lo escrito</button></div>
+        </div>
+      </aside>
+    </div>
   </section>
 
   <section id="mode-notebook" class="workspace notebook" aria-label="Cuadernos" data-pane="model" hidden>
