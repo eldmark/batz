@@ -16,7 +16,7 @@ Solo necesita la librería estándar de Python; no hay que instalar nada más pa
 
 Tres vías, de la más fácil a la más completa:
 
-1. **Demo en línea (no instala nada).** <!-- DEMO_URL -->https://... — es una demo compartida: puede tardar 30–60 s en despertar y lo que escribas es visible para otras personas (ver [PUBLICAR.md](docs/PUBLICAR.md)).
+1. **Demo en línea (no instala nada).** <!-- DEMO_URL -->[Abrir Bat’z](https://batz.onrender.com/) — es una demo compartida: puede tardar 30–60 s en despertar y lo que escribas es visible para otras personas (ver [PUBLICAR.md](docs/PUBLICAR.md)).
 2. **Docker** (no hace falta Python):
 
    ```bash
