@@ -1,4 +1,9 @@
 import {hashFor} from '../../app/navigation.js';
+import {CARDS as LEARN_CARDS, HISTORY} from '../learn/data.js';
+import {braid, enhanceHome} from './motion.js';
+
+// Ejercicios de Practicar (src/logos/practice_bank.py, len(EXERCISES)); se verifica a mano al cambiar el banco.
+export const PRACTICE_COUNT = 50;
 
 // Inicio: tarjetas de las cuatro herramientas y tres ejercicios progresivos.
 // Cada ejercicio es un dato; quien lo ejecuta (app.js) abre el módulo y carga sus entradas.
@@ -34,17 +39,6 @@ export const BANNER = {
   goal: 'Esta página sirve para practicar: los ejercicios de Practicar, evaluar modelos y demostrar.',
 };
 
-const THREAD_NS = 'http://www.w3.org/2000/svg';
-function thread(cls, d, box) {
-  const svg = document.createElementNS(THREAD_NS, 'svg');
-  svg.setAttribute('class', cls); svg.setAttribute('viewBox', box); svg.setAttribute('aria-hidden', 'true'); svg.setAttribute('focusable', 'false');
-  svg.setAttribute('preserveAspectRatio', 'none');
-  const path = document.createElementNS(THREAD_NS, 'path');
-  path.setAttribute('d', d);
-  svg.append(path);
-  return svg;
-}
-
 /** Del teorema al ejercicio: cada tarjeta carga en Demostrar un caso que ilustra un resultado de Gödel o de Turing. */
 export const CONNECTIONS = [
   {id: 'goedel-completitud', route: 'prove', who: 'Gödel · completitud (1929)', title: 'Lo que se sigue, se demuestra',
@@ -62,12 +56,12 @@ export const CONNECTIONS = [
 ];
 
 export function renderBanner(make) {
-  const section = make('section', undefined, 'home-banner');
-  section.setAttribute('aria-labelledby', 'banner-title');
-  const title = make('h3', BANNER.title, 'banner-title'); title.id = 'banner-title';
+  const section = make('section', undefined, 'home-banner hs');
+  section.dataset.sec = ''; section.setAttribute('aria-labelledby', 'banner-title');
+  const title = make('h3', BANNER.title, 'hs-title'); title.id = 'banner-title'; title.dataset.rv = '';
   const grid = make('div', undefined, 'banner-grid');
-  BANNER.people.forEach((p, i) => {
-    const card = make('article', undefined, `banner-person banner-${p.id}`);
+  for (const p of BANNER.people) {
+    const card = make('article', undefined, `banner-person banner-${p.id}`); card.dataset.rv = '';
     const fig = make('figure', undefined, 'banner-portrait');
     const frame = make('div', undefined, 'banner-frame');
     const initials = make('span', p.initials, 'banner-initials'); initials.setAttribute('aria-hidden', 'true');
@@ -83,41 +77,108 @@ export function renderBanner(make) {
     body.append(h, facts, make('p', p.link, 'banner-link'));
     card.append(fig, body);
     grid.append(card);
-    if (i === 0) grid.append(thread('banner-thread banner-thread-h', 'M0 50 C 25 10, 40 90, 60 50 S 85 20, 100 50', '0 0 100 100'), thread('banner-thread banner-thread-v', 'M50 0 C 10 25, 90 40, 50 60 S 20 85, 50 100', '0 0 100 100'));
-  });
-  const goal = make('div', undefined, 'banner-goal');
-  const cta = make('a', 'Ir a Practicar', 'button primary'); cta.href = '#/practicar';
-  goal.append(thread('banner-thread banner-thread-goal', 'M0 50 C 30 0, 60 100, 100 50', '0 0 100 100'), make('p', BANNER.goal), cta);
+  }
+  const goal = make('div', undefined, 'banner-goal'); goal.dataset.rv = '';
+  const cta = make('a', 'Ir a Practicar', 'home-link'); cta.href = '#/practicar'; cta.append(arrow());
+  goal.append(make('p', BANNER.goal), cta);
   section.append(title, grid, goal);
   return section;
 }
 
+const SVGNS = 'http://www.w3.org/2000/svg';
+function svgEl(tag, attrs) { const el = document.createElementNS(SVGNS, tag); for (const k in attrs) el.setAttribute(k, attrs[k]); return el; }
+function arrow(down) {
+  const svg = svgEl('svg', {class: down ? 'arr down' : 'arr', viewBox: down ? '0 0 12 20' : '0 0 20 12', 'aria-hidden': 'true', focusable: 'false'});
+  svg.append(svgEl('path', {d: down ? 'M6 1v17M1.500 13l4.500 5 4.500-5' : 'M1 6h17M13 1.5 18 6l-5 4.5'}));
+  return svg;
+}
+
+let teardown = null;
+
 export function renderHome(host, {go, runExercise}) {
+  if (teardown) { teardown(); teardown = null; }
   host.replaceChildren();
   const make = (tag, text, cls) => { const el = document.createElement(tag); if (text !== undefined) el.textContent = text; if (cls) el.className = cls; return el; };
-  const cards = make('ul', undefined, 'home-cards');
+  const root = host.closest('.home') || host;
+
+  // Titular: la propuesta de valor, con «hilo» subrayado por un trazo que se dibuja.
+  const heading = root.querySelector('#home-heading');
+  if (heading) {
+    const hilo = make('span', 'hilo', 'hilo');
+    hilo.append(svgEl('svg', {viewBox: '0 0 100 12', preserveAspectRatio: 'none', 'aria-hidden': 'true', focusable: 'false'}));
+    hilo.lastChild.append(svgEl('path', {d: 'M2 7C14 1 26 11 40 6S66 2 78 7 92 9 98 5'}));
+    heading.replaceChildren('El ', hilo, ' que une la matemática en comprobaciones');
+    heading.dataset.sec = '';
+  }
+
+  // Presentación: una idea, un botón principal y uno secundario.
+  const hero = make('section', undefined, 'home-hero hs'); hero.dataset.sec = '';
+  const lede = make('p', 'Bat’z significa «hilo». Escribe una fórmula o un razonamiento y síguelo paso a paso: cada conclusión llega con su prueba o su contramodelo, comprobados.', 'home-lede'); lede.dataset.rv = '';
+  const actions = make('div', undefined, 'home-actions'); actions.dataset.rv = '';
+  const start = make('button', 'Empezar', 'button primary home-cta'); start.type = 'button';
+  start.setAttribute('aria-describedby', 'home-start-note'); start.append(arrow());
+  start.addEventListener('click', () => runExercise(EXERCISES[0]));
+  const more = make('button', 'Ver las herramientas', 'home-link'); more.type = 'button';
+  more.addEventListener('click', () => {
+    const t = host.querySelector('#home-tools'); if (!t) return;
+    t.scrollIntoView({behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start'});
+    t.focus({preventScroll: true});
+  });
+  more.append(arrow(true));
+  const note = make('span', 'Abre Evaluar con el primer ejercicio ya cargado.', 'sr-only'); note.id = 'home-start-note';
+  actions.append(start, more, note);
+  const facts = make('p', undefined, 'home-facts'); facts.dataset.rv = '';
+  const fact = (n, label, route) => { const a = make('a', undefined, 'fact'); a.href = hashFor(route); const b = make('b', String(n)); b.dataset.count = String(n); a.append(b, ` ${label}`); return a; };
+  facts.append(fact(LEARN_CARDS.length, 'tarjetas', 'learn'), make('span', ' · ', 'sep'), fact(HISTORY.length, 'hitos', 'learn'), make('span', ' · ', 'sep'), fact(PRACTICE_COUNT, 'ejercicios', 'practice'));
+  hero.append(lede, actions, facts);
+
+  // Herramientas: lista ligera, el ejemplo en mono.
+  const tools = make('section', undefined, 'home-tools-sec hs'); tools.dataset.sec = '';
+  const toolsTitle = make('h3', 'Cuatro herramientas', 'hs-title'); toolsTitle.id = 'home-tools'; toolsTitle.tabIndex = -1; toolsTitle.dataset.rv = '';
+  const toolsLede = make('p', 'Cada una responde una pregunta distinta sobre una fórmula.', 'hs-lede'); toolsLede.dataset.rv = '';
+  const cards = make('ul', undefined, 'home-tools');
   for (const card of CARDS) {
-    const item = make('li'), link = make('a', undefined, 'home-card');
+    const item = make('li'), link = make('a', undefined, 'home-tool'); item.dataset.rv = '';
     link.href = hashFor(card.route);
-    link.append(make('strong', card.title), make('span', card.purpose), make('code', card.example));
+    const glow = make('span', undefined, 'tool-glow'); glow.setAttribute('aria-hidden', 'true'); glow.append(make('span', undefined, 'tool-spot'));
+    const head = make('span', undefined, 'tool-head'); head.append(make('strong', card.title), arrow());
+    link.append(glow, head, make('span', card.purpose, 'tool-purpose'), make('code', card.example));
     item.append(link); cards.append(item);
   }
+  tools.append(toolsTitle, toolsLede, cards);
+
+  // Ejercicios: pasos numerados.
+  const exSec = make('section', undefined, 'home-exercises-sec hs'); exSec.dataset.sec = ''; exSec.setAttribute('aria-labelledby', 'home-ex-title');
+  const exTitle = make('h3', 'Empieza con un ejemplo', 'hs-title'); exTitle.id = 'home-ex-title'; exTitle.dataset.rv = '';
+  const exLede = make('p', 'Tres ejercicios progresivos. Cargar uno reemplaza lo que haya en esa herramienta y te avisa antes.', 'hs-lede hint'); exLede.dataset.rv = '';
   const list = make('ol', undefined, 'home-exercises');
-  for (const ex of EXERCISES) {
-    const item = make('li'), button = make('button', 'Abrir y cargar ejemplo', 'button primary'); button.type = 'button';
+  EXERCISES.forEach((ex, i) => {
+    const item = make('li'), button = make('button', 'Abrir y cargar ejemplo', 'button secondary'); button.type = 'button'; item.dataset.rv = '';
+    button.append(arrow());
     button.addEventListener('click', () => runExercise(ex));
-    item.append(make('strong', ex.title), make('p', ex.does), make('p', ex.watch, 'hint'), button);
+    const num = make('span', String(i + 1), 'step-n'); num.setAttribute('aria-hidden', 'true');
+    const body = make('div', undefined, 'step-body');
+    body.append(make('strong', ex.title.replace(/^\d+\s*·\s*/, '')), make('p', ex.does), make('p', ex.watch, 'hint'), button);
+    item.append(num, body);
     list.append(item);
-  }
-  const bridge = make('section', undefined, 'home-bridge'); bridge.setAttribute('aria-labelledby', 'home-bridge-title');
-  const bridgeTitle = make('h3', 'Practica lo que probaron Gödel y Turing'); bridgeTitle.id = 'home-bridge-title';
+  });
+  exSec.append(exTitle, exLede, list);
+
+  // Gödel y Turing, y el puente a Demostrar.
+  const bridge = make('section', undefined, 'home-bridge hs'); bridge.dataset.sec = ''; bridge.setAttribute('aria-labelledby', 'home-bridge-title');
+  const bridgeTitle = make('h3', 'Practica lo que probaron Gödel y Turing', 'hs-title'); bridgeTitle.id = 'home-bridge-title'; bridgeTitle.dataset.rv = '';
   const bridgeList = make('ul', undefined, 'home-bridge-list');
   for (const item of CONNECTIONS) {
-    const li = make('li'), button = make('button', 'Cargar en Demostrar', 'button secondary'); button.type = 'button';
+    const li = make('li'), button = make('button', 'Cargar en Demostrar', 'button secondary'); button.type = 'button'; li.dataset.rv = '';
+    button.append(arrow());
     button.addEventListener('click', () => runExercise(item));
     li.append(make('span', item.who, 'bridge-who'), make('strong', item.title), make('p', item.does), make('p', item.watch, 'hint'), button);
     bridgeList.append(li);
   }
   bridge.append(bridgeTitle, bridgeList);
-  host.append(renderBanner(make), bridge, cards, make('h3', 'Empieza con un ejemplo'), make('p', 'Tres ejercicios progresivos. Cargar uno reemplaza lo que haya en esa herramienta y te avisa antes.', 'hint'), list);
+
+  const flow = make('div', undefined, 'home-flow');
+  flow.append(braid(), hero, tools, exSec, renderBanner(make), bridge, make('span', undefined, 'home-end'));
+  host.append(flow);
+  teardown = enhanceHome(root);
 }
