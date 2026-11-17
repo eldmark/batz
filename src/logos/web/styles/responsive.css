@@ -1,0 +1,4 @@
+/* F7: ajustes responsive y de errores en Demostrar y Cuadernos. */
+
+/* «Ir a la entrada» ocupa la columna del mensaje y no se comprime en la de la etiqueta. */
+.syntax-check li.bad > .button.small { grid-column: 2; justify-self: start; white-space: nowrap; }
