@@ -40,7 +40,7 @@ function thread(cls, d, box) {
   svg.setAttribute('class', cls); svg.setAttribute('viewBox', box); svg.setAttribute('aria-hidden', 'true'); svg.setAttribute('focusable', 'false');
   svg.setAttribute('preserveAspectRatio', 'none');
   const path = document.createElementNS(THREAD_NS, 'path');
-  path.setAttribute('d', d); path.setAttribute('pathLength', '100');
+  path.setAttribute('d', d);
   svg.append(path);
   return svg;
 }
