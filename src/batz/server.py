@@ -343,6 +343,7 @@ class Handler(BaseHTTPRequestHandler):
                  "/features/explanation-player/fullscreen.js": ("features/explanation-player/fullscreen.js", "text/javascript; charset=utf-8"),
                  "/features/explanation-player/player.css": ("features/explanation-player/player.css", "text/css; charset=utf-8"),
                  "/features/evaluator/examples.js": ("features/evaluator/examples.js", "text/javascript; charset=utf-8"),
+                 "/features/prover/examples.js": ("features/prover/examples.js", "text/javascript; charset=utf-8"),
                  "/styles/evaluator.css": ("styles/evaluator.css", "text/css; charset=utf-8"),
                  "/styles/thread.css": ("styles/thread.css", "text/css; charset=utf-8"),
                  "/features/export/export.js": ("features/export/export.js", "text/javascript; charset=utf-8"),
