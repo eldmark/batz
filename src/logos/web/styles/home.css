@@ -73,7 +73,7 @@
 
 /* ── Carrusel: Gödel, Turing y Church ── */
 .home-banner { margin: 0; padding: 0; background: none; border: 0; border-radius: 0; }
-.carousel-viewport { position: relative; display: grid; margin-top: var(--s6); touch-action: pan-y; }
+.carousel-viewport { position: relative; display: grid; overflow-x: clip; margin-top: var(--s6); touch-action: pan-y; }
 .slide { grid-area: 1 / 1; display: grid; grid-template-columns: minmax(220px, 380px) minmax(0, 1fr); gap: var(--s7); align-items: center; min-width: 0;
   opacity: 0; visibility: hidden; transform: translateX(28px); }
 .slide.is-before { transform: translateX(-28px); }

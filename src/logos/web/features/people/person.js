@@ -70,7 +70,7 @@ export function renderPerson(host, slug, {runExercise, connections = []} = {}) {
   }
 
   const time = section('Cronología', 'pp-time');
-  time.append(list('ol', dated(b.timeline), 'dated timeline'));
+  time.append(list('ol', dated(b.timeline), 'dated person-timeline'));
 
   const read = section('Para leer más', 'pp-read');
   read.append(list('ul', b.reading.map((t) => make('li', t)), 'reading'));

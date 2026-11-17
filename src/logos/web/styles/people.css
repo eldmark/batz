@@ -29,7 +29,7 @@
 .dated, .reading, .person-batz { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--s3); }
 .dated li { display: grid; grid-template-columns: 9ch minmax(0, 1fr); gap: var(--s4); font-size: 16px; line-height: 1.55; }
 .dated-y { font: 500 14px/1.7 var(--mono); color: var(--brand-700); }
-.timeline li { position: relative; padding-bottom: var(--s2); }
+
 .reading li { font: italic 400 16px/1.55 var(--serif); padding-left: var(--s4); border-left: 3px solid var(--border-strong); }
 .person-batz li { display: grid; gap: var(--s1); justify-items: start; }
 .person-batz p { margin: 0; }
