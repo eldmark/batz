@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LOGOS · Explicación guiada</title>
+  <link rel="icon" href="/favicon.svg">
+  <link rel="stylesheet" href="/tokens.css">
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/features/explanation-player/player.css">
+  <style>
+    body { display: block; padding: clamp(12px, 3vw, 40px); }
+    main { max-width: 1280px; margin: auto; }
+    h1 { font: 500 32px var(--serif); }
+    .demo-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-block: 20px; }
+    .demo-actions label { margin: 0; }
+    .demo-host { min-width: 0; }
+    #demo-log { overflow-wrap: anywhere; font-size: 13px; }
+  </style>
+  <script type="module" src="/preview.js"></script>
+</head>
+<body>
+  <main>
+    <h1>LOGOS · Explicación guiada</h1>
+    <p>Recorre una evaluación, una prueba o un contramodelo con sus pasos verificados.</p>
+    <div class="demo-actions">
+      <label>Comprobación <select id="fixture">
+        <option value="evaluation">Evaluación falsa</option><option value="true">Evaluación verdadera</option>
+        <option value="proof">Demostración</option><option value="countermodel">Contramodelo</option>
+        <option value="notebook">Prueba en Cuadernos</option><option value="empty">Sin recorrido</option>
+      </select></label>
+      <button id="load" type="button" class="button secondary">Cargar comprobación</button>
+      <button id="open" type="button" class="button secondary">Explicación guiada</button>
+      <button id="invalidate" type="button" class="button secondary">Simular cambio de datos</button>
+      <button id="second" type="button" class="button secondary">Abrir segunda explicación</button>
+    </div>
+    <div id="player" class="demo-host"></div>
+    <div id="other" class="demo-host"></div>
+    <details><summary>Registro de integración de la demo</summary><p id="demo-log"></p></details>
+  </main>
+</body>
+</html>
