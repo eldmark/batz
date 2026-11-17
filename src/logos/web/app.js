@@ -103,11 +103,14 @@ function verdictElement(word, kind, detail) {
   const verdict = node('p', undefined, `verdict ${kind}`);
   const big = node('span', undefined, 'verdict-word');
   big.append(node('span', word, 'sr-only'));
+  // Las letras se agrupan por palabra: la frase solo puede partirse en los espacios, nunca dentro de una palabra.
+  let group = null;
   [...word].forEach((char, i) => {
-    if (char === ' ') { big.append(document.createTextNode(' ')); return; }  // la frase puede partirse entre palabras
+    if (char === ' ') { big.append(document.createTextNode(' ')); group = null; return; }
+    if (!group) { group = node('span', undefined, 'vw'); big.append(group); }
     const letter = node('span', char, 'ch');
     letter.style.setProperty('--i', i); letter.setAttribute('aria-hidden', 'true');
-    big.append(letter);
+    group.append(letter);
   });
   verdict.append(big);
   if (detail) verdict.append(typeof detail === 'string' ? node('small', detail) : detail);
@@ -2182,6 +2185,7 @@ function setPresenting(on) {
 }
 $('present-toggle').addEventListener('click', () => setPresenting(!document.body.classList.contains('presenting')));
 $('present-exit').addEventListener('click', () => setPresenting(false));
+document.addEventListener('keydown', event => { if (event.key === 'Escape' && document.body.classList.contains('presenting')) setPresenting(false); });
 $('help-button').addEventListener('click', () => {
   const open = $('help-panel').hidden;
   $('help-panel').hidden = !open; $('help-button').setAttribute('aria-expanded', String(open));

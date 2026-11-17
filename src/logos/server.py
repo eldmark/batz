@@ -411,6 +411,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-Type", mime)
         self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", "no-cache")  # el navegador revalida: nunca se queda con una hoja de estilos vieja
         self.end_headers()
         self.wfile.write(body)
 

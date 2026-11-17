@@ -156,6 +156,7 @@ mark { background: var(--signal-200); color: var(--signal-950); border-radius: 2
   animation: band .4s var(--out); }
 /* La palabra aparece letra por letra, saliendo de un desenfoque (Text Effect + Blur Fade de 21st.dev, en CSS) */
 .verdict-word { display: block; }
+.verdict .vw { display: inline-block; white-space: nowrap; }
 .verdict .ch { display: inline-block; animation: letter .6s var(--out) both; animation-delay: calc(var(--i) * 34ms + 80ms); }
 .verdict.true { background: var(--success-bg); color: var(--success-fg); }
 .verdict.false { background: var(--danger-bg); color: var(--danger-fg); }
