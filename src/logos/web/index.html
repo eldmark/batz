@@ -132,13 +132,13 @@
       <p class="pane-lede">Aquí no hay un modelo concreto: se pregunta si la conclusión se sigue de las premisas en <strong>todos</strong> los modelos posibles. En Evaluar, en cambio, se comprueba la verdad en una sola interpretación.</p>
       <div class="block">
         <label for="proof-premises">Premisas, una por línea</label>
-        <textarea id="proof-premises" class="formal" rows="4" spellcheck="false" placeholder="∀x (P(x) → Q(x))&#10;P(a)"></textarea>
+        <textarea id="proof-premises" aria-describedby="proof-check" class="formal" rows="4" spellcheck="false" placeholder="∀x (P(x) → Q(x))&#10;P(a)"></textarea>
         <label for="proof-conclusion">Conclusión</label>
-        <input id="proof-conclusion" class="formal" spellcheck="false" placeholder="Q(a)">
+        <input id="proof-conclusion" aria-describedby="proof-check" class="formal" spellcheck="false" placeholder="Q(a)">
         <div id="proof-keyboard" class="keyboard" aria-label="Símbolos lógicos"></div>
         <label for="proof-constants">Constantes <span class="hint">separadas por coma; lo demás en minúscula es variable</span></label>
-        <input id="proof-constants" spellcheck="false" placeholder="a, b">
-        <ul id="proof-check" class="syntax-check" aria-live="polite"></ul>
+        <input id="proof-constants" aria-describedby="proof-check" spellcheck="false" placeholder="a, b">
+        <ul id="proof-check" class="syntax-check" aria-label="Comprobación de la sintaxis"></ul>
       </div>
     </section>
     <section class="pane question" aria-labelledby="proof-result-heading">
@@ -279,7 +279,7 @@
       <div class="question-inner">
         <h2 id="nb-evidence-heading" class="pane-title" tabindex="-1">Evidencia</h2>
         <p class="pane-lede">Las premisas usadas con su cita, la prueba o el contramodelo y, si existe, el recorrido paso a paso.</p>
-        <div id="nb-evidence" class="result nb-evidence" aria-live="polite"></div>
+        <div id="nb-evidence" class="result nb-evidence"></div>
       </div>
     </section>
     <div id="player-notebook" class="player-row"></div>

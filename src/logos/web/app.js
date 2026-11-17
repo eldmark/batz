@@ -1860,6 +1860,14 @@ function closeMenu({restoreFocus = false} = {}) {
 $('menu-button').addEventListener('click', () => (document.body.classList.contains('menu-open') ? closeMenu({restoreFocus: true}) : openMenu()));
 $('scrim').addEventListener('click', () => closeMenu({restoreFocus: true}));
 document.addEventListener('keydown', event => { if (event.key === 'Escape' && document.body.classList.contains('menu-open')) closeMenu({restoreFocus: true}); });
+// Menú móvil abierto: Tab recorre solo los enlaces del menú (Escape lo cierra); el contenido de detrás no recibe el foco.
+document.addEventListener('keydown', event => {
+  if (event.key !== 'Tab' || !document.body.classList.contains('menu-open')) return;
+  const stops = [...$('nav').querySelectorAll('a[href]')];
+  const at = stops.indexOf(document.activeElement);
+  const next = stops[(at + (event.shiftKey ? stops.length - 1 : 1)) % stops.length];
+  if (at === -1 || (event.shiftKey ? at === 0 : at === stops.length - 1)) { event.preventDefault(); (at === -1 ? stops[0] : next).focus(); }
+});
 window.matchMedia('(min-width: 901px)').addEventListener('change', () => closeMenu());
 
 function setSidebarCollapsed(collapsed, remember = true) {
@@ -1925,10 +1933,11 @@ for (const workspace of [$('mode-evaluate'), $('mode-dictionary'), $('mode-noteb
     if (phoneLayout()) workspace.scrollIntoView({behavior: 'auto', block: 'start'});
   }));
   workspace.querySelector(':scope > .subtabs').addEventListener('keydown', event => {
-    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+    event.preventDefault();
     const names = tabs.map(tab => tab.id.endsWith('evidence') ? 'evidence' : tab.id.endsWith('question') ? 'question' : 'model');
     const at = names.indexOf(workspace.dataset.pane);
-    const next = names[(at + (event.key === 'ArrowRight' ? 1 : names.length - 1)) % names.length];
+    const next = event.key === 'Home' ? names[0] : event.key === 'End' ? names[names.length - 1] : names[(at + (event.key === 'ArrowRight' ? 1 : names.length - 1)) % names.length];
     setPane(workspace, next); tabs[names.indexOf(next)].focus();
   });
 }
