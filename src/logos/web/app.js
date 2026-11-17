@@ -1,5 +1,6 @@
 import {ROUTES, routeFromHash, hashFor, titleFor, isKnownHash} from '/app/navigation.js';
 import {renderHome} from '/features/home/home.js';
+import {createTour} from '/features/tour/tour.js';
 
 const $ = (id) => document.getElementById(id);
 const symbolsBody = $('symbols');
@@ -2300,4 +2301,7 @@ addSymbol('P', 'predicate', 1);
 prepare();
 if (location.hash && !isKnownHash(location.hash)) history.replaceState(null, '', hashFor('home'));
 setMode(routeFromHash(location.hash));
+const tour = createTour({go, openMenu, closeMenu, storage: (() => { try { return localStorage; } catch { return null; } })()});
+$('tour-open').addEventListener('click', () => { $('help-panel').hidden = true; $('help-button').setAttribute('aria-expanded', 'false'); tour.open({fromHelp: true}); });
+tour.maybeOffer();
 $('story-pause').disabled = true;
