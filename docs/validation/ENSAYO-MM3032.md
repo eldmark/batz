@@ -30,7 +30,7 @@ El tiempo medido sirve para esta máquina y esta fórmula, no es una promesa de 
 ## Recorrido en pantalla para la entrega
 
 ```bash
-PYTHONPATH=src python3 -m logos.server --port 8765
+PYTHONPATH=src python3 -m batz.server --port 8765
 ```
 
 Abrir `http://127.0.0.1:8765/`. El núcleo y la interfaz funcionan sin internet; el navegador solo necesita llegar a ese servidor local.

@@ -8,7 +8,7 @@
 |---|---|---|
 | Evaluación semántica y justificación | 30 | `semantics.py` + `explain.py` |
 | Análisis sintáctico | 10 | lexer, parser, símbolos, errores con posición |
-| Interfaz gráfica | 10 | Servidor local + HTML/JS (`logos.server`) |
+| Interfaz gráfica | 10 | Servidor local + HTML/JS (`batz.server`) |
 | Defensa individual | 30 | docs + que cada integrante entienda cada módulo |
 | Aportes creativos | 20 | pruebas, Kalmár, contramodelos, español (ver §5) |
 

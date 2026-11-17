@@ -176,7 +176,7 @@ si se necesita instalar una herramienta, documentar esa dependencia y no introdu
 un nuevo stack de aplicación como efecto de las pruebas.
 
 Cada agente usará sus propios puertos y directorios temporales para cuadernos y
-léxico de prueba (`LOGOS_NOTEBOOKS`, `LOGOS_LEXICON`). No alterar datos personales
+léxico de prueba (`BATZ_NOTEBOOKS`, `BATZ_LEXICON`). No alterar datos personales
 en `datos/` ni probar borrado sobre cuadernos reales. Si el sandbox omite HTTP,
 informarlo y ejecutar esas pruebas con permisos adecuados cuando sea posible.
 

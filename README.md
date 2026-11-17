@@ -1,203 +1,117 @@
-# LOGOS
+# Bat’z
 
-Laboratorio de lógica de primer orden. Plan vigente del proyecto MM3032 (evaluador semántico): `docs/plans/PLAN_MM3032.md`. Fases originales en `docs/`.
+**Bat’z** («hilo» en k’iche’; antes se llamaba LOGOS) es un laboratorio de lógica de primer orden que corre en tu navegador: evalúa una fórmula en un modelo finito y explica el resultado paso a paso, demuestra consecuencias con pruebas revisadas por un verificador independiente, busca contramodelos y entiende español controlado. Es el proyecto MM3032 («Evaluador semántico»).
 
-## Rediseño de interfaz: instrucciones para agentes
+Solo necesita la librería estándar de Python; no hay que instalar nada más para revisarlo.
 
-La especificación del rediseño está documentada y pendiente de implementación:
+![Inicio de Bat’z: carrusel de Gödel, Turing y Church y tarjetas de las herramientas](docs/img/inicio.png)
 
-- [Plan de pantallas, navegación y ubicación del avatar 3D](docs/plans/REDISENO_INTERFAZ.md).
-- [Contrato del reproductor de explicaciones](docs/specs/EXPLANATION_PLAYER.md).
-- [Reparto entre Claude y Codex, preparación de ramas y mensajes de inicio](docs/plans/REDISENO_PARALELO.md).
+| | |
+|---|---|
+| ![Evaluar: veredicto, razones y árbol de evaluación](docs/img/evaluar-resultado.png) | ![Demostrar: prueba en notación de Fitch y contraste con el segundo motor](docs/img/demostrar-prueba.png) |
+| ![Demostrar: «No se sigue» con su contramodelo](docs/img/demostrar-contramodelo.png) | ![Explicación guiada con el avatar 3D](docs/img/explicacion-avatar.png) |
+| ![Cuaderno: pregunta con respuesta y cita a la fuente](docs/img/cuaderno-cita.png) | ![Aprender: línea del tiempo y tarjetas de estudio](docs/img/aprender.png) |
 
-Leer también [AGENTS.md](AGENTS.md) antes de implementar. Se conservan colores,
-fuentes, avatar y motores lógicos existentes.
+## Probar en 1 minuto
 
-## Fachada del proyecto MM3032 (M1)
+Tres vías, de la más fácil a la más completa:
 
-```python
-from logos import Signature, evaluar, libres
+1. **Demo en línea (no instala nada).** <!-- DEMO_URL -->https://... — es una demo compartida: puede tardar 30–60 s en despertar y lo que escribas es visible para otras personas (ver [PUBLICAR.md](docs/PUBLICAR.md)).
+2. **Docker** (no hace falta Python):
 
-firma = Signature(constants={"a"}, predicates={"P": 1})
-datos = {"domain": [0, 1], "constants": {"a": 0},
-         "predicates": {"P": {"arity": 1, "tuples": [[0]]}}}
-libres("P(x)", firma)               # ('x',)
-resultado = evaluar(firma, datos, "P(x)", {"x": 0})
-resultado.status, resultado.value   # ('ok', True)
-```
+   ```bash
+   docker compose up --build        # luego abre http://127.0.0.1:8765
+   ```
 
-`interpretacion` acepta un objeto o texto JSON con el formato de `FiniteModel`; la fachada exige exactamente los símbolos de la firma, relaciones no vacías y predicados de aridad positiva. Un error devuelve `status='invalid_input'`, diagnósticos en `errors` y ningún valor ni traza.
+   Detener con `docker compose down`. Otro puerto: `BATZ_PORT=9000 docker compose up --build`. La imagen incluye `espeak-ng`, así que la voz de la explicación suena sin configurar nada.
+3. **Python directamente** (solo librería estándar, **Python 3.10 o posterior**):
 
-## Interfaz local (M2–M4)
+   ```bash
+   python3 evaluador.py             # abre http://127.0.0.1:8765 en el navegador
+   ```
 
-```bash
-python3 evaluador.py
-```
+   La versión mínima es 3.10: el código no usa sintaxis posterior (se comprobó analizando todos los `.py` con `ast.parse(..., feature_version=(3, 10))`) ni módulos más recientes de la biblioteca estándar. Se ha ejecutado con Python 3.12 (la imagen de Docker) y 3.14; no se ha probado en una instalación real de 3.10. Para oír la voz en Linux conviene instalar `espeak-ng` (`sudo pacman -S espeak-ng`, `sudo apt install espeak-ng`); sin él, la narración sigue en texto o con las voces del navegador.
 
-Con Docker (no hace falta tener Python instalado):
+## Recorrido de 5 minutos para revisar
 
-```bash
-docker compose up --build      # detener: docker compose down
-```
+El menú de la barra lateral tiene siete secciones. Este recorrido toca todas.
 
-La interfaz queda en `http://127.0.0.1:8765/`, publicada solo en este equipo. Otro puerto: `LOGOS_PORT=9000 docker compose up --build`.
+1. **Inicio.** Mira el carrusel de Gödel, Turing y Church y las tarjetas de las herramientas. Si aparece un recorrido de bienvenida, puedes seguirlo u omitirlo.
+2. **Evaluar** (menú «Evaluar modelo»). En el paso 1 elige un caso en «¿Prefieres empezar de un caso de ejemplo?»; por ejemplo «Todo P es Q (falsa)», con `D = {0, 1}`, `P = {0}`, `Q = {1}`. Pasa al paso 2, deja `∀x (P(x) → Q(x))` y pulsa **Verificar**. *Qué observar:* el veredicto es **Falso** y la razón es el primer contraejemplo, `x = 0` (cumple `P` y no `Q`). Pulsa «Árbol»: cada nodo trae su valor y bajo cada cuantificador hay una rama por elemento del dominio. Prueba también una entrada inválida (`P(a, a)`): aparece el error con su posición y **ningún** Verdadero/Falso.
+3. **Demostrar con tres ejercicios de Gödel y Turing.** En Inicio, en «Practica lo que probaron Gödel y Turing», abre cada tarjeta y pulsa **Buscar prueba**:
+   - *Gödel · completitud*: `∀x (Humano(x) → Mortal(x))`, `Humano(socrates) ⊢ Mortal(socrates)`. Sale **Demostrada**, con la prueba en notación de Fitch y, debajo, «Los dos motores coinciden» (deducción natural y resolución, que son independientes).
+   - *Tarski y Gödel · modelos*: `∀x ∃y Ama(x, y) ⊢ ∃y ∀x Ama(x, y)`. Sale **No se sigue**, con un contramodelo verificado de dos elementos; «Abrir en Evaluar» lo carga y la conclusión da Falso.
+   - *Turing y Church · indecidibilidad*: transitividad, irreflexividad y serialidad de `R` ⊢ `∃x ∀y ¬R(y, x)`. Sale **Búsqueda inconclusa**: no es «falsa» ni «demostrada». Es el límite honesto de un buscador sobre una lógica indecidible.
+4. **Cuaderno de ejemplo con cita.** En «Cuadernos» pulsa «Crear el cuaderno de ejemplo», escribe `¿Juan aprueba?` y pulsa «Preguntar». *Qué observar:* la respuesta **Sí** viene con una prueba verificada y tres premisas citadas; al pulsar el número de una cita se abre la fuente en la oración exacta de donde salió. Otras dos oraciones de las fuentes piden elegir lectura o se dejan fuera con su motivo: nada se interpreta «más o menos».
+5. **Explicación guiada con avatar y voz opcional.** En el resultado de Evaluar (o de Demostrar) pulsa «Explicación guiada». El avatar 3D señala el elemento que se está probando; un clic en un elemento del dominio salta al caso que el cuantificador prueba con él. Marca «Narración por voz» y elige en «Voz» una del navegador o una de este equipo (espeak-ng); con «Probar voz» la oyes. Hay pantalla completa y Esc para salir.
+6. **Aprender y las páginas de Gödel, Turing y Church.** En «Aprender» recorre la línea del tiempo y las tarjetas de teoría (el modo «Estudiar» recuerda cuáles ya sabes). Desde Inicio abre las páginas de **Kurt Gödel**, **Alan Turing** y **Alonzo Church**.
+7. **Practicar.** Elige un ejercicio, selecciona una regla, indica las líneas y pulsa «Comprobar paso». El servidor revisa cada paso con el verificador; hay pistas y una solución de referencia. Son 50 ejercicios en tres categorías.
 
-Abre `http://127.0.0.1:8765/` y pulsa «Ejemplo» (carga uno del modo en que estás), o «Cargar archivo» con uno de `ejemplos/*.logos`. La barra superior cambia entre cinco modos: evaluar una fórmula en un modelo, demostrar una consecuencia, el diccionario, el cuaderno y practicar demostraciones. La explicación se construye desde una traza verificada; cada nodo tiene un resumen, detalles desplegables y posición en la fórmula. Guía de defensa: `docs/DEFENSA.md`.
+Los argumentos de defensa de cada módulo están en [docs/DEFENSA.md](docs/DEFENSA.md) y la correspondencia punto por punto con el plan, en [docs/REVISION.md](docs/REVISION.md).
 
-### Practicar: 50 demostraciones interactivas
+## Qué demuestra el proyecto
 
-Abre `http://127.0.0.1:8765/#practicar` o pulsa **Practicar**. Son 50 ejercicios fijos, sin temática ni tiempo límite, divididos en tres categorías con sus propios contadores de progreso:
+El plan del proyecto es [`docs/plans/PLAN_MM3032.md`](docs/plans/PLAN_MM3032.md): evaluar fórmulas de primer orden en una interpretación finita, explicarlo y validar las entradas. Sobre eso, Bat’z cuida la **corrección matemática**:
 
-| Categoría | Niveles | Recorrido |
-|---|---|---|
-| Introducción | 01–10 | Pruebas de uno o dos pasos: conectores, hipótesis, particularización, testigos e igualdad. |
-| Desafío | 11–40 | Contraposición, casos anidados, De Morgan, testigos nuevos, unicidad, funciones y primera inducción. |
-| Modo Leyenda | 41–50 | Peirce, principio del bebedor, alcance de cuantificadores, funciones inyectivas/sobreyectivas y lemas por inducción. |
+- **El valor lo decide Python, y la explicación sale de una traza ya verificada.** La semántica sigue la definición de Tarski; `check_trace` revisa cada nodo antes de que `explain` o el avatar narren nada. Una entrada inválida nunca produce Verdadero ni Falso.
+- **Dos motores independientes para las pruebas.** El motor A busca en deducción natural; el motor B refuta por resolución. Se contrastan, y el B nunca convierte un «no sé» en una prueba.
+- **Un verificador separado del buscador.** «Demostrada» solo se muestra si un `checker` que ni siquiera importa el buscador acepta el certificado paso a paso. En lógica proposicional siempre hay veredicto: prueba (con el lema de Kalmár) o valuación que la refuta.
+- **Contramodelos verificados.** Un contramodelo se reevalúa con el evaluador antes de mostrarse. Se busca en dominios pequeños (1 a 3 elementos), con límites explícitos de tiempo y candidatos.
+- **«Inconcluso» no es «falso» ni «demostrado».** La validez en primer orden es indecidible; si la búsqueda agota sus límites, la respuesta es `unknown` y la interfaz lo rotula como «Búsqueda inconclusa» o, si hay un contramodelo, «No se sigue».
+- **Español controlado sin adivinar.** Cada frase da todas sus lecturas (alcance de cuantificadores, sentidos de una palabra) y se elige una; lo que la gramática no entiende se rechaza con su motivo. Ningún modelo de lenguaje decide una fórmula.
 
-Las tres categorías están siempre disponibles. La dificultad aumenta por la combinación de estrategias y el control de dependencias, además de la extensión de las pruebas. La última demostración construye la conmutatividad de la suma en 49 pasos propios y tres inducciones; sus dos lemas también deben demostrarse.
+Detalle: [semántica](docs/specs/SEMANTICS.md), [cálculo de pruebas](docs/specs/PROOF_CALCULUS.md), [lenguaje formal](docs/specs/FORMAL_LANGUAGE.md), [español controlado](docs/specs/SPANISH_CONTROLLED.md), [reglas de dependencia](docs/architecture/ARCHITECTURE.md) y [contratos JSON](docs/specs/JSON_CONTRACTS.md).
 
-1. Elige un ejercicio. El objetivo y cada línea tienen su lectura española encima de la fórmula.
-2. Selecciona una regla; la ayuda explica cuántas referencias requiere y en qué orden.
-3. Escribe las referencias o toca los números de las líneas. Escribe la nueva fórmula con el teclado o los botones de símbolos. Completa el término, la variable o la plantilla si la regla los pide.
-4. Pulsa **Comprobar paso** (también Ctrl/⌘ + Enter). Un error conserva tu entrada. **Deshacer** elimina el último paso.
-5. El objetivo solo se completa si su prueba no depende de hipótesis ajenas a las premisas. Las hipótesis pendientes se pueden desplegar en cada línea. No son cajas Fitch: son las dependencias formales de cada derivación.
+## Pruebas
 
-Hay tres pistas por ejercicio y una solución de referencia desplegable. Leerla no completa el ejercicio. Se aceptan otras pruebas correctas y están disponibles todas las reglas, con las recomendadas primero. Los pasos, el borrador y las pistas se guardan en este navegador; al recargar se vuelven a verificar las pruebas guardadas. Si no hay almacenamiento local, se puede jugar durante la sesión.
-
-Los ejercicios aritméticos usan la notación funcional que admite el núcleo: `cero` representa 0, `s(t)` el sucesor, `suma(t,u)` la suma y `producto(t,u)` la multiplicación. Los axiomas y las instancias del esquema de inducción son premisas explícitas; no se evalúa la aritmética de Peano como si tuviera un modelo finito.
-
-Al actualizar desde la versión de diez ejercicios se conservan y revalidan las pruebas compatibles. Los antiguos 05, 06 y 10 se sustituyeron por ejercicios introductorios; sus borradores se archivan en el registro `previous` del progreso local. Los temas más avanzados reaparecen en Desafío. Una revisión matemática por ejercicio permite detectar futuros cambios de enunciado sin atribuir una solución antigua al nuevo problema.
-
-El banco y las pistas están en `src/logos/practice_bank.py`; el tutor y la API están en `src/logos/practice.py`. El servidor recalcula todos los contextos y comprueba los prefijos con el checker independiente; nunca confía en contextos o marcas de éxito del cliente. Al terminar verifica el certificado contra las premisas reales del ejercicio. Las pruebas se ejecutan con:
-
-```powershell
-$env:PYTHONPATH = "src;tests"
-python -m unittest discover -s tests -p test_practice.py -v
-```
-
-La validación opcional de navegador está en `scripts/validate_practice_browser.cjs`; requiere una instalación externa de Playwright y un servidor LOGOS activo. No se necesitan dependencias nuevas para ejecutar el juego. Para exportar sus fixtures desde la raíz del repositorio:
-
-```powershell
-$env:PYTHONPATH = "src"
-python -c "import json; from pathlib import Path; from logos.practice import EXERCISES; Path('practice-fixtures.json').write_text(json.dumps(EXERCISES), encoding='utf-8')"
-$env:LOGOS_PRACTICE_FIXTURES = "$PWD\practice-fixtures.json"
-# Opcional: PLAYWRIGHT_MODULE apunta al paquete playwright o playwright-core existente.
-# Opcional: PLAYWRIGHT_CHROMIUM_EXECUTABLE apunta a un Chromium ya instalado.
-# Opcional: LOGOS_BASE_URL cambia http://127.0.0.1:8765.
-node scripts/validate_practice_browser.cjs
-```
-
-La sección «Buscar un modelo donde sea falsa» busca una interpretación estricta que falsifique una **sentencia**. Usa tamaños de dominio 1–3, hasta 5000 candidatos o 2 segundos; si no encuentra uno, devuelve `unknown` y no afirma validez universal. El hallazgo se muestra como tablas (la relación binaria, como matriz) y se puede cargar en las tablas del modelo. «Exportar JSON» guarda firma, interpretación y fórmula; «Cargar archivo» valida el modelo antes de cargarlo.
-
-### Modo Demostrar
-
-- **Prueba en notación de Fitch.** El certificado de deducción natural que acepta el verificador se dispone en líneas con cajas: cada hipótesis que se descarga (→I, ¬I, RAA, ∨E, ∃E) abre una, y la variable nueva de ∀I y ∃E queda marcada. Solo cambia la presentación; `proof/fitch.py` comprueba que cada línea cite lo mismo que el certificado.
-- **«No se sigue» con su contramodelo.** Si no hay prueba, se busca un modelo de 1 a 3 elementos donde las premisas son verdaderas y la conclusión falsa (semántica estándar: admite relaciones vacías). Se verifica con el evaluador y se puede abrir en el modo Evaluar con la conclusión.
-- **Letras proposicionales.** Una minúscula sola en posición de fórmula (`p → q`) es una letra: si todo el problema es proposicional, se decide completo con la tabla de verdad y el lema de Kalmár (prueba o valuación que lo refuta). Las letras se muestran como se escribieron.
-- **Resolución** sigue como segunda opinión independiente.
-
-### En el teléfono
-
-Bajo 720 px de ancho, la cabecera se compacta, Evaluar y Diccionario se recorren en dos sub-pestañas («1 · Modelo / 2 · Fórmula», «Buscar / Añadir»), los símbolos se editan en tarjetas y, mientras se escribe una fórmula, el teclado lógico queda pegado encima del teclado del sistema. Todo lo que se toca mide al menos 44 px y los campos usan 16 px para que iPhone no haga zoom. En el paso a paso se cambia de paso deslizando sobre la escena.
-
-Las microinteracciones (píldora que se desliza entre pestañas, botones con estado de carga y ✓/✕, veredicto letra por letra, avisos que entran y se van solos, contadores, casillas que dibujan su palomita) se inspiraron en componentes de 21st.dev y están reescritas a mano en CSS y JavaScript, sin dependencias. Con «reducir movimiento» activado en el sistema, se apagan.
-
-## Ensayo final reproducible
+Solo hace falta Python (y Node para las del frontend). Desde la raíz del repositorio:
 
 ```bash
-PYTHONPATH=src python3 scripts/validate_demo.py --seed 20261102
+PYTHONPATH=src:tests python3 -m unittest discover -s tests   # 325 pruebas, 1 omitida (unos 40 s)
+node --test tests/frontend/app/*.test.mjs                    # 48 pruebas
+PYTHONPATH=src python3 scripts/validate_demo.py --seed 20261102   # recorrido reproducible por HTTP local
+PYTHONPATH=src python3 scripts/report_spanish.py --check          # los 51 casos del español controlado
 ```
 
-El reporte y el recorrido para la entrega están en `docs/validation/ENSAYO-MM3032.md`. El ensayo usa solo HTTP local y deja claro cuáles comprobaciones necesitan una persona frente al navegador.
+- **Python (325, 1 omitida).** La omitida es una prueba solo de Windows. Cubre el lexer y el parser, la semántica y las trazas, las explicaciones, la fachada del proyecto con su matriz de errores, el verificador de pruebas y el buscador, la resolución, los contramodelos, el español (con los 51 casos de la especificación), el diccionario, los cuadernos, Practicar, la voz y un servidor HTTP real que sirve la interfaz y la API.
+- **Node (48), en `tests/frontend/app/`.** Lógica pura del frontend: rutas, recorrido de bienvenida, tarjetas de estudio, exportación, datos de las personas, elección de voz y que todas las hojas de estilo tengan sus llaves balanceadas.
+- **Opcionales de navegador** (requieren Playwright externo, no incluidas en las anteriores): `tests/frontend/player/check.cjs` y `scripts/validate_practice_browser.cjs`.
 
-## Archivos preparados
+No hay pruebas automáticas del DOM de `app.js` ni de `practice.js`; esas pantallas se verificaron a mano con un navegador automatizado (ver [Límites](#límites-conocidos)).
 
-Un archivo `.logos` describe un modelo y sus fórmulas en texto plano; el formato está documentado en `src/logos/modelfile.py` y hay dos ejemplos en `ejemplos/`. La interfaz evalúa todas las fórmulas del archivo y compara cada una con su valor esperado, si lo trae.
+## Mapa de documentación
 
-## Diccionario
+| Documento | Para qué |
+|---|---|
+| [docs/REVISION.md](docs/REVISION.md) | Requisito del plan → dónde se ve en la app → código → prueba. **Empieza aquí si revisas.** |
+| [docs/DEFENSA.md](docs/DEFENSA.md) | Cada módulo y la regla matemática que implementa; 15 preguntas probables con su respuesta. |
+| [docs/plans/PLAN_MM3032.md](docs/plans/PLAN_MM3032.md) | Plan vigente: requisitos, estado y decisiones. |
+| [docs/USO.md](docs/USO.md) | Guía de uso detallada: API de Python, cada pantalla, formatos de archivo, voz opcional. |
+| [docs/PUBLICAR.md](docs/PUBLICAR.md) | Docker local, hosting gratuito (Render, Hugging Face) y por qué no Vercel. |
+| [docs/ARQUITECTURA.md](docs/ARQUITECTURA.md) | Resumen técnico completo y verificado del código, con límites y deuda. |
+| [docs/architecture/ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md) | Diseño: flujo de datos, módulos, reglas de dependencia, dos caminos de prueba. |
+| [docs/specs/JSON_CONTRACTS.md](docs/specs/JSON_CONTRACTS.md) | Contratos JSON de la API local. Otras especificaciones: [lenguaje](docs/specs/FORMAL_LANGUAGE.md), [semántica](docs/specs/SEMANTICS.md), [pruebas](docs/specs/PROOF_CALCULUS.md), [español](docs/specs/SPANISH_CONTROLLED.md), [reproductor](docs/specs/EXPLANATION_PLAYER.md). |
+| [docs/validation/ENSAYO-MM3032.md](docs/validation/ENSAYO-MM3032.md) | Ensayos: recorrido reproducible, [51 casos de español](docs/validation/ESPANOL-51-CASOS.md), [auditoría del léxico](docs/validation/LEXICO-AUDITORIA.md) y [lo que falta por revisar](docs/validation/REVISION-EQUIPO.md). |
+| [docs/plans/entregas/INTEGRACION.md](docs/plans/entregas/INTEGRACION.md) | Rediseño de la interfaz: [plan](docs/plans/REDISENO_INTERFAZ.md), [reparto](docs/plans/REDISENO_PARALELO.md) e integración. El plan original de implementación: [IMPLEMENTATION_PLAN.md](docs/plans/IMPLEMENTATION_PLAN.md). |
+| [AGENTS.md](AGENTS.md) | Instrucciones para agentes de código que trabajen en el repositorio. |
+| [docs/00-README-ROADMAP.md](docs/00-README-ROADMAP.md) y fases `01`–`10` | Documentos de planificación originales (históricos). |
 
-El tercer modo de la interfaz muestra el diccionario del español (`src/logos/lexicon.tsv`, unos 6200 entradas más 2700 deducidas por reglas con sus formas) y permite añadir palabras; las tuyas se guardan en `datos/lexico_usuario.tsv`. Con Docker esa carpeta es un volumen, así que no se pierden al reconstruir.
+## Créditos
 
-Para ampliarlo en lote: `PYTHONPATH=src python3 scripts/lexicon_queue.py mine texto.txt` (cola de candidatas), `next` (propuestas del modelo), `accept` (añade las revisadas). Ver `docs/plans/PLAN_MM3032.md` §10.
+- **Fotos y retratos** de Inicio, Aprender y las páginas de personas: copias locales con autor, licencia y origen verificados en [`src/batz/web/img/CREDITOS.md`](src/batz/web/img/CREDITOS.md). Los de licencia CC BY-SA muestran su crédito junto a la imagen.
+- **Bibliotecas, tipografías y avatar** (Three.js, Literata, IBM Plex Sans, JetBrains Mono, Human Base Meshes, MediaPipe, whisper.cpp) con sus licencias y procedencia: [`docs/THIRD_PARTY.md`](docs/THIRD_PARTY.md). La textura del rostro del avatar sale de fotos de un integrante del equipo, usadas con su permiso.
+- Las microinteracciones se inspiraron en componentes de 21st.dev y están reescritas a mano, sin dependencias.
 
-## Cuaderno: preguntas a tus propias fuentes
+## Límites conocidos
 
-El cuarto modo reúne textos en español («fuentes») y contesta preguntas usando solo lo que ellos dicen. Abre la pestaña «Cuaderno» y pulsa «Ejemplo».
+Dicho con franqueza, para que no sorprenda en una revisión:
 
-- **Fuentes.** Pega un texto o sube un `.txt`. Cada oración pasa por el español controlado: si tiene una sola lectura, es una premisa; si tiene varias, o si hubo que suponer la categoría de una palabra, espera a que elijas; si queda fuera de la gramática, se marca con el motivo y no se usa. Al abrir una fuente, el color de cada oración dice en cuál de los tres casos está, y al tocarla se ve su fórmula.
-- **Preguntas.** Se escriben como una afirmación entre signos de pregunta («¿Juan aprueba?»). Hay cinco respuestas: **Sí** (hay prueba verificada), **No** (hay prueba verificada de lo contrario), **No lo deciden** (ni una ni otra: se muestran un modelo donde es falsa y otro donde es verdadera), **No se sigue** y **Sin respuesta** (se agotaron los límites).
-- **Citas.** Cada premisa que usa la prueba lleva un número que abre la fuente en la oración de donde salió. La derivación solo lista las premisas que usa, aunque el cuaderno tenga muchas más.
-- **Avisos.** Si las fuentes se contradicen entre sí, la respuesta lo dice; si la pregunta usa una palabra que ninguna premisa menciona, también.
-
-«Se sigue de tus fuentes» quiere decir que hay una prueba desde lo que dicen, no que lo que dicen sea cierto. Ningún modelo de lenguaje interviene: una oración que la gramática no entiende no se interpreta «más o menos», se deja fuera.
-
-Los cuadernos se guardan en `datos/cuadernos/` (otra carpeta: variable `LOGOS_NOTEBOOKS`), uno por archivo, y se exportan e importan como un solo `.json`. En disco solo van los textos y las lecturas elegidas; el análisis y las respuestas se recalculan cada vez, así que siguen al diccionario actual. Límites: 20 fuentes por cuaderno, 20 000 caracteres y 150 oraciones por fuente, 80 premisas por pregunta.
-
-Para que haya contramodelos con muchas premisas, `modelfinder.py` busca modelos desplegando los cuantificadores sobre dominios pequeños en vez de enumerar interpretaciones completas; lo que encuentra se vuelve a evaluar con el evaluador antes de mostrarse. Código: `src/logos/notebook.py`, `src/logos/modelfinder.py`; pruebas: `tests/test_notebook.py`, `tests/test_modelfinder.py`.
-
-## Español controlado
-
-El panel «Escribir la fórmula en español» reconoce un fragmento pequeño y muestra todas sus lecturas. El sujeto y el objeto directo de la oración principal pueden intercambiar su alcance: «Todos los estudiantes leyeron un libro» y «Algún profesor admira a cada estudiante» dan dos lecturas cada una; «Todos los estudiantes leyeron todos los libros» da una, porque las dos órdenes dicen lo mismo. Lo que está dentro de una relativa o del «si» no cambia de alcance, y «ningún» tampoco. Hay que elegir una lectura antes de preparar el modelo. Las frases fuera del fragmento se rechazan. La especificación amplia y los casos todavía no cubiertos están en `docs/specs/SPANISH_CONTROLLED.md`.
-
-## Narración y vista 3D opcionales
-
-Al evaluar una fórmula, hallar un contramodelo o demostrar, «Ver paso a paso» recorre los pasos verificados con pausa, avance, retroceso y repetición. En un contramodelo, el avatar cuenta primero la búsqueda (qué tamaños probó, cuántas interpretaciones descartó y un ejemplo que no sirve) y luego por qué la fórmula falla. En una prueba, narra las líneas de la vista Fitch con su mismo número. La vista 3D usa Three.js incluido localmente; la vista 2D queda disponible si WebGL falla.
-
-El botón de la esquina de la escena pone el paso a paso en pantalla completa: la escena crece y el texto del paso y los controles quedan al lado (debajo en el teléfono). Las flechas ← → cambian de paso y Esc sale. En Android, si el teléfono está vertical, intenta girar a horizontal. En el iPhone, que no ofrece pantalla completa para estos elementos, la sección cubre la ventana.
-
-La voz solo se activa si el usuario la marca y el sistema tiene una voz local en español; si no la hay, la casilla se desactiva y explica cómo instalarla (en Windows: Configuración → Hora e idioma → Voz → Agregar voces → Español). Mientras habla, la boca del avatar sigue a la voz sílaba por sílaba:
-
-- **Ritmo:** cuando la voz empieza una palabra, la palabra se parte en sílabas al ritmo medido de la voz, que se ajusta solo con el tiempo entre palabras. Así nunca se atrasa.
-- **Letras, cifras y símbolos:** se cuentan por su nombre: «x» es «equis», «0» es «cero», «=» es «igual a».
-- **Forma de la boca:** abre en las vocales abiertas, se redondea en «o» y «u» y junta los labios en m, b, p y v (morph targets `Boca_abierta` y `Boca_redonda` del GLB).
-- **Voces que no avisan cada palabra:** la boca sigue un ritmo estimado a partir del texto.
-
-### Entrada por voz (opcional)
-
-«Grabar frase» transcribe en este equipo con whisper.cpp; nada sale a internet. Para instalarlo, por usuario y sin administrador:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts\instalar_voz.ps1      # Windows: ffmpeg (winget), whisper.cpp y el modelo base
-```
-
-```bash
-bash scripts/instalar_voz.sh                                           # Linux o macOS (sin probar en esta entrega)
-```
-
-whisper.cpp y el modelo quedan en `%LOCALAPPDATA%\LOGOS\voz` (o `~/.local/share/logos/voz`), donde el servidor los encuentra sin variables de entorno; cada descarga se comprueba con su SHA-256. `-Modelo small` es más preciso y más lento. Para quitarlo: borrar esa carpeta y `winget uninstall --id Gyan.FFmpeg -e`. La imagen de Docker no incluye la transcripción por voz (whisper), pero sí `espeak-ng`: la voz de la explicación guiada se genera dentro del contenedor. El texto transcrito siempre se muestra para revisarlo antes de traducirlo.
-
-La procedencia y la licencia de Three.js, whisper.cpp y lo demás están en `docs/THIRD_PARTY.md`.
-
-## Fases 1 a 3: compilador, semántica finita y pruebas (`src/logos/`)
-
-```
-PYTHONPATH=src:tests python3 -m unittest discover -s tests
-```
-
-Solo librería estándar de Python (≥ 3.10). Sintaxis y símbolos: `docs/specs/FORMAL_LANGUAGE.md`. Semántica: `docs/specs/SEMANTICS.md`. Cálculo de pruebas: `docs/specs/PROOF_CALCULUS.md`. Contratos JSON: `docs/specs/JSON_CONTRACTS.md`. Arquitectura, plan y decisiones: `docs/architecture/`, `docs/plans/`, `docs/decisions/`.
-
-```python
-from logos import parse, to_string, substitute, Var
-f = parse("∀x (P(x) → Q(x))")
-to_string(f, ascii=True)   # 'forall x (P(x) -> Q(x))'
-from logos import FiniteModel, is_true, evaluate
-m = FiniteModel(["a"], predicates={"P": (1, []), "Q": (1, [("a",)])})
-is_true(m, parse("∀x (Q(x) → P(x))"))   # False: contramodelo de la conversa
-```
-
-```python
-from logos.proof import prove_text, format_certificate
-r = prove_text(["∀x (P(x) → Q(x))", "P(a)"], "Q(a)", constants=["a"])
-r.status                          # 'proved' (solo si el checker aceptó el certificado)
-print(format_certificate(r.certificate))
-```
-
-El buscador (`proof/search.py`) es incompleto: devuelve `unknown` (nunca "falso") al agotar profundidad, nodos o tiempo. El checker (`proof/checker.py`) no depende del buscador.
-
-Lógica proposicional (siempre hay veredicto: prueba o contramodelo verificado):
-
-```python
-from logos import decide, parse
-v = decide([parse("p → q", propositional=True)], parse("¬q → ¬p", propositional=True))
-v.status, v.method                # ('proved', 'search'); el respaldo completo es 'kalmar'
-```
+- **La validez en primer orden es indecidible.** El buscador de pruebas es incompleto por diseño (profundidad 6, 20 000 nodos, 3 s); los contramodelos se buscan solo hasta 3 elementos. «Búsqueda inconclusa» es una respuesta legítima. En lógica proposicional (letras como `p → q`) siempre hay veredicto hasta 12 letras (la prueba de Kalmár, hasta 6).
+- **Evaluar usa el perfil estricto del proyecto**: dominio no vacío, relaciones no vacías y predicados de aridad ≥ 1. Un contramodelo de Demostrar puede tener una relación vacía (semántica clásica) y entonces no se puede abrir en Evaluar; la interfaz lo dice.
+- **El diccionario del español lo generó un asistente y no tiene revisión humana** (unas 6200 entradas más unas 2700 formas deducidas por reglas). Está auditado automáticamente (0 avisos de confianza alta), pero una persona debe confirmarlo. El español controlado cubre un fragmento, no el español en general.
+- **Lo que necesita personas sigue pendiente** ([`docs/validation/REVISION-EQUIPO.md`](docs/validation/REVISION-EQUIPO.md)): revisión cruzada firmada, ensayo de defensa, ensayo audible con una voz española real, prueba en un teléfono real y la fecha de entrega.
+- **Sin pruebas automáticas del DOM** (`app.js` tiene unas 2300 líneas en un solo módulo). La interfaz se probó a mano con Chromium automatizado a distintos anchos; teléfono real y lector de pantalla real no se probaron.
+- **La voz** de `espeak-ng` es sintética y robótica; la transcripción por voz (whisper.cpp) es opcional, no está en Docker y su instalador para Linux/macOS no se ha probado en un sistema real.
+- **Seguridad: es una aplicación local.** El servidor no tiene autenticación ni comprueba `Origin`/`Host`; escucha en `127.0.0.1` por defecto. En la demo pública el estado (cuadernos, palabras añadidas) es compartido entre visitantes y se pierde al reiniciar: no escribas datos personales.
+- **La escena 3D** admite dominios de hasta 12 elementos; con más, queda el texto y la vista 2D.
+- Algunas fechas y atribuciones históricas de «Aprender» no se contrastaron con fuentes externas.
