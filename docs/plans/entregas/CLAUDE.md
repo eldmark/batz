@@ -193,3 +193,15 @@ el hito de antes y el de después como tarjetas pequeñas (en ≤767 px, pestañ
 - Corrección de datos: el orden de la lista ahora es cronológico por año de inicio (Tarski 1933 y Gentzen 1934 iban después de Church y Turing 1936).
 - Archivos: `features/learn/timeline.js` (lógica pura, nuevo), `learn.js`, `data.js` (`slugs`), `styles/learn.css`,
   `server.py` (ruta de `timeline.js`), `tests/frontend/app/learn.test.mjs`.
+
+## Carrusel y páginas de personas
+
+Rama `rediseno/personas`. El banner de Inicio es ahora un carrusel de tres diapositivas (Gödel, Turing, Church) en
+`features/home/carousel.js`: `role="region"` con `aria-roledescription="carrusel"`, diapositivas `role="group"`
+«1 de 3», botones anterior/siguiente, puntos con `aria-current`, flechas/Inicio/Fin, deslizar táctil (solo toque y lápiz)
+y anuncio `aria-live="polite"` únicamente al navegar. Sin autoavance. Las inactivas llevan `inert`; el movimiento es
+solo `opacity`/`transform` y se apaga con `prefers-reduced-motion`. La lógica pura (`stepIndex`, `swipeDelta`, `keyIndex`) está probada.
+Church no tiene retrato libre: tarjeta tipográfica con monograma «AC» y la nota «Retrato no disponible con licencia libre».
+Rutas `#/godel`, `#/turing`, `#/church` (`nav: false` en `navigation.js`, fuera de la barra lateral; `personFor`).
+Datos en `features/people/bios.js`, vista en `person.js` (reutiliza el `runExercise` y `CONNECTIONS` de Inicio), estilos en `styles/people.css`.
+En `app.js` solo la conexión: sección `#mode-person`, título, foco al h1 y ayuda. Todo dato incierto se omitió (p. ej. lugar de la muerte de Church).

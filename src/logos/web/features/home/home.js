@@ -1,6 +1,7 @@
 import {hashFor} from '../../app/navigation.js';
 import {CARDS as LEARN_CARDS, HISTORY} from '../learn/data.js';
 import {braid, enhanceHome} from './motion.js';
+import {renderCarousel} from './carousel.js';
 
 // Ejercicios de Practicar (src/logos/practice_bank.py, len(EXERCISES)); se verifica a mano al cambiar el banco.
 export const PRACTICE_COUNT = 50;
@@ -19,26 +20,6 @@ export const EXERCISES = [
   {id: 'notebook', route: 'notebook', title: '3 · Consulta unas fuentes', does: 'Crea el cuaderno de ejemplo con textos en español.', watch: 'Pregunta «¿Juan aprueba?» y abre la cita que respalda la respuesta.'},
 ];
 
-// Banner: dos retratos de dominio público (ver img/CREDITOS.md). Si falta una imagen, queda la tarjeta con iniciales.
-export const BANNER = {
-  title: 'Dos lógicos detrás de lo que practicas',
-  people: [
-    {id: 'godel', name: 'Kurt Gödel', years: '1906–1978', initials: 'KG', src: '/img/godel.jpg',
-     alt: 'Retrato fotográfico de Kurt Gödel, joven, con gafas redondas, traje y corbata a cuadros.',
-     credit: 'Retrato, h. 1925. Dominio público (Wikimedia Commons).', page: 'https://commons.wikimedia.org/wiki/File:Young_Kurt_G%C3%B6del_as_a_student_in_1925.jpg',
-     facts: ['Teorema de completitud (1929): en lógica de primer orden, lo verdadero en todos los modelos se puede demostrar.',
-             'Teoremas de incompletitud (1931): en sistemas formales suficientemente ricos hay enunciados que no se pueden ni demostrar ni refutar.'],
-     link: '«Evaluar» trabaja con modelos (semántica) y «Demostrar» con pruebas (sintaxis); la completitud es el puente entre ambos.'},
-    {id: 'turing', name: 'Alan Turing', years: '1912–1954', initials: 'AT', src: '/img/turing.jpg',
-     alt: 'Retrato fotográfico de Alan Turing con la mirada hacia un lado, de chaqueta de tweed, camisa y corbata oscura.',
-     credit: 'Retrato de Elliott & Fry, 1951. Dominio público (Wikimedia Commons).', page: 'https://commons.wikimedia.org/wiki/File:Alan_Turing_(1951).jpg',
-     facts: ['1936: la máquina de Turing y la indecidibilidad del problema de la parada.',
-             'Junto con Church, de ahí se sigue que la validez en lógica de primer orden es indecidible.'],
-     link: 'Por eso una búsqueda puede quedar «inconclusa», y eso no equivale a falso.'},
-  ],
-  goal: 'Esta página sirve para practicar: los ejercicios de Practicar, evaluar modelos y demostrar.',
-};
-
 /** Del teorema al ejercicio: cada tarjeta carga en Demostrar un caso que ilustra un resultado de Gödel o de Turing. */
 export const CONNECTIONS = [
   {id: 'goedel-completitud', route: 'prove', who: 'Gödel · completitud (1929)', title: 'Lo que se sigue, se demuestra',
@@ -54,36 +35,6 @@ export const CONNECTIONS = [
    watch: 'Pulsa «Buscar prueba»: queda «Búsqueda inconclusa». No decide la consecuencia: no es «falsa» ni «demostrada». No existe un algoritmo que decida toda consecuencia de primer orden.',
    proof: {premises: '∀x ∀y ∀z ((R(x, y) ∧ R(y, z)) → R(x, z))\n∀x ¬R(x, x)\n∀x ∃y R(x, y)', conclusion: '∃x ∀y ¬R(y, x)', constants: ''}},
 ];
-
-export function renderBanner(make) {
-  const section = make('section', undefined, 'home-banner hs');
-  section.dataset.sec = ''; section.setAttribute('aria-labelledby', 'banner-title');
-  const title = make('h3', BANNER.title, 'hs-title'); title.id = 'banner-title'; title.dataset.rv = '';
-  const grid = make('div', undefined, 'banner-grid');
-  for (const p of BANNER.people) {
-    const card = make('article', undefined, `banner-person banner-${p.id}`); card.dataset.rv = '';
-    const fig = make('figure', undefined, 'banner-portrait');
-    const frame = make('div', undefined, 'banner-frame');
-    const initials = make('span', p.initials, 'banner-initials'); initials.setAttribute('aria-hidden', 'true');
-    const img = make('img'); img.src = p.src; img.alt = p.alt; img.width = 480; img.height = p.id === 'godel' ? 636 : 640; img.loading = 'lazy'; img.decoding = 'async';
-    img.addEventListener('error', () => { img.remove(); frame.classList.add('is-missing'); frame.setAttribute('role', 'img'); frame.setAttribute('aria-label', `Retrato de ${p.name} no disponible`); });
-    frame.append(initials, img);
-    const cap = make('figcaption', undefined, 'banner-credit');
-    const a = make('a', p.credit); a.href = p.page; a.target = '_blank'; a.rel = 'noopener noreferrer';
-    cap.append(a); fig.append(frame, cap);
-    const body = make('div', undefined, 'banner-text');
-    const h = make('h4', undefined, 'banner-name'); h.append(p.name, make('span', p.years));
-    const facts = make('ul'); for (const f of p.facts) facts.append(make('li', f));
-    body.append(h, facts, make('p', p.link, 'banner-link'));
-    card.append(fig, body);
-    grid.append(card);
-  }
-  const goal = make('div', undefined, 'banner-goal'); goal.dataset.rv = '';
-  const cta = make('a', 'Ir a Practicar', 'home-link'); cta.href = '#/practicar'; cta.append(arrow());
-  goal.append(make('p', BANNER.goal), cta);
-  section.append(title, grid, goal);
-  return section;
-}
 
 const SVGNS = 'http://www.w3.org/2000/svg';
 function svgEl(tag, attrs) { const el = document.createElementNS(SVGNS, tag); for (const k in attrs) el.setAttribute(k, attrs[k]); return el; }
@@ -164,7 +115,7 @@ export function renderHome(host, {go, runExercise}) {
   });
   exSec.append(exTitle, exLede, list);
 
-  // Gödel y Turing, y el puente a Demostrar.
+  // Puente a Demostrar: un ejercicio por resultado de Gödel o de Turing.
   const bridge = make('section', undefined, 'home-bridge hs'); bridge.dataset.sec = ''; bridge.setAttribute('aria-labelledby', 'home-bridge-title');
   const bridgeTitle = make('h3', 'Practica lo que probaron Gödel y Turing', 'hs-title'); bridgeTitle.id = 'home-bridge-title'; bridgeTitle.dataset.rv = '';
   const bridgeList = make('ul', undefined, 'home-bridge-list');
@@ -178,7 +129,7 @@ export function renderHome(host, {go, runExercise}) {
   bridge.append(bridgeTitle, bridgeList);
 
   const flow = make('div', undefined, 'home-flow');
-  flow.append(braid(), hero, tools, exSec, renderBanner(make), bridge, make('span', undefined, 'home-end'));
+  flow.append(braid(), hero, tools, exSec, renderCarousel({arrow}), bridge, make('span', undefined, 'home-end'));
   host.append(flow);
   teardown = enhanceHome(root);
 }

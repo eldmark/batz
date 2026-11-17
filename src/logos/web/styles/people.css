@@ -1,0 +1,50 @@
+/* Retratos y páginas de personas (#/godel, #/turing, #/church). Solo tokens de tokens.css.
+   El movimiento se limita a opacity y transform y se apaga con prefers-reduced-motion. */
+.portrait { margin: 0; width: 100%; max-width: 380px; }
+.portrait-frame { position: relative; isolation: isolate; aspect-ratio: 4 / 5; overflow: hidden; display: grid; place-items: center; background: var(--brand-100); border-radius: var(--r); }
+.portrait-frame img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 20%; mix-blend-mode: multiply; filter: grayscale(1) contrast(1.05); }
+.portrait-frame::after { content: ""; position: absolute; inset: 0; background: var(--brand-800); mix-blend-mode: lighten; pointer-events: none; opacity: .35; }
+.portrait-frame.is-placeholder { background: linear-gradient(160deg, var(--brand-100), var(--brand-200)); }
+.portrait-frame.is-placeholder::after { display: none; }
+.portrait-glyph { position: absolute; right: 8%; top: 2%; font: 300 min(62vw, 320px)/1 var(--serif); font-style: italic; color: var(--brand-300); opacity: .55; pointer-events: none; }
+.portrait-mono { position: relative; font: 500 clamp(64px, 12vw, 120px)/1 var(--serif); letter-spacing: .02em; color: var(--brand-900); }
+.portrait-credit { margin-top: var(--s2); font: 400 12px/1.4 var(--sans); color: var(--text-muted); }
+.portrait-credit a { color: var(--text-muted); text-underline-offset: 2px; text-decoration-color: var(--border-strong); }
+.portrait-credit a:hover { color: var(--link); }
+
+/* ── Página de una persona ── */
+.person-page { max-width: 1040px; padding: clamp(24px, 4vw, 56px) var(--gutter) 120px; }
+.person-page :focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 3px; }
+.person-nav { display: flex; flex-wrap: wrap; gap: var(--s2) var(--s5); margin-bottom: var(--s6); }
+.person-head { display: grid; grid-template-columns: minmax(220px, 340px) minmax(0, 1fr); gap: var(--s7); align-items: end; }
+.person-info { display: flex; flex-direction: column; gap: var(--s4); min-width: 0; }
+.person-years { margin: 0; font: 400 15px/1 var(--mono); color: var(--text-muted); }
+.person-lede { margin: 0; max-width: 24ch; font: 500 clamp(26px, 3.4vw, 40px)/1.2 var(--serif); letter-spacing: -.015em; color: var(--brand-900); text-wrap: balance; }
+.person-facts { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: var(--s2) var(--s4); margin: var(--s3) 0 0; font-size: 15px; line-height: 1.5; }
+.person-facts dt { color: var(--text-muted); }
+.person-facts dd { margin: 0; }
+.person-sec { max-width: 66ch; margin-top: clamp(40px, 6vw, 72px); padding-top: var(--s5); border-top: var(--hair); }
+.person-h { margin: 0 0 var(--s4); font: 500 clamp(24px, 3vw, 32px)/1.15 var(--serif); letter-spacing: -.01em; color: var(--brand-900); }
+.person-sec p { margin: 0 0 var(--s3); font-size: 16.5px; line-height: 1.65; }
+.dated, .reading, .person-batz { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--s3); }
+.dated li { display: grid; grid-template-columns: 9ch minmax(0, 1fr); gap: var(--s4); font-size: 16px; line-height: 1.55; }
+.dated-y { font: 500 14px/1.7 var(--mono); color: var(--brand-700); }
+
+.reading li { font: italic 400 16px/1.55 var(--serif); padding-left: var(--s4); border-left: 3px solid var(--border-strong); }
+.person-batz li { display: grid; gap: var(--s1); justify-items: start; }
+.person-batz p { margin: 0; }
+.person-sec .button { margin-top: var(--s4); }
+.person-more { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s2) var(--s5); margin-top: clamp(40px, 6vw, 72px); padding-top: var(--s5); border-top: var(--hair); color: var(--text-muted); font-size: 15px; }
+.person-page .home-link { display: inline-flex; align-items: center; gap: var(--s2); padding: var(--s2) 0; font: 600 15px/1.2 var(--sans); color: var(--link); text-decoration: none; border-radius: var(--r); }
+.person-page .home-link:hover { color: var(--brand-900); text-decoration: underline; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .person-head .portrait, .person-info { animation: person-in .6s var(--out) both; }
+  .person-info { animation-delay: .08s; }
+  @keyframes person-in { from { opacity: 0; transform: translateY(14px); } }
+}
+@media (max-width: 720px) {
+  .person-head { grid-template-columns: minmax(0, 1fr); gap: var(--s5); align-items: start; }
+  .person-head .portrait { max-width: 260px; }
+  .dated li { grid-template-columns: 7.5ch minmax(0, 1fr); gap: var(--s3); }
+}
