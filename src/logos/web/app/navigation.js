@@ -6,6 +6,7 @@ export const ROUTES = [
   {id: 'practice', hash: '#/practicar', title: 'Practicar'},
   {id: 'notebook', hash: '#/cuadernos', title: 'Cuadernos'},
   {id: 'dictionary', hash: '#/diccionario', title: 'Diccionario'},
+  {id: 'learn', hash: '#/aprender', title: 'Aprender'},
 ];
 
 const byId = new Map(ROUTES.map(route => [route.id, route]));
