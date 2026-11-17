@@ -1,5 +1,6 @@
 import {ROUTES, routeFromHash, hashFor, titleFor, isKnownHash} from '/app/navigation.js';
 import {renderHome} from '/features/home/home.js';
+import {createExplanationPlayer} from '/features/explanation-player/index.js';
 
 const $ = (id) => document.getElementById(id);
 const symbolsBody = $('symbols');
@@ -12,11 +13,6 @@ let freeRequest = 0;
 let searchRequest = 0;
 let evalInputs = 0;    // revisión de las entradas de Evaluar: una respuesta de una revisión anterior se descarta
 let proofInputs = 0;   // ídem para Demostrar
-let storyState = null;
-let storyScene = null;
-let storyTimer = null;
-let storyPlaying = false;
-let storyNonce = 0;
 let spanishRecorder = null;
 let spanishStream = null;
 let spanishRecordTimer = null;
@@ -141,242 +137,61 @@ document.addEventListener('pointerdown', event => {
   wave.addEventListener('animationend', () => wave.remove());
 });
 
-let storyWordTimers = [];                          // ritmo simulado de la boca (voces que no avisan cada palabra)
-function stopStoryAudio() {
-  if (storyTimer) clearTimeout(storyTimer);
-  storyTimer = null;
-  storyWordTimers.forEach(clearTimeout); storyWordTimers = [];
-  if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-  storyScene?.talking(false);
-}
+// ── Explicación guiada: una instancia del reproductor compartido por módulo ──
+// El reproductor no conoce las pantallas: avisa por callbacks y aquí se resuelve el destino del resaltado.
+const explanations = {};          // origen → {player, host, id, label}
+let explanationRev = 0;
+const EXPLANATION_HOSTS = {evaluate: 'player-evaluate', prove: 'player-prove', notebook: 'player-notebook'};
 
-function pauseStory() {
-  storyPlaying = false;
-  stopStoryAudio();
-  $('story-play').disabled = false;
-  $('story-pause').disabled = true;
+function stepScope(origin) { return origin === 'notebook' ? $('nb-evidence') : origin === 'prove' ? $('proof-result') : $('result'); }
+function clearStepHighlights(origin) {
+  stepScope(origin).querySelectorAll('.fitch li.current').forEach(li => li.classList.remove('current'));
+  if (origin === 'evaluate') showSpan(null);
 }
-
-function clearStory() {
-  storyNonce++;
-  pauseStory();
-  exitStoryFullscreen();
-  if (storyScene) storyScene.dispose();
-  storyScene = null; storyState = null;
-  $('story-section').hidden = true;
-  $('story-visual').replaceChildren();
-  $('story-2d').replaceChildren();
+function highlightStep(origin, event) {
+  clearStepHighlights(origin);
+  if (!event) return;
+  if (event.kind === 'proof') stepScope(origin).querySelector(`.fitch li[data-line="${event.line}"]`)?.classList.add('current');
+  else if (origin === 'evaluate' && event.kind !== 'search' && event.kind !== 'premise') showSpan(event.span);
 }
-
-function renderStory2D(event) {
-  const box = $('story-2d'); box.replaceChildren();
-  if (!storyState) return;
-  const model = storyState.model;
-  if (event.kind === 'proof' || !model) {
-    const rule = event.rule_label || event.rule;
-    box.append(node('p', `Línea ${event.line ?? event.trace_path} · ${rule}${event.refs?.length ? ` · usa ${event.refs.join(', ')}` : ''}`, 'hint'));
-    if (event.context?.length) box.append(node('p', `Hipótesis abiertas: ${event.context.join(', ')}`, 'hint'));
-    return;
-  }
-  if (event.kind === 'search') {
-    // Durante la búsqueda solo existen los elementos del tamaño que se está probando.
-    const nodes = node('div', undefined, 'story-domain');
-    model.domain.slice(0, event.size).forEach(value => nodes.append(node('span', valueLabel(value), `story-node ${event.phase === 'found' ? 'true' : ''}`)));
-    if (!event.size) nodes.append(node('span', '…', 'story-node'));
-    box.append(nodes, node('p', event.size ? `D con ${plural(event.size, 'elemento', 'elementos')}` : 'Todavía sin dominio', 'hint'));
-    return;
-  }
-  const focus = event.term_values?.length ? event.term_values :
-    event.element !== null && event.element !== undefined ? [event.element] : Object.values(event.assignment || {});
-  const nodes = node('div', undefined, 'story-domain');
-  model.domain.forEach(value => {
-    const active = event.kind !== 'premise' && focus.some(item => sameValue(item, value));
-    const chip = node('span', valueLabel(value), `story-node ${active ? (event.value ? 'true' : 'false') : ''}`);
-    nodes.append(chip);
+function explanationFor(origin) {
+  if (explanations[origin]) return explanations[origin];
+  const entry = explanations[origin] = {id: null};
+  entry.host = $(EXPLANATION_HOSTS[origin]);
+  entry.player = createExplanationPlayer({
+    host: entry.host,
+    onStepChange: ({resultId, event}) => { if (resultId === entry.id) highlightStep(origin, event); },
+    onStateChange: state => { if (state.resultId === entry.id && state.presentation === 'expanded' && state.status === 'ready') return; clearStepHighlights(origin); },
   });
-  box.append(nodes);
-  if (event.relation && model.predicates[event.relation]) {
-    const relation = model.predicates[event.relation];
-    box.append(node('p', `${event.relation}ᴵ = {${relation.tuples.map(tupleLabel).join(', ')}}`, 'hint'));
-  } else {
-    box.append(node('p', `D = {${model.domain.map(valueLabel).join(', ')}}`, 'hint'));
-  }
+  return entry;
 }
 
-function renderStoryStep() {
-  if (!storyState) return;
-  const {events, index} = storyState;
-  const event = events[index];
-  const current = $('story-current'); current.replaceChildren();
-  const where = event.kind === 'proof' ? `línea ${event.line}` : event.kind === 'search' ? 'búsqueda'
-    : event.kind === 'premise' ? 'premisa' : `nodo ${event.trace_path}`;
-  current.append(node('span', `Paso ${index + 1} de ${events.length} · ${where}`, 'hint'));
-  if (event.formula) current.append(node('strong', event.formula));
-  current.append(node('p', event.text_es));
-  const badge = event.kind === 'search' ? ['Búsqueda acotada', 'verified'] : event.value === null ? ['Paso verificado', 'verified']
-    : event.value ? ['Verdadero', 'true'] : ['Falso', 'false'];
-  current.append(node('span', badge[0], `badge ${badge[1]}`));
-  $('story-prev').disabled = index === 0;
-  $('story-next').disabled = index === events.length - 1;
-  for (const [i, item] of [...$('story-list').children].entries()) {
-    if (i === index) item.setAttribute('aria-current', 'step');
-    else item.removeAttribute('aria-current');
-  }
-  // En una prueba, la línea que se narra se marca en la vista Fitch (solo con el paso a paso abierto).
-  document.querySelectorAll('.fitch li.current').forEach(li => li.classList.remove('current'));
-  if (event.kind === 'proof' && !$('story-section').hidden) document.querySelector(`.fitch li[data-line="${event.line}"]`)?.classList.add('current');
-  renderStory2D(event);
-  if (storyScene) storyScene.setEvent(event);
-  if (event.kind !== 'search' && event.kind !== 'premise') showSpan(event.span);
+/** Ofrece «Explicación guiada» bajo un resultado. Cargar no abre ni desplaza: abre solo el botón. */
+function showStory(story, model, host, {origin, kind, title}) {
+  const entry = explanationFor(origin);
+  if (!story?.events?.length) { entry.player.clear(); entry.id = null; return; }
+  const payload = {resultId: `${origin}:${++explanationRev}`, origin, kind, title, story, model: model ?? null};
+  entry.id = payload.resultId; entry.player.load(payload);
+  const open = node('button', 'Explicación guiada', 'button secondary story-open'); open.type = 'button';
+  open.addEventListener('click', () => {
+    if (entry.id !== payload.resultId) { entry.id = payload.resultId; entry.player.load(payload); }   // otro resultado del mismo módulo la había reemplazado
+    entry.player.open();
+    entry.host.scrollIntoView({behavior: reduceMotion() ? 'auto' : 'smooth', block: 'start'});
+  });
+  host.append(open);
 }
 
-async function initStory3D() {
-  if (!storyState || !$('story-3d').checked || storyScene) return;
-  const nonce = storyNonce;
-  try {
-    const {createStoryScene} = await import('/story3d.js');
-    if (nonce !== storyNonce || !storyState || !$('story-3d').checked) return;
-    storyScene = createStoryScene($('story-visual'), storyState.model, {onPick: pickStoryElement});
-    storyScene.setEvent(storyState.events[storyState.index]);
-    $('story-visual').hidden = false;
-    $('story-status').textContent = storyState.model ? 'Haz clic en un elemento para ver ese caso.' : '';
-  } catch {
-    $('story-3d').checked = false;
-    $('story-visual').hidden = true;
-    $('story-status').textContent = 'WebGL no está disponible; sigue la vista 2D.';
-  }
+/** Una entrada cambió: la explicación de ese módulo deja de valer (se conserva visible, marcada como desactualizada). */
+const STALE_REASONS = {evaluate: 'El modelo o la fórmula cambiaron. Vuelve a evaluar.',
+  prove: 'Las premisas o la conclusión cambiaron. Vuelve a buscar la prueba.',
+  notebook: 'La pregunta o las fuentes cambiaron. Vuelve a preguntar.'};
+function clearStory(origin, reason = STALE_REASONS[origin]) {
+  const entry = explanations[origin];
+  if (!entry?.id) return;
+  entry.player.invalidate(reason); entry.id = null; clearStepHighlights(origin);
 }
-
-function showStory(story, model, host) {
-  clearStory();
-  if (!story?.events?.length) return;
-  if (host) {
-    const open = node('button', 'Ver paso a paso', 'button secondary story-open'); open.type = 'button';
-    open.addEventListener('click', () => {
-      $('story-section').hidden = false; renderStoryStep();
-      $('story-section').scrollIntoView({behavior: reduceMotion() ? 'auto' : 'smooth', block: 'start'}); initStory3D();
-    });
-    host.append(open);
-  }
-  storyState = {events: story.events, model, index: 0};
-  $('story-3d').disabled = false;
-  $('story-3d').checked = true;
-  $('story-visual').hidden = false;
-  $('story-status').textContent = '';
-  $('story-list').replaceChildren();
-  for (const [i, event] of story.events.entries()) {
-    const item = node('li');
-    const where = event.kind === 'proof' ? `Línea ${event.line}` : event.kind === 'search' ? 'Búsqueda'
-      : event.kind === 'premise' ? 'Premisa' : event.trace_path;
-    const button = node('button', `${where} · ${event.text_es}`, 'story-link');
-    button.type = 'button';
-    button.addEventListener('click', () => { pauseStory(); storyState.index = i; renderStoryStep(); });
-    item.append(button); $('story-list').append(item);
-  }
-  renderStoryStep();
-}
-
-// Clic en un elemento del dominio: salta al paso donde el cuantificador en curso prueba ese caso.
-function pickStoryElement(element) {
-  if (!storyState) return;
-  const {events, index} = storyState;
-  let path = events[index].trace_path;
-  while (path) {
-    const owner = events.find(e => e.trace_path === path);
-    if (owner?.kind === 'quantifier') {
-      const depth = path.split('.').length + 1;
-      const hit = events.findIndex(e => e.trace_path.startsWith(path + '.') && e.trace_path.split('.').length === depth && sameValue(e.element, element));
-      if (hit >= 0) { pauseStory(); storyState.index = hit; renderStoryStep(); return; }
-    }
-    path = path.includes('.') ? path.slice(0, path.lastIndexOf('.')) : '';
-  }
-  $('story-status').textContent = 'Ese elemento no se prueba en este paso: avanza hasta un cuantificador.';
-}
-
-function localSpanishVoice() {
-  if (!('speechSynthesis' in window)) return null;
-  // Primero una voz latinoamericana (México, EE. UU., Latinoamérica); si no hay, cualquier español local.
-  const local = window.speechSynthesis.getVoices().filter(voice => voice.lang.toLowerCase().startsWith('es') && voice.localService === true);
-  return local.find(voice => /^es-(mx|us|419|gt|co|ar|cl|pe)/i.test(voice.lang)) || local[0] || null;
-}
-
-/** La casilla de voz solo se ofrece si el sistema tiene una voz local en español; si no, dice cómo instalarla. */
-function refreshVoiceOption() {
-  const box = $('story-voice'), help = $('voice-help');
-  if (!('speechSynthesis' in window)) {
-    box.checked = false; box.disabled = true;
-    help.textContent = 'Este navegador no puede leer en voz alta.'; help.hidden = false;
-    return;
-  }
-  const voice = localSpanishVoice();
-  box.disabled = !voice;
-  if (!voice) box.checked = false;
-  const windows = /Windows/.test(navigator.userAgent);
-  help.textContent = voice ? '' : windows
-    ? 'No hay voz en español en este equipo. Instálala en Configuración → Hora e idioma → Voz → Agregar voces → Español, y recarga la página.'
-    : 'No hay voz local en español en este equipo. Instala una en la configuración de voz del sistema y recarga la página.';
-  help.hidden = Boolean(voice);
-}
-
-function advanceStory() {
-  if (!storyState || !storyPlaying) return;
-  if (storyState.index >= storyState.events.length - 1) {   // fin del recorrido: el avatar reacciona al valor de la fórmula
-    pauseStory();
-    const root = storyState.events.find(e => e.kind !== 'search' && e.kind !== 'premise');
-    if (root && root.value !== null) storyScene?.verdict(root.value);
-    return;
-  }
-  storyState.index++;
-  renderStoryStep(); narrateCurrent();
-}
-
-function narrateCurrent() {
-  if (!storyState || !storyPlaying) return;
-  stopStoryAudio();
-  const event = storyState.events[storyState.index];
-  const voice = $('story-voice').checked ? localSpanishVoice() : null;
-  if (voice && 'SpeechSynthesisUtterance' in window) {
-    const utterance = new SpeechSynthesisUtterance(event.text_es);
-    utterance.lang = voice.lang; utterance.voice = voice; utterance.rate = .92;
-    const index = storyState.index;
-    // La boca del avatar sigue a la voz: cada palabra que empieza se parte en sílabas al ritmo medido de la voz.
-    let spoken = 0, gotWord = false;                  // hasta dónde llegó la voz en el texto
-    // Algunas voces no avisan cuándo empieza cada palabra. Por eso, al empezar, la boca sigue un ritmo estimado a
-    // partir del texto (unas 0,185 s por sílaba y una pausa en cada coma o punto); con el primer aviso real de
-    // palabra ese ritmo se cancela y manda la voz.
-    const simulate = () => {
-      let at = 0;
-      for (const raw of event.text_es.match(/\S+/g) || []) {
-        const word = raw.replace(/[,.;:!?¡¿()]/g, ''), pause = /[,.;:!?)]$/.test(raw);
-        const beats = storyScene?.syllableCount?.(word) ?? ((word.normalize('NFD').match(/[aeiouy]+/gi) || []).length || 1);
-        storyWordTimers.push(setTimeout(() => storyScene?.say(word, utterance.rate), at));
-        at += Math.max(1, beats) * 185 / utterance.rate + (pause ? 300 : 35);
-      }
-    };
-    utterance.onstart = () => { storyScene?.talking(true); simulate(); };
-    utterance.onboundary = boundary => {
-      if (boundary.name && boundary.name !== 'word') return;
-      if (!gotWord) { storyWordTimers.forEach(clearTimeout); storyWordTimers = []; }   // la voz sí avisa: manda ella
-      gotWord = true;
-      const word = event.text_es.slice(boundary.charIndex, boundary.charIndex + (boundary.charLength || 12)).split(/[\s,.;:]/)[0];
-      const pause = /[,.;:!?¡¿()]/.test(event.text_es.slice(spoken, boundary.charIndex));   // coma, punto: el hueco no es ritmo
-      spoken = boundary.charIndex + word.length;
-      storyScene?.say(word, utterance.rate, pause);
-    };
-    const finish = () => {
-      storyWordTimers.forEach(clearTimeout); storyWordTimers = [];   // la voz terminó: el ritmo simulado también
-      storyScene?.talking(false);
-      if (storyPlaying && storyState?.index === index) advanceStory();
-    };
-    utterance.onend = finish;
-    utterance.onerror = finish;
-    window.speechSynthesis.speak(utterance);
-    $('story-status').textContent = `Voz local: ${voice.name}.`;
-    return;
-  }
-  if ($('story-voice').checked) $('story-status').textContent = 'No hay voz local en español. Continúa la narración en texto.';
-  storyTimer = setTimeout(advanceStory, Math.max(2200, event.text_es.length * 55));
-}
+/** Al navegar: se pausa todo y se sale de pantalla completa; no se pierde el paso. */
+function pauseExplanations() { for (const entry of Object.values(explanations)) { entry.player.pause(); entry.player.exitFullscreen?.(); } for (const origin of Object.keys(explanations)) clearStepHighlights(origin); }
 
 function node(tag, text, className) {
   const el = document.createElement(tag);
@@ -494,7 +309,7 @@ function signature() {
 
 function invalidateTables() {
   evalInputs++;
-  clearStory();
+  clearStory('evaluate', 'El modelo cambió. Vuelve a evaluar.');
   searchRequest++;
   preparedSignature = null;
   interpretationBox.replaceChildren();
@@ -541,7 +356,7 @@ function valueSelect(label, options) {
   select.setAttribute('aria-label', label);
   const blank = node('option', 'Selecciona un valor'); blank.value = ''; select.append(blank);
   options.forEach((value, i) => { const opt = node('option', valueLabel(value)); opt.value = String(i); select.append(opt); });
-  select.addEventListener('change', () => { clearStory(); refreshReady(); });
+  select.addEventListener('change', () => { clearStory('evaluate'); refreshReady(); });
   return select;
 }
 
@@ -565,7 +380,7 @@ function table(box, headA, headB) {
 }
 
 function prepare() {
-  clearStory();
+  clearStory('evaluate');
   searchRequest++;
   const error = $('model-error'); error.hidden = true;
   $('countermodel-result').replaceChildren();
@@ -592,7 +407,7 @@ function prepare() {
       for (const args of tuples(domain, arity)) {
         const row = node('tr'); row.dataset.args = JSON.stringify(args); row.dataset.predicate = name;
         const checkbox = node('input'); checkbox.type = 'checkbox'; checkbox.setAttribute('aria-label', `${name}${tupleLabel(args)} pertenece`);
-        checkbox.addEventListener('change', () => { clearStory(); refreshReady(); });
+        checkbox.addEventListener('change', () => { clearStory('evaluate'); refreshReady(); });
         row.append(node('td', tupleLabel(args)), node('td', undefined, 'check-cell'));
         row.lastChild.append(checkBox(checkbox)); body.append(row);
         // Toda la fila sirve para marcar la tupla: en el teléfono es más fácil que acertar a la casilla.
@@ -866,7 +681,7 @@ function explanationElement(data, root = false) {
 }
 
 async function evaluateFormula() {
-  clearStory();
+  clearStory('evaluate');
   const resultBox = $('result'); resultBox.replaceChildren();
   await withBusy($('evaluate'), 'Evaluando…', async () => {
     try {
@@ -911,7 +726,7 @@ async function evaluateFormula() {
       }
       head.append(node('h3', 'Por qué'), switcher);
       resultBox.append(head, reasons); choose('reasons');
-      showStory(result.story, result.model, resultBox);
+      showStory(result.story, result.model, resultBox, {origin: 'evaluate', kind: 'evaluation', title: 'Evaluación semántica'});
       if (phoneLayout()) resultBox.scrollIntoView({behavior: reduceMotion() ? 'auto' : 'smooth', block: 'start'});
       return 'done';
     } catch (exc) { resultBox.append(node('p', exc.message || 'No se pudo evaluar.', 'error')); return 'fail'; }
@@ -932,7 +747,7 @@ function loadProofSample() {
   const sample = PROOF_SAMPLES[proofSample++ % PROOF_SAMPLES.length];
   $('proof-premises').value = sample.premises; $('proof-conclusion').value = sample.conclusion;
   $('proof-constants').value = sample.constants;
-  proofInputs++; clearStory(); $('proof-result').replaceChildren(); checkProofSyntax();
+  proofInputs++; clearStory('prove'); $('proof-result').replaceChildren(); checkProofSyntax();
   toast(sample.note);
 }
 function loadDictionarySample() {
@@ -1050,7 +865,7 @@ const SEARCH_LIMITS = {size_limit: 'Se agotó el tamaño máximo.', candidate_li
   timeout: 'Se agotó el tiempo.', table_limit: 'La tabla supera el límite de búsqueda.'};
 
 async function searchCountermodel() {
-  clearStory();
+  clearStory('evaluate');
   const request = ++searchRequest;
   const box = $('countermodel-result'); box.replaceChildren();
   const button = $('find-countermodel');
@@ -1083,7 +898,7 @@ async function searchCountermodel() {
         toast('Contramodelo cargado en las tablas.', 'success');
       });
       box.append(load, node('h3', '¿Por qué es falsa?'), explanationElement(result.explanation, true));
-      showStory(result.story, result.model, box);
+      showStory(result.story, result.model, box, {origin: 'evaluate', kind: 'countermodel', title: 'Búsqueda de contramodelo'});
       return 'done';
     } catch (exc) {
       if (request === searchRequest) box.replaceChildren(node('p', exc.message || 'No se pudo buscar.', 'error'));
@@ -1323,7 +1138,7 @@ function contrastElement(contrast) {
 }
 
 async function proveFormula() {
-  clearStory();
+  clearStory('prove');
   const box = $('proof-result'); box.replaceChildren();
   const button = $('prove');
   await withBusy(button, 'Buscando…', async () => {
@@ -1343,7 +1158,7 @@ async function proveFormula() {
         const head = node('div', undefined, 'result-head'); head.append(node('h3', 'Derivación'), logic);
         box.append(head, fitchElement(result.fitch));
         if (result.contrast) box.append(contrastElement(result.contrast));
-        showStory(result.story, null, box);
+        showStory(result.story, null, box, {origin: 'prove', kind: 'proof', title: 'Prueba en deducción natural'});
         return 'done';
       }
       if (result.status === 'refuted' && result.mode === 'propositional') {
@@ -1368,7 +1183,7 @@ async function proveFormula() {
         }
         box.append(node('h3', '¿Por qué falla la conclusión?'), explanationElement(found.explanation, true));
         if (result.contrast) box.append(contrastElement(result.contrast));
-        showStory(found.story, found.model, box);
+        showStory(found.story, found.model, box, {origin: 'prove', kind: 'countermodel', title: 'Contramodelo'});
         return 'done';
       }
       const saturated = result.contrast?.engine_b.status === 'saturated';
@@ -1545,7 +1360,7 @@ let nb = null;        // el cuaderno abierto, tal como lo devuelve el servidor
 let nbList = [];
 let nbAskRev = 0;     // una respuesta de una pregunta o de unas fuentes anteriores se descarta
 function clearNotebookAnswer() {
-  nbAskRev++; $('nb-answer').replaceChildren(); $('nb-evidence').replaceChildren(); $('nb-evidence-dot').textContent = ''; clearStory();
+  nbAskRev++; $('nb-answer').replaceChildren(); $('nb-evidence').replaceChildren(); $('nb-evidence-dot').textContent = ''; clearStory('notebook');
 }
 let nbOpen = null;    // fuente abierta en el visor: {source, sentence, cited}
 
@@ -1588,7 +1403,6 @@ async function loadNotebook(id) {
   const result = await nbCall('get', {id});
   if (!same) nbOpen = null;
   setNotebook(result.notebook, {keepAnswer: same});
-  $('nb-evidence').querySelectorAll('.story-open').forEach(button => button.remove());   // el paso a paso se cierra al cambiar de modo
 }
 
 /** Cambia el cuaderno mostrado. Si cambiaron las premisas, la respuesta en pantalla ya no vale y se quita. */
@@ -1797,7 +1611,7 @@ async function deleteNotebook() {
   try {
     const title = nb.title;
     nbList = (await nbCall('delete', {id: nb.id})).notebooks;
-    nb = null; nbOpen = null; clearStory();
+    nb = null; nbOpen = null; clearStory('notebook');
     if (nbList.length) await loadNotebook(nbList[0].id); else renderNotebook();
     toast(`Cuaderno «${title}» borrado.`);
   } catch (exc) { toast(exc.message, 'error', 6000); }
@@ -1899,7 +1713,7 @@ function renderNotebookAnswer(result) {
       fitch.querySelector(`li[data-line="${line.n}"] .why`)?.before(chip);
     }
     ev.append(head, fitch, contrastElement(proof.contrast));
-    showStory(proof.story, null, ev);
+    showStory(proof.story, null, ev, {origin: 'notebook', kind: 'proof', title: 'Prueba a partir de tus fuentes'});
     return;
   }
 
@@ -1918,7 +1732,7 @@ function renderNotebookAnswer(result) {
   if (result.witness) {
     ev.append(...notebookModel(result.witness, 'Un caso donde es verdadera', 'En este otro modelo las premisas también son verdaderas, y lo que preguntas es verdadero.'));
   } else if (engine.contradicts === 'saturated') ev.append(node('h3', 'Un caso donde es verdadera'), node('p', saturated, 'hint'));
-  if (result.countermodel) showStory(result.countermodel.story, result.countermodel.model, ev);
+  if (result.countermodel) showStory(result.countermodel.story, result.countermodel.model, ev, {origin: 'notebook', kind: 'countermodel', title: 'Un caso donde es falsa'});
 }
 
 function showNotebookEvidence() {
@@ -2008,7 +1822,7 @@ function setMode(mode) {
   if (mode !== 'home') $('sample').querySelector('.label').textContent = SAMPLE_LABEL[mode];
   closeMenu();
   pillHosts().forEach(placePill);
-  if (changed) { clearStory(); $('story-section').hidden = true; }
+  if (changed) pauseExplanations();
   if (mode === 'prove') checkProofSyntax();
   if (mode === 'dictionary') searchDictionary(true);
   if (mode === 'notebook') openNotebookMode();
@@ -2085,7 +1899,7 @@ async function runExercise(exercise) {
     proofSample = 0; loadProofSample();
     if (had) toast('Se reemplazó lo que había en Demostrar.', 'warning', 9000, {label: 'Deshacer', run: () => {
       ['proof-premises', 'proof-conclusion', 'proof-constants'].forEach((id, i) => { $(id).value = before[i]; });
-      clearStory(); $('proof-result').replaceChildren(); checkProofSyntax();
+      clearStory('prove'); $('proof-result').replaceChildren(); checkProofSyntax();
     }});
   } else if (exercise.id === 'notebook') {
     await loadNotebookSample();
@@ -2118,11 +1932,6 @@ for (const workspace of [$('mode-evaluate'), $('mode-dictionary'), $('mode-noteb
   });
 }
 $('go-question').addEventListener('click', () => { setPane($('mode-evaluate'), 'question'); $('mode-evaluate').scrollIntoView({block: 'start'}); });
-$('story-close').addEventListener('click', () => {
-  pauseStory(); exitStoryFullscreen(); $('story-section').hidden = true;
-  document.querySelectorAll('.fitch li.current').forEach(li => li.classList.remove('current'));
-});
-
 $('add-symbol').addEventListener('click', () => { addSymbol(); invalidateTables(); });
 $('prepare').addEventListener('click', prepare);
 $('domain').addEventListener('input', invalidateTables);
@@ -2144,35 +1953,7 @@ $('prove').addEventListener('click', proveFormula);
 for (const id of ['proof-premises', 'proof-conclusion', 'proof-constants']) {
   $(id).addEventListener('input', () => { proofInputs++; clearStory(); $('proof-result').replaceChildren(); scheduleProofCheck(); });
 }
-$('story-play').addEventListener('click', () => {
-  if (!storyState) return;
-  if (storyState.index === storyState.events.length - 1) storyState.index = 0;
-  storyPlaying = true; renderStoryStep();
-  $('story-play').disabled = true; $('story-pause').disabled = false;
-  narrateCurrent();
-});
-$('story-pause').addEventListener('click', pauseStory);
-$('story-prev').addEventListener('click', () => {
-  if (!storyState || storyState.index === 0) return;
-  stopStoryAudio(); storyState.index--; renderStoryStep(); if (storyPlaying) narrateCurrent();
-});
-$('story-next').addEventListener('click', () => {
-  if (!storyState || storyState.index === storyState.events.length - 1) return;
-  stopStoryAudio(); storyState.index++; renderStoryStep(); if (storyPlaying) narrateCurrent();
-});
-$('story-replay').addEventListener('click', () => {
-  if (!storyState) return;
-  stopStoryAudio(); storyState.index = 0; renderStoryStep(); if (storyPlaying) narrateCurrent();
-});
-$('story-voice').addEventListener('change', () => { if (storyPlaying) narrateCurrent(); });
-$('story-3d').addEventListener('change', () => {
-  storyNonce++;
-  if (storyScene) storyScene.dispose(); storyScene = null;
-  $('story-visual').replaceChildren(); $('story-visual').hidden = true;
-  if ($('story-3d').checked) initStory3D();
-  else $('story-status').textContent = 'Vista 2D activa.';
-});
-formulaBox.addEventListener('input', () => { evalInputs++; clearStory(); searchRequest++; $('result').replaceChildren(); $('countermodel-result').replaceChildren(); updateFree(); refreshReady(); });
+formulaBox.addEventListener('input', () => { evalInputs++; clearStory('evaluate'); searchRequest++; $('result').replaceChildren(); $('countermodel-result').replaceChildren(); updateFree(); refreshReady(); });
 function buildKeyboard(container, target) {
   for (const symbol of ['¬', '∧', '∨', '→', '↔', '∀', '∃', '(', ')', '=', '≠', '⊥']) {
     const button = node('button', symbol, 'key'); button.type = 'button'; button.setAttribute('aria-label', `Insertar ${symbol}`);
@@ -2217,87 +1998,9 @@ function floatKeyboard(keyboard, fields) {
 floatKeyboard($('symbols-keyboard'), [formulaBox]);
 floatKeyboard($('proof-keyboard'), [$('proof-premises'), $('proof-conclusion')]);
 
-// ── Paso a paso en pantalla completa ──
-// Va la sección entera (escena, texto del paso y controles), útil para proyectar. Con la API nativa cuando existe;
-// el iPhone no la ofrece para estos elementos, así que ahí la sección cubre la ventana (respaldo).
-function storyFullscreenElement() { return document.fullscreenElement || document.webkitFullscreenElement || null; }
-function storyIsFullscreen() { return $('story-section').classList.contains('is-fullscreen'); }
-// Al entrar, la sección sale del flujo y la página se acorta: el navegador recorta el desplazamiento y, al salir,
-// la página quedaba más arriba. Se guarda dónde estaba la sección y se devuelve ahí al salir.
-let storyReturn = null;
-function rememberStoryScroll() { storyReturn = {top: $('story-section').getBoundingClientRect().top}; }
-function restoreStoryScroll() {
-  const saved = storyReturn; storyReturn = null;
-  if (!saved) return;
-  const align = () => {
-    if ($('story-section').hidden) return;
-    const drift = $('story-section').getBoundingClientRect().top - saved.top;
-    if (Math.abs(drift) > 1) window.scrollTo({top: window.scrollY + drift, behavior: 'instant'});
-  };
-  // primero cuando la sección vuelve al flujo; luego otra vez, porque la ventana termina de cambiar de tamaño después
-  requestAnimationFrame(() => requestAnimationFrame(align));
-  for (const ms of [150, 400, 800]) setTimeout(align, ms);
-}
-function syncStoryFullscreen() {
-  const section = $('story-section'), fallback = section.classList.contains('story-fallback-fullscreen');
-  const on = fallback || storyFullscreenElement() === section;
-  const was = section.classList.contains('is-fullscreen');
-  section.classList.toggle('is-fullscreen', on);
-  if (was && !on) restoreStoryScroll();
-  document.documentElement.classList.toggle('story-locked', fallback);
-  if (!on) try { screen.orientation?.unlock?.(); } catch { /* sin bloqueo que soltar */ }
-  const button = $('story-fullscreen'), label = on ? 'Salir de pantalla completa' : 'Pantalla completa';
-  button.setAttribute('aria-pressed', String(on)); button.setAttribute('aria-label', label); button.title = label;
-}
-async function enterStoryFullscreen() {
-  const section = $('story-section');
-  rememberStoryScroll();
-  const request = section.requestFullscreen || section.webkitRequestFullscreen;
-  if (request && (document.fullscreenEnabled ?? document.webkitFullscreenEnabled ?? true)) {
-    try {
-      await request.call(section, {navigationUI: 'hide'});
-      // teléfono en vertical: como los reproductores de video, se gira a horizontal si el sistema lo permite (Android)
-      if (matchMedia('(pointer: coarse) and (orientation: portrait)').matches) screen.orientation?.lock?.('landscape')?.catch?.(() => {});
-      return;
-    } catch { /* sin permiso o sin soporte: respaldo */ }
-  }
-  section.classList.add('story-fallback-fullscreen'); syncStoryFullscreen();
-}
-function exitStoryFullscreen() {
-  const section = $('story-section');
-  if (section.classList.contains('story-fallback-fullscreen')) { section.classList.remove('story-fallback-fullscreen'); syncStoryFullscreen(); return; }
-  if (storyFullscreenElement()) (document.exitFullscreen ? document.exitFullscreen() : document.webkitExitFullscreen?.())?.catch?.(() => {});
-}
-$('story-fullscreen').addEventListener('click', () => (storyIsFullscreen() ? exitStoryFullscreen() : enterStoryFullscreen()));
-document.addEventListener('fullscreenchange', syncStoryFullscreen);
-document.addEventListener('webkitfullscreenchange', syncStoryFullscreen);
-document.addEventListener('keydown', event => {
-  if (!storyIsFullscreen() || event.target.closest?.('input, textarea, select')) return;
-  if (event.key === 'Escape') exitStoryFullscreen();          // la nativa ya sale sola; esto cubre el respaldo
-  else if (event.key === 'ArrowRight') { event.preventDefault(); $('story-next').click(); }
-  else if (event.key === 'ArrowLeft') { event.preventDefault(); $('story-prev').click(); }
-});
-
-// Paso a paso: en el teléfono se cambia de paso deslizando sobre la escena.
-{
-  let start = null;
-  const stage = document.querySelector('.story-stage');
-  stage.addEventListener('pointerdown', event => { start = {x: event.clientX, y: event.clientY}; });
-  stage.addEventListener('pointerup', event => {
-    if (!start || !storyState) return;
-    const dx = event.clientX - start.x, dy = event.clientY - start.y;
-    start = null;
-    if (Math.abs(dx) < 56 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
-    $(dx < 0 ? 'story-next' : 'story-prev').click();
-  });
-}
-
-if ('speechSynthesis' in window) window.speechSynthesis.addEventListener?.('voiceschanged', refreshVoiceOption);
-refreshVoiceOption();
 pillHosts().forEach(host => { pillObserver.observe(host); placePill(host); });
 document.fonts?.ready.then(() => pillHosts().forEach(placePill));
 addSymbol('P', 'predicate', 1);
 prepare();
 if (location.hash && !isKnownHash(location.hash)) history.replaceState(null, '', hashFor('home'));
 setMode(routeFromHash(location.hash));
-$('story-pause').disabled = true;

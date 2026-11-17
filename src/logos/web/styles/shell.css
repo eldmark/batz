@@ -103,3 +103,8 @@ body[data-sidebar=collapsed] .nav-group { margin: 0; }
   .notebook .nb-ask { flex-wrap: wrap; }
   .notebook .nb-ask input { flex: 1 1 100%; }
 }
+
+/* ── Explicación guiada: fila de ancho completo bajo los paneles de cada módulo ── */
+.player-row { grid-column: 1 / -1; min-width: 0; padding: 0 var(--gutter); }
+.player-row .ep-player { margin-block: var(--s5); }
+.story-open { margin-top: var(--s3); }

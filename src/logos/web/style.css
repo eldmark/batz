@@ -182,62 +182,12 @@ details[open] > .explanation { animation: arrive .18s var(--out); }
 .explanation .details { margin: 2px 0 var(--s1) 30px; font: 13px/1.5 var(--mono); color: var(--text-muted); }
 
 .spanish-panel { margin-top: var(--s6); padding-top: var(--s3); border-top: var(--hair); }
-.spanish-panel summary, .story details summary { cursor: pointer; font-weight: 600; color: var(--link); }
+.spanish-panel summary{ cursor: pointer; font-weight: 600; color: var(--link); }
 .spanish-panel input { width: 100%; }
 .spanish-reading { display: grid; gap: var(--s1); margin-top: var(--s3); padding-top: var(--s3); border-top: var(--hair); }
 .spanish-reading code { white-space: pre-wrap; overflow-wrap: anywhere; }
 .spanish-reading .button { justify-self: start; }
 .model-json { margin: var(--s3) 0; padding: var(--s3); max-height: 300px; overflow: auto; background: var(--surface-sunken); border-radius: var(--r); font-size: 12px; line-height: 1.45; }
-
-/* ── Paso a paso: cambia de plano (oscuro) porque es otro modo, mirar en vez de escribir ── */
-.story { padding: var(--s6) var(--gutter); background: var(--brand-950); color: var(--brand-50); }
-.story .pane-lede, .story .hint { color: var(--brand-200); }
-.story-body { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); gap: var(--s6); margin-top: var(--s5); }
-.story-visual { height: 380px; border-radius: var(--r); background: var(--brand-900); overflow: hidden; }
-.story-stage { position: relative; }
-
-/* Botón de pantalla completa, sobre la esquina de la escena (como en un reproductor de video) */
-.stage-button { position: absolute; top: var(--s2); right: var(--s2); z-index: 2; display: grid; place-items: center; width: 44px; height: 44px; padding: 0;
-  border: 1px solid color-mix(in oklab, var(--brand-50) 22%, transparent); border-radius: 10px; cursor: pointer;
-  background: color-mix(in oklab, var(--brand-950) 60%, transparent); color: var(--brand-50);
-  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); transition: background-color .15s ease-out, border-color .15s ease-out; }
-.stage-button .icon { width: 20px; height: 20px; }
-.stage-button .exit, .stage-button[aria-pressed=true] .enter { display: none; }
-.stage-button[aria-pressed=true] .exit { display: inline; }
-.stage-button:focus-visible { outline: 2px solid var(--signal-300); outline-offset: 2px; }
-@media (hover: hover) { .stage-button:hover { background: color-mix(in oklab, var(--brand-800) 85%, transparent); border-color: var(--brand-300); } }
-.story-stage:has(.story-visual[hidden]) .story-2d { padding-right: 56px; }   /* en la vista 2D el botón no tapa los elementos */
-
-/* Pantalla completa: la escena 3D crece; el texto del paso y los controles quedan al lado (debajo en el teléfono) */
-.story.is-fullscreen { display: flex; flex-direction: column; width: 100%; height: 100%; overflow: auto; padding: var(--s4) var(--s5); }
-.story.is-fullscreen .story-body { flex: 1 1 auto; min-height: 0; grid-template-columns: minmax(0, 7fr) minmax(300px, 3fr); margin-top: var(--s3); }
-.story.is-fullscreen .story-stage { display: flex; flex-direction: column; min-height: 0; }
-.story.is-fullscreen .story-visual { flex: 1 1 auto; height: auto; min-height: 260px; }
-.story.is-fullscreen .story-side { min-height: 0; overflow: auto; }
-.story.is-fullscreen.story-fallback-fullscreen { position: fixed; inset: 0; z-index: 1000;
-  padding: max(var(--s4), env(safe-area-inset-top)) max(var(--s4), env(safe-area-inset-right)) max(var(--s4), env(safe-area-inset-bottom)) max(var(--s4), env(safe-area-inset-left)); }
-html.story-locked, html.story-locked body { overflow: hidden; }
-.story-2d { margin-top: var(--s3); }
-.story-domain { display: flex; flex-wrap: wrap; gap: var(--s2); }
-.story-node { display: grid; place-items: center; min-width: 46px; height: 46px; padding: 0 10px; border-radius: 99px; background: var(--brand-800); color: var(--brand-100); font: 600 15px/1 var(--mono); transition: background-color .2s ease-out, color .2s ease-out, transform .2s var(--out); }
-.story-node.true { background: var(--success-300); color: var(--success-950); transform: scale(1.12); }
-.story-node.false { background: var(--danger-300); color: var(--danger-950); transform: scale(1.12); }
-.story-2d p { margin-top: var(--s2); overflow-wrap: anywhere; }
-.story-current { display: grid; gap: var(--s2); min-height: 128px; align-content: start; font-size: 18px; line-height: 1.45; }
-.story-current strong { font: 600 20px/1.3 var(--mono); color: var(--signal-300); overflow-wrap: anywhere; }
-.story-current .badge { justify-self: start; }
-.story-controls, .story-options { display: flex; flex-wrap: wrap; gap: var(--s2) var(--s3); align-items: center; margin-top: var(--s4); }
-.story-options label { display: flex; align-items: center; gap: var(--s2); margin: 0; font-weight: 500; }
-.story .button.secondary { background: transparent; color: var(--brand-50); border-color: var(--brand-600); }
-.story .button.secondary:hover:not(:disabled) { background: var(--brand-800); border-color: var(--brand-300); }
-.story .button:disabled { background: transparent; color: var(--brand-500); border-color: var(--brand-800); }
-.story #story-play:not(:disabled) { background: var(--signal-300); color: var(--signal-950); border-color: transparent; }
-.story details { margin-top: var(--s4); }
-.story details summary { color: var(--brand-200); }
-.story-list { max-height: 240px; overflow: auto; padding-left: var(--s5); }
-.story-list li[aria-current=step] { color: var(--signal-300); }
-.story-link { border: 0; background: none; text-align: left; color: inherit; font: inherit; padding: 3px 0; cursor: pointer; }
-.story-link:hover { text-decoration: underline; }
 
 /* ── Más allá del modelo: consulta ocasional, se aparta ── */
 .lab { padding: var(--s7) var(--gutter); background: var(--surface-sunken); border-top: var(--hair); }
@@ -250,7 +200,7 @@ footer { padding: var(--s5) var(--gutter); font-size: 13px; color: var(--brand-1
 @keyframes arrive { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
 
 @media (max-width: 900px) {
-  .workspace, .story-body, .lab-grid { grid-template-columns: minmax(0, 1fr); }
+  .workspace, .lab-grid { grid-template-columns: minmax(0, 1fr); }
   .pane.question { border-left: 0; border-top: var(--hair); }
   .question-inner { position: static; max-height: none; overflow: visible; }
   .pane { padding-block: var(--s5) var(--s6); }
@@ -269,7 +219,7 @@ footer { padding: var(--s5) var(--gutter); font-size: 13px; color: var(--brand-1
   .verdict .ch, .ripple, .hint.searching { animation: none; }
   .button[aria-busy=true] { animation: none; }
   .button[aria-busy=true]::before { animation-duration: 2.4s; }
-  .button:active:not(:disabled), .key:active, .story-node.true, .story-node.false { transform: none; }
+  .button:active:not(:disabled), .key:active{ transform: none; }
 }
 @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
 
@@ -283,7 +233,6 @@ body.dropping::after { content: "Suelta el archivo para cargarlo"; position: fix
 .spanish-panel { margin-top: var(--s4); }
 .question-inner > .result + .more { margin-top: var(--s6); }
 .chip { font: 400 12px/1 var(--mono); padding: 4px 7px; border-radius: 99px; background: var(--k-constant-bg); color: var(--k-constant-fg); }
-.story-open { margin-top: var(--s4); }
 
 /* Fórmulas del archivo: una fila por fórmula, con su valor; clic para verla en detalle */
 .batch { margin-top: var(--s4); }
@@ -317,8 +266,6 @@ input.formal, #proof-constants { width: 100%; }
 .contrast.completeness_gap > summary { color: var(--warning-fg); }
 .contrast .contrast-steps { margin-top: var(--s2); }
 .contrast .contrast-steps > summary { cursor: pointer; font-weight: 600; color: var(--link); }
-
-.story-head { display: flex; align-items: center; justify-content: space-between; gap: var(--s4); }
 @media (max-width: 900px) {
   .batch-item { grid-template-columns: 22px minmax(0, 1fr); }
   .batch-item .chip, .batch-note { grid-column: 2; justify-self: start; }
@@ -422,10 +369,6 @@ label.check svg { grid-area: 1 / 1; width: 16px; height: 16px; pointer-events: n
 label.check .tick { stroke-dasharray: 16; stroke-dashoffset: 16; transition: stroke-dashoffset .28s var(--out) .03s; }
 label.check input:checked + svg .tick { stroke-dashoffset: 0; }
 .check-cell label.check { min-height: 40px; }
-.story-options label.check input { border-color: var(--brand-400); background: transparent; }
-.story-options label.check input:checked { background: var(--signal-300); border-color: var(--signal-300); }
-.story-options label.check svg { stroke: var(--signal-950); }
-.voice-help { margin-top: var(--s2); color: var(--brand-200); }
 
 /* Avisos flotantes (Toast): entran con rebote y se van solos */
 .toasts { position: fixed; z-index: 40; right: max(var(--s4), env(safe-area-inset-right)); bottom: max(var(--s4), env(safe-area-inset-bottom));
@@ -517,7 +460,7 @@ label.check input:checked + svg .tick { stroke-dashoffset: 0; }
   .button.small { min-height: 40px; padding-inline: 14px; }
   .remove { width: var(--tap); height: var(--tap); }
   .filter { min-height: 40px; padding-inline: 14px; }
-  .more > summary, .contrast summary, .model-json-toggle summary, .story details summary { display: flex; align-items: center; min-height: var(--tap); }
+  .more > summary, .contrast summary, .model-json-toggle summary{ display: flex; align-items: center; min-height: var(--tap); }
   label { font-size: 14px; }
   .hint { font-size: 14px; }
 
@@ -563,26 +506,7 @@ label.check input:checked + svg .tick { stroke-dashoffset: 0; }
   .fitch .bar { width: 12px; }
   .fitch .why { flex-basis: 100%; margin-left: 0; font-size: 12px; }
   .model-row { grid-template-columns: minmax(40px, auto) minmax(0, 1fr); gap: var(--s2); }
-
-  /* Paso a paso: escena más baja y controles fijos abajo, con íconos */
-  .story { padding: var(--s5) var(--s4); }
-  .story-body { gap: var(--s4); margin-top: var(--s3); }
-  .story-visual { height: clamp(220px, 62vw, 320px); }
-  .story-stage { touch-action: pan-y; }
-  .story.is-fullscreen { padding: var(--s3) var(--s4) 0; }
-  .story.is-fullscreen .story-body { flex: none; grid-template-columns: minmax(0, 1fr); }
-  .story.is-fullscreen .story-visual { flex: none; height: min(56vh, 100vw); height: min(56svh, 100vw); }   /* más alta, la cámara se aleja y el avatar se achica */
-  .story.is-fullscreen .story-side { overflow: visible; }
-  .story-current { min-height: 0; font-size: 17px; }
-  .story-controls { position: sticky; bottom: 0; z-index: 5; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--s2);
-    margin: var(--s3) calc(-1 * var(--s4)) 0; padding: var(--s2) var(--s4) calc(var(--s2) + env(safe-area-inset-bottom));
-    background: color-mix(in oklab, var(--brand-950) 90%, transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
-  .story-controls .button { min-height: 48px; padding: 0; }
-  .story-controls .label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-  .story-controls .icon { width: 22px; height: 22px; }
-  .story-options { gap: var(--s1) var(--s4); }
   label.check { min-height: var(--tap); }
-  .story-link { min-height: 40px; padding: 8px 0; }
 
   /* Diccionario: los filtros se desplazan en una fila en vez de partirse en dos */
   .filters { flex-wrap: nowrap; overflow-x: auto; margin-inline: calc(-1 * var(--s4)); padding: 2px var(--s4); scrollbar-width: none; }
@@ -597,12 +521,6 @@ label.check input:checked + svg .tick { stroke-dashoffset: 0; }
 
 /* Teléfono en horizontal: la escena 3D no debe ocupar toda la altura */
 @media (max-height: 500px) and (orientation: landscape) {
-  .story-visual { height: 64vh; }
-  .story.is-fullscreen .story-head { display: none; }   /* toda la altura para la escena; se sale con el botón de la esquina */
-  .story.is-fullscreen .story-visual:not([hidden]) ~ .story-2d { display: none; }   /* las esferas 3D ya muestran el dominio */
-  .story.is-fullscreen .story-body { flex: 1 1 auto; grid-template-columns: minmax(0, 3fr) minmax(220px, 2fr); margin-top: 0; }
-  .story.is-fullscreen .story-visual { flex: 1 1 auto; height: auto; }
-  .story.is-fullscreen .story-side { overflow: auto; }
   .subtabs { position: static; }
 }
 

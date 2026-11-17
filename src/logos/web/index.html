@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="/tokens.css">
   <link rel="stylesheet" href="/style.css">
   <link rel="stylesheet" href="/styles/shell.css">
+  <link rel="stylesheet" href="/features/explanation-player/player.css">
   <link rel="stylesheet" href="/practice.css">
   <script type="module" src="/app.js"></script>
   <script defer src="/practice.js"></script>
@@ -121,6 +122,7 @@
         </details>
       </div>
     </section>
+    <div id="player-evaluate" class="player-row"></div>
   </section>
 
   <section id="mode-prove" class="workspace prove" aria-label="Demostrar" hidden>
@@ -148,6 +150,7 @@
         <div id="proof-result" class="result" aria-live="polite"></div>
       </div>
     </section>
+    <div id="player-prove" class="player-row"></div>
   </section>
 
   <section id="mode-dictionary" class="workspace dictionary" aria-label="Diccionario" data-pane="model" hidden>
@@ -278,33 +281,7 @@
         <div id="nb-evidence" class="result nb-evidence" aria-live="polite"></div>
       </div>
     </section>
-  </section>
-
-  <section id="story-section" class="story" aria-labelledby="story-heading" hidden>
-    <div class="story-head">
-      <h2 id="story-heading" class="pane-title">Paso a paso</h2>
-      <button id="story-close" class="button secondary" type="button">Cerrar</button>
-    </div>
-    <div class="story-body">
-      <div class="story-stage">
-        <div id="story-visual" class="story-visual"></div>
-        <button id="story-fullscreen" class="stage-button" type="button" aria-label="Pantalla completa" aria-pressed="false" title="Pantalla completa"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><path class="enter" d="M3.5 7.5v-4h4M12.5 3.5h4v4M16.5 12.5v4h-4M7.5 16.5h-4v-4"/><path class="exit" d="M7.5 3.5v4h-4M16.5 7.5h-4v-4M12.5 16.5v-4h4M3.5 12.5h4v4"/></svg></button>
-        <div id="story-2d" class="story-2d"></div>
-      </div>
-      <div class="story-side">
-        <div id="story-current" class="story-current" aria-live="polite"></div>
-        <div class="story-controls">
-          <button id="story-prev" class="button secondary" type="button" aria-label="Paso anterior"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M12.5 4.5 7 10l5.5 5.5"/></svg><span class="label">Anterior</span></button>
-          <button id="story-play" class="button secondary" type="button" aria-label="Reproducir"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><path class="fill" d="M6.5 4.2v11.6L16 10z"/></svg><span class="label">Reproducir</span></button>
-          <button id="story-pause" class="button secondary" type="button" aria-label="Pausar"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M7.5 4.5v11M12.5 4.5v11"/></svg><span class="label">Pausar</span></button>
-          <button id="story-next" class="button secondary" type="button" aria-label="Paso siguiente"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M7.5 4.5 13 10l-5.5 5.5"/></svg><span class="label">Siguiente</span></button>
-          <button id="story-replay" class="button secondary" type="button" aria-label="Desde el inicio"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M4.5 10a5.5 5.5 0 1 0 1.8-4.1M4.5 3.5v3h3"/></svg><span class="label">Desde el inicio</span></button>
-        </div>
-        <div class="story-options"><label class="check"><input id="story-voice" type="checkbox"><svg viewBox="0 0 20 20" aria-hidden="true"><path class="tick" d="M5 10.5l3.2 3.2L15 6.5"/></svg> Leer en voz alta</label><label class="check"><input id="story-3d" type="checkbox" checked><svg viewBox="0 0 20 20" aria-hidden="true"><path class="tick" d="M5 10.5l3.2 3.2L15 6.5"/></svg> Vista 3D</label><span id="story-status" class="hint" role="status"></span></div>
-        <p id="voice-help" class="hint voice-help" hidden></p>
-        <details><summary>Ver todos los pasos</summary><ol id="story-list" class="story-list"></ol></details>
-      </div>
-    </div>
+    <div id="player-notebook" class="player-row"></div>
   </section>
 
   </main>
