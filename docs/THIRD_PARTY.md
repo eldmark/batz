@@ -28,7 +28,17 @@ JetBrains Mono NL se eligió para las fórmulas porque el archivo completo conti
 
 `vendor/GLTFLoader.js`, `vendor/BufferGeometryUtils.js` y `vendor/SkeletonUtils.js` vienen del mismo paquete `three@0.187.0` (carpeta `examples/jsm`, licencia MIT). El único cambio es la ruta de sus `import`, que ahora apunta a `./three.module.js` para no depender de un mapa de importación.
 
-El avatar (`src/logos/web/avatar/logos.glb`, fuente editable en `assets/avatar/logos-avatar.blend`) es un modelo propio del proyecto, construido en Blender a partir de tres vistas de referencia: primitivas fundidas por material con remallado de vóxeles y suavizado. No contiene geometría ni texturas de terceros. Trae un esqueleto de 17 huesos con pesos difuminados en las articulaciones y siete animaciones: `Idle`, `Explica`, `Senala`, `Piensa`, `Verdadero`, `Falso` y `Saluda`. Desde 2026-11-13 también trae dos formas de boca (shape keys exportadas como morph targets): `Boca_abierta` y `Boca_redonda`, que la narración mueve con cada palabra. En 0 la cara queda igual que antes.
+El avatar está en `src/logos/web/avatar/logos.glb`, con su fuente editable en `assets/avatar/logos-avatar.blend`.
+
+- **Malla:** el cuerpo y los ojos parten de [Human Base Meshes](https://download.blender.org/demo/asset-bundles/human-base-meshes/) de Blender Studio (v1.4.1, CC0, dominio público), deformados en Blender para que la cabeza tome la forma de una cara real.
+- **Textura de la cabeza:** sale de fotos de frente y de perfil de un integrante del equipo, usadas con su permiso.
+- **Pelo, ropa y ojos:** son del proyecto.
+- **Puntos de la cara:** se detectaron con el modelo Face Landmarker de MediaPipe (Apache 2.0), que se usa solo al construir el avatar y no se distribuye.
+- **Esqueleto y animaciones:** son propios: 17 huesos y siete animaciones (`Idle`, `Explica`, `Senala`, `Piensa`, `Verdadero`, `Falso` y `Saluda`).
+- **Boca:** tiene dos formas (morph targets): `Boca_abierta`, una mandíbula que gira, y `Boca_redonda`. La narración las mueve con cada palabra.
+- **Parpadeo:** un tercer morph target, `Parpadeo`. La vista 3D parpadea cada 2 a 6 segundos al azar, salvo con «reducir movimiento».
+
+El proceso completo está en `assets/avatar/realista/README.md`.
 
 ## Voz local (opcional, no incluida en el repositorio)
 

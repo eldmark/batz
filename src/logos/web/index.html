@@ -18,6 +18,7 @@
       <button id="tab-evaluate" class="mode" role="tab" type="button" aria-selected="true" aria-controls="mode-evaluate"><span class="long">Evaluar en un modelo</span><span class="short">Evaluar</span></button>
       <button id="tab-prove" class="mode" role="tab" type="button" aria-selected="false" aria-controls="mode-prove" tabindex="-1">Demostrar</button>
       <button id="tab-dictionary" class="mode" role="tab" type="button" aria-selected="false" aria-controls="mode-dictionary" tabindex="-1">Diccionario</button>
+      <button id="tab-notebook" class="mode" role="tab" type="button" aria-selected="false" aria-controls="mode-notebook" tabindex="-1">Cuaderno</button>
     </div>
     <div class="topbar-actions">
       <button id="import-json" class="button on-brand" type="button" aria-label="Cargar archivo"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 13V3m0 0L6 7m4-4 4 4M3.5 12.5v3a1.5 1.5 0 0 0 1.5 1.5h10a1.5 1.5 0 0 0 1.5-1.5v-3"/></svg><span class="label">Cargar archivo</span></button>
@@ -169,6 +170,78 @@
     </section>
   </main>
 
+  <main id="mode-notebook" class="workspace notebook" role="tabpanel" aria-labelledby="tab-notebook" data-pane="model" hidden>
+    <div class="subtabs" role="tablist" aria-label="Parte del cuaderno">
+      <span class="pill" aria-hidden="true"></span>
+      <button id="nb-pane-model" class="subtab" role="tab" type="button" aria-selected="true" aria-controls="nb-sources-panel">Fuentes <span id="nb-state" class="subtab-state" aria-hidden="true"></span></button>
+      <button id="nb-pane-question" class="subtab" role="tab" type="button" aria-selected="false" aria-controls="nb-chat-panel" tabindex="-1">Preguntas</button>
+    </div>
+    <section id="nb-sources-panel" class="pane model" aria-labelledby="nb-heading">
+      <h2 id="nb-heading" class="pane-title">Cuaderno</h2>
+      <p class="pane-lede">Reúne textos en español. Cada oración que se entiende pasa a ser una premisa, y las respuestas citan de qué oración salió cada una.</p>
+
+      <div id="nb-empty" class="block" hidden>
+        <h3>Todavía no hay cuadernos</h3>
+        <p class="hint">Empieza con el de ejemplo para ver cómo se citan las fuentes, o crea uno vacío y pega tu texto.</p>
+        <div class="actions"><button id="nb-first-sample" class="button secondary" type="button">Crear el cuaderno de ejemplo</button><button id="nb-first-blank" class="button secondary" type="button">Crear uno vacío</button></div>
+      </div>
+
+      <div id="nb-body" hidden>
+        <div class="nb-bar">
+          <div class="nb-pick"><label for="nb-select">Cuaderno abierto</label><select id="nb-select"></select></div>
+          <div class="nb-name"><label for="nb-title">Título</label><input id="nb-title" maxlength="80" autocomplete="off"></div>
+          <button id="nb-new" class="button secondary" type="button">Nuevo</button>
+        </div>
+
+        <div class="block" aria-labelledby="nb-sources-heading">
+          <h3 id="nb-sources-heading">Fuentes</h3>
+          <p id="nb-summary" class="hint"></p>
+          <ul id="nb-sources" class="nb-sources"></ul>
+          <details id="nb-add" class="more"><summary>Añadir una fuente</summary>
+            <label for="nb-source-title">Título</label>
+            <input id="nb-source-title" maxlength="80" placeholder="Apuntes de la clase 3" autocomplete="off">
+            <label for="nb-source-text">Texto <span class="hint">una afirmación por oración; lo que no se entienda queda marcado y no se usa</span></label>
+            <textarea id="nb-source-text" class="prose" rows="6" spellcheck="true" placeholder="Todo estudiante que estudia aprueba. Juan es un estudiante. Juan estudia."></textarea>
+            <p id="nb-source-error" class="error" role="alert" hidden></p>
+            <div class="actions"><button id="nb-source-save" class="button secondary" type="button">Añadir fuente</button><button id="nb-source-file" class="button secondary" type="button">Subir un .txt</button>
+              <input id="nb-file" type="file" accept=".txt,.md,text/plain" hidden></div>
+          </details>
+        </div>
+
+        <div id="nb-viewer" class="block" hidden>
+          <div class="result-head nb-viewer-head"><h3 id="nb-viewer-title"></h3><button id="nb-viewer-close" class="button secondary small" type="button">Cerrar</button></div>
+          <p class="nb-legend" aria-hidden="true"><span class="nb-key premise">premisa</span><span class="nb-key choose">falta elegir lectura</span><span class="nb-key rejected">no se usa</span></p>
+          <div id="nb-text" class="nb-text"></div>
+          <div id="nb-sentence" class="nb-sentence" aria-live="polite"></div>
+        </div>
+
+        <details class="more"><summary>Exportar, importar o borrar</summary>
+          <p class="hint">El archivo exportado lleva las fuentes y las lecturas que elegiste; se puede abrir en otro equipo con LOGOS.</p>
+          <div class="actions"><button id="nb-export" class="button secondary" type="button">Exportar cuaderno</button><button id="nb-import" class="button secondary" type="button">Importar cuaderno</button>
+            <input id="nb-import-file" type="file" accept=".json,application/json" hidden><button id="nb-delete" class="button secondary" type="button">Borrar cuaderno</button></div>
+        </details>
+      </div>
+    </section>
+
+    <section id="nb-chat-panel" class="pane question" aria-labelledby="nb-chat-heading">
+      <div class="question-inner">
+        <h2 id="nb-chat-heading" class="pane-title">Pregunta a tus fuentes</h2>
+        <p class="pane-lede">La respuesta sale solo de las premisas activas y llega con su prueba verificada o con un contramodelo.</p>
+        <div class="nb-ask">
+          <label for="nb-question" class="sr-only">Pregunta</label>
+          <input id="nb-question" maxlength="300" placeholder="¿Juan aprueba?" autocomplete="off" spellcheck="true">
+          <button id="nb-ask" class="button primary" type="button">Preguntar</button>
+        </div>
+        <p id="nb-ask-note" class="hint">Escríbela como una afirmación entre signos de pregunta: «¿Juan aprueba?», «¿Algún estudiante lee un libro?».</p>
+        <div id="nb-answer" class="result" aria-live="polite"></div>
+        <div id="nb-history" class="nb-history" hidden>
+          <div class="result-head"><h3>Preguntas anteriores</h3><button id="nb-history-clear" class="button secondary small" type="button">Vaciar</button></div>
+          <ul id="nb-history-list"></ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
   <section id="story-section" class="story" aria-labelledby="story-heading" hidden>
     <div class="story-head">
       <h2 id="story-heading" class="pane-title">Paso a paso</h2>
@@ -177,6 +250,7 @@
     <div class="story-body">
       <div class="story-stage">
         <div id="story-visual" class="story-visual"></div>
+        <button id="story-fullscreen" class="stage-button" type="button" aria-label="Pantalla completa" aria-pressed="false" title="Pantalla completa"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><path class="enter" d="M3.5 7.5v-4h4M12.5 3.5h4v4M16.5 12.5v4h-4M7.5 16.5h-4v-4"/><path class="exit" d="M7.5 3.5v4h-4M16.5 7.5h-4v-4M12.5 16.5v-4h4M3.5 12.5h4v4"/></svg></button>
         <div id="story-2d" class="story-2d"></div>
       </div>
       <div class="story-side">
@@ -195,6 +269,6 @@
     </div>
   </section>
 
-  <footer>La verdad se evalúa en la interpretación indicada: verdadera aquí no significa válida en todos los modelos.</footer>
+  <footer><span class="footer-default">La verdad se evalúa en la interpretación indicada: verdadera aquí no significa válida en todos los modelos.</span><span class="footer-notebook">«Se sigue de tus fuentes» quiere decir que hay una prueba desde lo que dicen; no que lo que dicen sea cierto.</span></footer>
 </body>
 </html>

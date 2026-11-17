@@ -31,7 +31,7 @@ docker compose up --build      # detener: docker compose down
 
 La interfaz queda en `http://127.0.0.1:8765/`, publicada solo en este equipo. Otro puerto: `LOGOS_PORT=9000 docker compose up --build`.
 
-Abre `http://127.0.0.1:8765/` y pulsa «Ejemplo» (carga uno del modo en que estás), o «Cargar archivo» con uno de `ejemplos/*.logos`. La barra superior cambia entre tres modos: evaluar una fórmula en un modelo, demostrar una consecuencia y el diccionario. La explicación se construye desde una traza verificada; cada nodo tiene un resumen, detalles desplegables y posición en la fórmula. Guía de defensa: `docs/DEFENSA.md`.
+Abre `http://127.0.0.1:8765/` y pulsa «Ejemplo» (carga uno del modo en que estás), o «Cargar archivo» con uno de `ejemplos/*.logos`. La barra superior cambia entre cuatro modos: evaluar una fórmula en un modelo, demostrar una consecuencia, el diccionario y el cuaderno. La explicación se construye desde una traza verificada; cada nodo tiene un resumen, detalles desplegables y posición en la fórmula. Guía de defensa: `docs/DEFENSA.md`.
 
 La sección «Buscar un modelo donde sea falsa» busca una interpretación estricta que falsifique una **sentencia**. Usa tamaños de dominio 1–3, hasta 5000 candidatos o 2 segundos; si no encuentra uno, devuelve `unknown` y no afirma validez universal. El hallazgo se muestra como tablas (la relación binaria, como matriz) y se puede cargar en las tablas del modelo. «Exportar JSON» guarda firma, interpretación y fórmula; «Cargar archivo» valida el modelo antes de cargarlo.
 
@@ -66,6 +66,21 @@ El tercer modo de la interfaz muestra el diccionario del español (`src/logos/le
 
 Para ampliarlo en lote: `PYTHONPATH=src python3 scripts/lexicon_queue.py mine texto.txt` (cola de candidatas), `next` (propuestas del modelo), `accept` (añade las revisadas). Ver `docs/plans/PLAN_MM3032.md` §10.
 
+## Cuaderno: preguntas a tus propias fuentes
+
+El cuarto modo reúne textos en español («fuentes») y contesta preguntas usando solo lo que ellos dicen. Abre la pestaña «Cuaderno» y pulsa «Ejemplo».
+
+- **Fuentes.** Pega un texto o sube un `.txt`. Cada oración pasa por el español controlado: si tiene una sola lectura, es una premisa; si tiene varias, o si hubo que suponer la categoría de una palabra, espera a que elijas; si queda fuera de la gramática, se marca con el motivo y no se usa. Al abrir una fuente, el color de cada oración dice en cuál de los tres casos está, y al tocarla se ve su fórmula.
+- **Preguntas.** Se escriben como una afirmación entre signos de pregunta («¿Juan aprueba?»). Hay cinco respuestas: **Sí** (hay prueba verificada), **No** (hay prueba verificada de lo contrario), **No lo deciden** (ni una ni otra: se muestran un modelo donde es falsa y otro donde es verdadera), **No se sigue** y **Sin respuesta** (se agotaron los límites).
+- **Citas.** Cada premisa que usa la prueba lleva un número que abre la fuente en la oración de donde salió. La derivación solo lista las premisas que usa, aunque el cuaderno tenga muchas más.
+- **Avisos.** Si las fuentes se contradicen entre sí, la respuesta lo dice; si la pregunta usa una palabra que ninguna premisa menciona, también.
+
+«Se sigue de tus fuentes» quiere decir que hay una prueba desde lo que dicen, no que lo que dicen sea cierto. Ningún modelo de lenguaje interviene: una oración que la gramática no entiende no se interpreta «más o menos», se deja fuera.
+
+Los cuadernos se guardan en `datos/cuadernos/` (otra carpeta: variable `LOGOS_NOTEBOOKS`), uno por archivo, y se exportan e importan como un solo `.json`. En disco solo van los textos y las lecturas elegidas; el análisis y las respuestas se recalculan cada vez, así que siguen al diccionario actual. Límites: 20 fuentes por cuaderno, 20 000 caracteres y 150 oraciones por fuente, 80 premisas por pregunta.
+
+Para que haya contramodelos con muchas premisas, `modelfinder.py` busca modelos desplegando los cuantificadores sobre dominios pequeños en vez de enumerar interpretaciones completas; lo que encuentra se vuelve a evaluar con el evaluador antes de mostrarse. Código: `src/logos/notebook.py`, `src/logos/modelfinder.py`; pruebas: `tests/test_notebook.py`, `tests/test_modelfinder.py`.
+
 ## Español controlado
 
 El panel «Escribir la fórmula en español» reconoce un fragmento pequeño y muestra todas sus lecturas. El sujeto y el objeto directo de la oración principal pueden intercambiar su alcance: «Todos los estudiantes leyeron un libro» y «Algún profesor admira a cada estudiante» dan dos lecturas cada una; «Todos los estudiantes leyeron todos los libros» da una, porque las dos órdenes dicen lo mismo. Lo que está dentro de una relativa o del «si» no cambia de alcance, y «ningún» tampoco. Hay que elegir una lectura antes de preparar el modelo. Las frases fuera del fragmento se rechazan. La especificación amplia y los casos todavía no cubiertos están en `docs/specs/SPANISH_CONTROLLED.md`.
@@ -74,7 +89,14 @@ El panel «Escribir la fórmula en español» reconoce un fragmento pequeño y m
 
 Al evaluar una fórmula, hallar un contramodelo o demostrar, «Ver paso a paso» recorre los pasos verificados con pausa, avance, retroceso y repetición. En un contramodelo, el avatar cuenta primero la búsqueda (qué tamaños probó, cuántas interpretaciones descartó y un ejemplo que no sirve) y luego por qué la fórmula falla. En una prueba, narra las líneas de la vista Fitch con su mismo número. La vista 3D usa Three.js incluido localmente; la vista 2D queda disponible si WebGL falla.
 
-La voz solo se activa si el usuario la marca y el sistema tiene una voz local en español; si no la hay, la casilla se desactiva y explica cómo instalarla (en Windows: Configuración → Hora e idioma → Voz → Agregar voces → Español). Mientras habla, la boca del avatar se mueve con cada palabra: abre en las vocales abiertas y se redondea en «o» y «u» (morph targets `Boca_abierta` y `Boca_redonda` del GLB).
+El botón de la esquina de la escena pone el paso a paso en pantalla completa: la escena crece y el texto del paso y los controles quedan al lado (debajo en el teléfono). Las flechas ← → cambian de paso y Esc sale. En Android, si el teléfono está vertical, intenta girar a horizontal. En el iPhone, que no ofrece pantalla completa para estos elementos, la sección cubre la ventana.
+
+La voz solo se activa si el usuario la marca y el sistema tiene una voz local en español; si no la hay, la casilla se desactiva y explica cómo instalarla (en Windows: Configuración → Hora e idioma → Voz → Agregar voces → Español). Mientras habla, la boca del avatar sigue a la voz sílaba por sílaba:
+
+- **Ritmo:** cuando la voz empieza una palabra, la palabra se parte en sílabas al ritmo medido de la voz, que se ajusta solo con el tiempo entre palabras. Así nunca se atrasa.
+- **Letras, cifras y símbolos:** se cuentan por su nombre: «x» es «equis», «0» es «cero», «=» es «igual a».
+- **Forma de la boca:** abre en las vocales abiertas, se redondea en «o» y «u» y junta los labios en m, b, p y v (morph targets `Boca_abierta` y `Boca_redonda` del GLB).
+- **Voces que no avisan cada palabra:** la boca sigue un ritmo estimado a partir del texto.
 
 ### Entrada por voz (opcional)
 
