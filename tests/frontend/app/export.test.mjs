@@ -21,3 +21,7 @@ test('prueba, contramodelo e inconclusa se rotulan distinto', () => {
   assert.match(open, /Búsqueda inconclusa/); assert.match(open, /no significa falso/);
 });
 test('fitch con subpruebas muestra la profundidad', () => { assert.match(fitchHtml([{n: 2, depth: 2, formula: 'Q', label: 'Hip', refs: []}]), /│ │ Q/); });
+test('contramodelo proposicional: la valuación llega como pares letra/valor', () => {
+  const html = buildProofHtml({premises: ['p → q'], conclusion: 'q', result: {status: 'refuted', valuation: [['p', false], ['q', false]]}});
+  assert.match(html, /p = F, q = F/);
+});

@@ -20,7 +20,7 @@ Base común: `ea78374`. Ramas fusionadas: `rediseno/codex-reproductor`, `redisen
 ## Verificación realizada sobre la rama integrada
 
 - `PYTHONPATH=src:tests python3 -m unittest discover -s tests`: 315 pruebas, correctas, 1 omitida.
-- `node --test tests/frontend/app/navigation.test.mjs` (4) y `tour.test.mjs` (5), ejecutados sobre cada archivo.
+- `node --test` sobre cada archivo de `tests/frontend/app/` (bios, export, learn, navigation, people, tour).
 - Playwright (Chromium): las 6 rutas a 1440 y 390 px sin errores de consola ni desborde horizontal; flujo completo
   Evaluar → Resultado → Explicación guiada → contramodelo; los 18 ejemplos de Evaluar dan el valor esperado;
   Demostrar y Cuadernos con reproductor y resaltado de la línea Fitch; lectura en español que añade símbolos al modelo.
@@ -42,3 +42,8 @@ Base común: `ea78374`. Ramas fusionadas: `rediseno/codex-reproductor`, `redisen
 ## Añadido después de la primera integración
 
 Inicio: tarjetas «Practica lo que probaron Gödel y Turing»; exportar resultados (HTML e impresión/PDF) de Evaluar y Demostrar; sección Aprender (`#/aprender`, 18 hitos históricos y 33 tarjetas; fechas y atribuciones sin contrastar con fuentes externas); nombre Bat’z y logotipo.
+
+## Segunda ronda (landing, personas, línea del tiempo)
+
+Carrusel de Gödel, Turing y Church en Inicio y páginas `#/godel`, `#/turing`, `#/church` (biografías con solo datos verificables; Church sin retrato libre); línea del tiempo de Aprender con tarjetas «antes/después», retratos de 19 de 22 personas con licencia verificada (`img/CREDITOS.md`) y cierre hacia el modo Estudiar; landing minimalista y micro-interacciones; resumen técnico en `docs/ARQUITECTURA.md`.
+Corregido tras la lectura técnica: exportación del contramodelo proposicional (la valuación llega como pares) y marcado como desactualizada de la explicación de Demostrar al editar premisas. Pendiente conocido (sección 8 de `ARQUITECTURA.md`): `app.js` monolítico, `do_POST` sin captura de algunas excepciones, sin comprobación de `Origin`/`Host`, documentación de contratos desactualizada.

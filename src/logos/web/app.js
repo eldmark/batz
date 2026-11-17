@@ -2263,7 +2263,7 @@ $('record-spanish').addEventListener('click', recordSpanish);
 $('stop-spanish').addEventListener('click', stopSpanishRecording);
 $('prove').addEventListener('click', proveFormula);
 for (const id of ['proof-premises', 'proof-conclusion', 'proof-constants']) {
-  $(id).addEventListener('input', () => { proofInputs++; clearStory(); $('proof-result').replaceChildren(); scheduleProofCheck(); });
+  $(id).addEventListener('input', () => { proofInputs++; clearStory('prove'); $('proof-result').replaceChildren(); scheduleProofCheck(); });
 }
 formulaBox.addEventListener('input', () => { evalInputs++; clearStory('evaluate'); searchRequest++; $('result').replaceChildren(); $('countermodel-result').replaceChildren(); updateFree(); refreshReady(); });
 function buildKeyboard(container, target) {

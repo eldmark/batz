@@ -79,7 +79,8 @@ export function buildProofHtml({premises = [], conclusion = '', result}) {
     const found = result.countermodel;
     tail = `<h2>Resultado</h2><p><span class="verdict false">Contramodelo verificado</span></p><p>La conclusión no se sigue: en este modelo las premisas son verdaderas y la conclusión, falsa.</p>${modelHtml(found.model)}${found.explanation ? `<h2>Por qué falla la conclusión</h2>${explanationHtml(found.explanation)}` : ''}`;
   } else if (result.status === 'refuted') {
-    const valuation = Object.entries(result.valuation || {});
+    // el servidor entrega la valuación como lista de pares [letra, valor]
+    const valuation = Array.isArray(result.valuation) ? result.valuation : Object.entries(result.valuation || {});
     tail = `<h2>Resultado</h2><p><span class="verdict false">Contramodelo verificado</span></p><p>Valuación proposicional que hace verdaderas las premisas y falsa la conclusión${valuation.length ? `: ${valuation.map(([k, v]) => `${esc(k)} = ${v ? 'V' : 'F'}`).join(', ')}` : ''}.</p>`;
   } else {
     tail = `<h2>Resultado</h2><p><span class="verdict neutral">Búsqueda inconclusa</span></p><p>Inconcluso no significa falso: la consecuencia queda sin decidir dentro de los límites de búsqueda.</p>`;

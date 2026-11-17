@@ -8,8 +8,8 @@ Antes de implementar el rediseño, leer en este orden:
 2. [Contrato entre la aplicación y el reproductor](docs/specs/EXPLANATION_PLAYER.md).
 3. [Reparto y protocolo para Claude y Codex](docs/plans/REDISENO_PARALELO.md).
 
-El usuario autorizó documentar el rediseño y enviará dos agentes a implementarlo.
-Esta entrega de documentación no es una implementación de las pantallas.
+El rediseño está implementado e integrado (ver `docs/plans/entregas/INTEGRACION.md`; resumen técnico en `docs/ARQUITECTURA.md`).
+Estos tres documentos siguen siendo la referencia de sus criterios y contratos.
 Cada agente debe identificar su frente antes de editar y respetar la propiedad
 de archivos del protocolo. No lanzar agentes adicionales por iniciativa propia.
 
