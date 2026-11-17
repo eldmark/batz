@@ -1,7 +1,11 @@
-# Rediseño de LOGOS: navegación, herramientas y explicación guiada
+# Rediseño de Bat’z (antes LOGOS): navegación, herramientas y explicación guiada
 
-Fecha: 2026-11-16. Estado: especificación para implementación; ninguna fase
-implementada por esta entrega. Base de código revisada: `40e636a`.
+Fecha: 2026-11-16. Estado: **implementado e integrado** (ver
+[INTEGRACION.md](entregas/INTEGRACION.md) y [ARQUITECTURA.md](../ARQUITECTURA.md)).
+El texto de abajo es la especificación original, que se conserva como referencia
+de criterios de aceptación; la interfaz actual puede diferir en detalles de
+nombre (por ejemplo, los botones se llaman «Cargar ejemplo» e «Importar modelo»).
+Base de código revisada al escribirlo: `40e636a`.
 
 ## 1. Decisiones y alcance
 

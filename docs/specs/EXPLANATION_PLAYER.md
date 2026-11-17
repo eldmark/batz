@@ -1,7 +1,11 @@
 # Contrato del reproductor de explicaciones
 
-Fecha: 2026-11-16. Estado: contrato de implementación acordado en documentación;
-los módulos y métodos siguientes todavía no existen en la base `40e636a`.
+Fecha: 2026-11-16. Estado (actualizado en la rama de entrega): **implementado**.
+Los módulos existen (`index.js`, `events.js`, `fullscreen.js`, `player.css` en
+`src/batz/web/features/explanation-player/`, y `src/batz/web/story3d.js`) y la
+aplicación los usa en Evaluar, Demostrar y Cuadernos. Este texto sigue siendo el
+contrato público; lo añadido durante la implementación está marcado como tal
+(`exitFullscreen()` y el selector de voz).
 
 Leer junto a [REDISENO_INTERFAZ.md](../plans/REDISENO_INTERFAZ.md) y
 [REDISENO_PARALELO.md](../plans/REDISENO_PARALELO.md).
@@ -62,6 +66,7 @@ player.invalidate('El modelo cambió. Vuelve a evaluar.');
 player.close();
 player.clear();
 player.getSnapshot();
+player.exitFullscreen();        // añadido en la implementación
 player.destroy();
 ```
 
@@ -81,6 +86,7 @@ No se exige que `load` espere a cargar 3D para representar el texto.
 | `invalidate(reason)` | Pausa, marca desactualizado y muestra el motivo. Inhabilita reproducción y avance hasta cargar un resultado nuevo. |
 | `clear()` | Cancela actividad, elimina resultado y libera escena/recursos asociados. Queda vacío. |
 | `getSnapshot()` | Devuelve un objeto nuevo con el estado público indicado abajo. |
+| `exitFullscreen()` | **Añadido en la implementación.** Sale de pantalla completa sin cerrar ni pausar el reproductor y sin cambiar paso ni estado; no hace nada si no hay pantalla completa o la instancia ya se destruyó. La aplicación lo llama junto con `pause()` al cambiar de sección. |
 | `destroy()` | Limpia audio, eventos, observadores, timers, WebGL y DOM propio. La instancia deja de usarse. |
 
 `pause`, `close`, `clear` y `destroy` deben tolerar su repetición y no fallar si
@@ -166,6 +172,18 @@ sin exponer objetos en `window`. Claude pausa explícitamente al navegar.
 - Audio desactivado al principio. Seleccionar voz española local, preferir
   latinoamericana y responder a `voiceschanged`. Si falta, explicar y permitir
   seguir sin voz. Nunca exigir audio para avanzar.
+- **Selector de voz (añadido en la implementación).** Un `select` ofrece
+  «Automática» (primero una voz local del navegador, luego una del equipo) y dos
+  grupos: «Voces del navegador» (solo las locales en español) y «Voces de este
+  equipo (espeak-ng)». Las del equipo las genera el servidor local: la lista sale
+  de `POST /api/voice/voices` y el audio, un WAV, de `POST /api/voice/speak`
+  (`docs/specs/JSON_CONTRACTS.md` §8.7); el texto no sale del equipo. «Probar voz»
+  lee una frase de muestra; si no hay ninguna voz aparece «Volver a buscar voces»
+  (útil tras instalar `espeak-ng` sin recargar) y un mensaje según la causa real:
+  sin motor, servidor antiguo o sin servidor. La elección se guarda en
+  `localStorage` (`batz-voz`: `auto`, `browser:<voiceURI>` o `server:<id>`) y una
+  preferencia que ya no existe vuelve a «Automática». Con una voz del equipo, la
+  boca del avatar se reparte las palabras en la duración real del audio.
 - Reutilizar sincronización labial por sílabas y respaldo sin eventos de palabra.
 - 3D opcional, con 2D y texto completos; distinguir `0` de ausencia de elemento.
 - Seleccionar un elemento salta al caso que realmente contiene el guion, dentro

@@ -1,4 +1,4 @@
-# Guía de defensa — LOGOS MM3032
+# Guía de defensa — Bat’z (MM3032)
 
 ## Cómo ejecutar la demostración
 
@@ -8,7 +8,7 @@ Desde la raíz del proyecto:
 python3 evaluador.py
 ```
 
-Abrir `http://127.0.0.1:8765/` en el navegador (también `docker compose up --build`). Pulsar «Ejemplo»: el dominio es `{0,1}`, `a` vale `0`, `Pᴵ={(0)}` y `Qᴵ={(1)}`. La fórmula `∀x (P(x) → Q(x))` es falsa; `x=0` es el primer contraejemplo. Cambiarla a `∃x P(x)` muestra el testigo `0`. Las tablas y el editor aceptan teclado; los botones insertan símbolos en la posición del cursor.
+Abrir `http://127.0.0.1:8765/` en el navegador (también `docker compose up --build`). Pulsar «Cargar ejemplo» (en Evaluar hay además un menú de casos de ejemplo): el dominio es `{0,1}`, `a` vale `0`, `Pᴵ={(0)}` y `Qᴵ={(1)}`. La fórmula `∀x (P(x) → Q(x))` es falsa; `x=0` es el primer contraejemplo. Cambiarla a `∃x P(x)` muestra el testigo `0`. Las tablas y el editor aceptan teclado; los botones insertan símbolos en la posición del cursor.
 
 ## Mapa de módulos y argumento matemático
 
@@ -64,7 +64,7 @@ La revisión cruzada del equipo de `FORMAL_LANGUAGE.md`, `SEMANTICS.md` y `ACCEP
 
 En el modo «Demostrar», escribir `∀x (P(x) → Q(x))` y `P(a)` como premisas, `Q(a)` como conclusión y `a` como constante. Debe salir «Demostrada» con cuatro líneas en notación de Fitch y, debajo, «Los dos motores coinciden» con la refutación por resolución de cinco cláusulas. Borrar un paréntesis de una premisa: la revisión de sintaxis marca el punto exacto y el botón se desactiva.
 
-Con «Ejemplo» se recorren tres casos. El segundo, `∀x ∃y Ama(x, y)` contra `∃y ∀x Ama(x, y)`, sale «No se sigue» con un contramodelo verificado de dos elementos (`Ama` como matriz: cada uno ama al otro). «Abrir en Evaluar» lo carga con la conclusión, y al evaluarla sale «Falso». «Ver paso a paso» muestra al avatar contando la búsqueda antes de explicar por qué falla. El tercero es la ley de Peirce, `((p → q) → p) → p`: con letras minúsculas se decide como lógica proposicional, y la prueba tiene cajas anidadas con RAA. Cambiar a premisa `p → q` y conclusión `q → p`: sale «No se sigue» con la valuación p = F, q = V.
+Con el botón de ejemplo de Demostrar («Cargar ejemplo» en la barra superior, que va rotando) se recorren tres casos; las tarjetas de Inicio «Practica lo que probaron Gödel y Turing» cargan además tres casos ligados a resultados de Gödel y Turing. El segundo, `∀x ∃y Ama(x, y)` contra `∃y ∀x Ama(x, y)`, sale «No se sigue» con un contramodelo verificado de dos elementos (`Ama` como matriz: cada uno ama al otro). «Abrir en Evaluar» lo carga con la conclusión, y al evaluarla sale «Falso». «Ver paso a paso» muestra al avatar contando la búsqueda antes de explicar por qué falla. El tercero es la ley de Peirce, `((p → q) → p) → p`: con letras minúsculas se decide como lógica proposicional, y la prueba tiene cajas anidadas con RAA. Cambiar a premisa `p → q` y conclusión `q → p`: sale «No se sigue» con la valuación p = F, q = V.
 
 Para el evaluador, cargar `ejemplos/grafo.logos`: ocho fórmulas se evalúan de una vez, siete coinciden con el valor que el archivo esperaba y una (`Q(a)`) se rechaza por símbolo no declarado, sin valor de verdad.
 

@@ -1,10 +1,20 @@
-# Arquitectura técnica de Bat’z (paquete `logos`)
+# Arquitectura técnica de Bat’z (paquete `batz`; hasta la versión anterior se llamaba LOGOS)
 
 Resumen técnico de cómo funciona cada parte del código. Se escribió leyendo el
-código de la rama `rediseno/claude-interfaz` (commit `d478163`); donde algo no se
-leyó en detalle se dice. Las referencias son `archivo` y función o clase. Las
-afirmaciones sobre ejecución (315 pruebas de Python, 41 de Node) se comprobaron
-al escribir este documento; las demás salen de leer el código.
+código de la rama `rediseno/claude-interfaz` (commit `d478163`) y se actualizó
+sobre la rama de entrega (`entrega/publicacion`, commit `f0a9724`); donde algo no
+se leyó en detalle se dice. Las referencias son `archivo` y función o clase. Las
+afirmaciones sobre ejecución (325 pruebas de Python con 1 omitida, 48 de Node) se
+comprobaron al actualizar este documento; las demás salen de leer el código.
+
+Nombre: el producto se llama **Bat’z** («hilo» en k’iche’). El paquete Python es
+`batz` (`src/batz/`), el servidor se lanza con `python -m batz.server` o con
+`python3 evaluador.py`, las variables de entorno son `BATZ_*` y las claves de
+`localStorage` empiezan por `batz-`. Antes de ese renombrado el proyecto se
+llamaba LOGOS (`logos`, `LOGOS_*`, `logos-*`); los documentos históricos de
+`docs/` pueden conservar ese nombre. Siguen con el nombre antiguo, a propósito:
+el error `LogosError`, la extensión de los archivos de modelo `.logos`, el avatar
+`avatar/logos.glb` y su fuente `logos-avatar.blend`.
 
 Convenciones: «motor A» es la deducción natural (`proof/`), «motor B» es la
 resolución (`resolution/`). «Inconcluso» (`unknown`) nunca significa «falso»
@@ -24,19 +34,19 @@ numpy, y solo para regenerar los pesos; la inferencia no.)
 
 | Ruta | Contenido |
 |---|---|
-| `evaluador.py` | Punto de entrada: añade `src/` a `sys.path` y llama a `logos.server.main`. |
-| `src/logos/*.py` | Núcleo lógico y servidor (sección 2 y 3). |
-| `src/logos/proof/` | Certificados, checker, buscador, Kalmár, vista Fitch, render de texto. |
-| `src/logos/resolution/` | Motor B: forma clausal (`clausify.py`) y resolución (`prover.py`). |
-| `src/logos/lexicon.tsv`, `spanish_grammar.txt`, `spanish_tagger.json` | Datos del español: léxico base (6137 líneas), gramática (136 líneas), pesos del etiquetador. |
-| `src/logos/web/` | Frontend servido tal cual (sección 4). |
-| `src/logos/web/app.js` | Shell y lógica de pantalla (2322 líneas, un solo módulo). |
-| `src/logos/web/app/navigation.js` | Rutas puras (sin DOM). |
-| `src/logos/web/features/*` | Módulos por función: `home`, `evaluator`, `export`, `explanation-player`, `learn`, `people`, `tour`. |
-| `src/logos/web/story3d.js` | Escena Three.js del reproductor (avatar, dominio, labios). |
-| `src/logos/web/practice.js`, `practice.css` | Modo Practicar: script clásico (IIFE, no módulo). |
-| `src/logos/web/tokens.css`, `style.css`, `styles/*.css` | Hojas de estilo (sección 4.9). |
-| `src/logos/web/vendor/`, `fonts/`, `avatar/logos.glb`, `img/` | Three.js, fuentes locales woff2, avatar, retratos y marca. |
+| `evaluador.py` | Punto de entrada: añade `src/` a `sys.path` y llama a `batz.server.main`. |
+| `src/batz/*.py` | Núcleo lógico y servidor (sección 2 y 3). `voice_input.py` (transcripción) y `voice_output.py` (voz con espeak-ng) son las dos piezas de voz. |
+| `src/batz/proof/` | Certificados, checker, buscador, Kalmár, vista Fitch, render de texto. |
+| `src/batz/resolution/` | Motor B: forma clausal (`clausify.py`) y resolución (`prover.py`). |
+| `src/batz/lexicon.tsv`, `spanish_grammar.txt`, `spanish_tagger.json` | Datos del español: léxico base (6137 líneas), gramática (136 líneas), pesos del etiquetador. |
+| `src/batz/web/` | Frontend servido tal cual (sección 4). |
+| `src/batz/web/app.js` | Shell y lógica de pantalla (2322 líneas, un solo módulo). |
+| `src/batz/web/app/navigation.js` | Rutas puras (sin DOM). |
+| `src/batz/web/features/*` | Módulos por función: `home`, `evaluator`, `export`, `explanation-player`, `learn`, `people`, `tour`. |
+| `src/batz/web/story3d.js` | Escena Three.js del reproductor (avatar, dominio, labios). |
+| `src/batz/web/practice.js`, `practice.css` | Modo Practicar: script clásico (IIFE, no módulo). |
+| `src/batz/web/tokens.css`, `style.css`, `styles/*.css` | Hojas de estilo (sección 4.9). |
+| `src/batz/web/vendor/`, `fonts/`, `avatar/logos.glb`, `img/` | Three.js, fuentes locales woff2, avatar, retratos y marca. |
 | `tests/` | `unittest` de Python (30 archivos `test_*.py` más `helpers.py`, `semantic_helpers.py`, `proof_corpus.py`). |
 | `tests/frontend/app/*.test.mjs` | Pruebas Node de lógica pura del frontend. |
 | `tests/frontend/player/` | Demo y pruebas de navegador del reproductor (Playwright externo). |
@@ -45,7 +55,7 @@ numpy, y solo para regenerar los pesos; la inferencia no.)
 | `datos/` | Datos del usuario en tiempo de ejecución (`.gitkeep`; el resto está en `.gitignore`): `lexico_usuario.tsv`, `cuadernos/*.json`. |
 | `ejemplos/*.logos` | Paquetes de ejemplo para «Importar modelo» (`grafo.logos`, `personas.logos`). |
 | `assets/avatar/` | Fuente Blender del avatar y scripts de construcción (`realista/`). No se sirve. |
-| `Dockerfile`, `docker-compose.yml` | Imagen `python:3.12-slim`; el compose publica solo en `127.0.0.1` y monta `./datos`. |
+| `Dockerfile`, `docker-compose.yml` | Imagen `python:3.12-slim` con el paquete del sistema `espeak-ng` (voz de la explicación guiada); el compose publica solo en `127.0.0.1` y monta `./datos`. |
 
 ### 1.2 Flujo general
 
@@ -70,7 +80,10 @@ numpy, y solo para regenerar los pesos; la inferencia no.)
                                                      │        ├ /api/notebook/* ─► notebook ──────┼─► datos/cuadernos/*.json
                                                      │        ├ /api/lexicon/*  ─► lexicon ───────┼─► datos/lexico_usuario.tsv
                                                      │        ├ /api/practice/* ─► practice       │
-                                                     │        └ /api/voice/* ─► voice_input ──────┼─► whisper-cli + ffmpeg (opcional, local)
+                                                     │        ├ /api/voice/status|transcribe ─►   │
+                                                     │        │    voice_input ───────────────────┼─► whisper-cli + ffmpeg (opcional, local)
+                                                     │        └ /api/voice/voices|speak ─►        │
+                                                     │             voice_output ──────────────────┼─► espeak-ng (opcional, local)
                                                      └───────────────────────────────────────────┘
 ```
 
@@ -342,7 +355,7 @@ lema sin tildes (`duermen` → `Dormir`); `sin=` hace sinónimos y `sentido=` cr
 símbolos distintos para sentidos distintos (`Banco_asiento`). `_derived` añade
 sin guardar diminutivos y participios. El léxico base es `lexicon.tsv`
 (`source="base"`); las palabras añadidas por el usuario se guardan en
-`datos/lexico_usuario.tsv` o en `LOGOS_LEXICON` (`source="usuario"`). `add` valida
+`datos/lexico_usuario.tsv` o en `BATZ_LEXICON` (`source="usuario"`). `add` valida
 (`_validate`: una palabra, solo letras, categoría, rasgos, formas generables),
 rechaza duplicados exactos, escribe el TSV (añadiendo) y recarga y precalienta
 las cachés (`reload`, `warm_up`). `remove` solo quita entradas del usuario.
@@ -350,7 +363,7 @@ Las cachés son `lru_cache`.
 
 ### 2.15 Cuadernos: `notebook.py`
 
-Un cuaderno es un JSON en `datos/cuadernos/c<12 hex>.json` (o `LOGOS_NOTEBOOKS`)
+Un cuaderno es un JSON en `datos/cuadernos/c<12 hex>.json` (o `BATZ_NOTEBOOKS`)
 con `version`, `title`, `created`, `updated`, `sources` (cada una con `id` `f<n>`,
 `title`, `text`, `enabled`, `choices`) y `chat`. **En disco solo van textos y
 lecturas elegidas**; el análisis y las respuestas se recalculan en cada petición.
@@ -408,17 +421,37 @@ referencia. Límites: 100 jugadas propias, 500 caracteres por expresión, ≤ 60
 paréntesis o negaciones. `api`: `catalog`, `preview` (lectura en español
 composicional con `reading`), `check`, `hint`, `solution`.
 
-### 2.17 Voz: `voice_input.py`
+### 2.17 Voz: `voice_input.py` (entrada) y `voice_output.py` (salida)
+
+**Entrada, `voice_input.py`.**
+
 
 Transcripción opcional **local** con `whisper-cli` + modelo `ggml-*.bin` +
-`ffmpeg`, localizados por variables `LOGOS_WHISPER_CLI` y `LOGOS_WHISPER_MODEL`
-o en la carpeta de voz del usuario (`~/.local/share/logos/voz` o
-`%LOCALAPPDATA%\LOGOS\voz`). Una variable definida manda aunque apunte a un
+`ffmpeg`, localizados por variables `BATZ_WHISPER_CLI` y `BATZ_WHISPER_MODEL`
+o en la carpeta de voz del usuario (`~/.local/share/batz/voz` o
+`%LOCALAPPDATA%\Batz\voz`). Una variable definida manda aunque apunte a un
 archivo inexistente. `transcribe(audio)`: acepta 100 B – 5 MB, convierte con
 ffmpeg (15 s de límite) y transcribe (60 s) dentro de un directorio temporal.
 `availability()` nunca devuelve rutas absolutas. El texto transcrito **no se
 traduce solo**: la interfaz lo deja en el campo y la persona pulsa «Mostrar
 lecturas».
+
+**Salida, `voice_output.py`.** Síntesis local y opcional para equipos cuyo
+navegador no ofrece voces en español (en Linux casi nunca las hay). Usa
+`espeak-ng` (o `espeak`) si está instalado; el texto no sale de la máquina.
+`voices()` ejecuta `espeak-ng --voices=es` y `parse_voices` arma una lista con
+dos entradas por idioma español, una masculina (`es`) y una femenina (`es+f3`);
+una sola entrada por id aunque Debian liste varias filas por idioma.
+`availability()` devuelve `{available, engine, voices, hint}`; sin motor,
+`hint` explica cómo instalarlo. `synthesize(text, voice, rate)` devuelve un WAV:
+texto de hasta 600 caracteres, `voice` debe estar entre las que lista `voices()`
+(y cumplir una expresión regular de ids), velocidad 0,5–2,0 (se traduce a
+palabras por minuto, base 165), 15 s de límite y 8 MB de audio; los últimos 64
+resultados se guardan en una caché en memoria. Errores como `VoiceOutputError`
+con código (`invalid_text`, `text_too_long`, `invalid_voice`, `invalid_rate`,
+`voice_unavailable`, `synthesis_failed`). El Docker de entrega instala
+`espeak-ng`, así que la narración suena también dentro del contenedor.
+Probado en `tests/test_voice_output.py` (con procesos simulados).
 
 ---
 
@@ -435,7 +468,7 @@ MIME). Si la ruta no está, 404. Solo se sirven los archivos enumerados: no hay
 resolución de rutas arbitrarias, así que no hay recorrido de directorios.
 Excepción: `/fonts/<archivo>.woff2`, donde se toma solo `Path(path).name` y se
 exige que sea `.woff2` y exista en `web/fonts/`. `/favicon.ico` responde 204.
-Se lee el archivo en cada petición (sin caché ni `Cache-Control`).
+Se lee el archivo en cada petición y se responde con `Cache-Control: no-cache`: el navegador puede guardar la copia pero siempre la revalida, de modo que nunca se queda con una hoja de estilos o un módulo viejos tras actualizar. Las respuestas JSON de la API llevan `Cache-Control: no-store`, igual que el audio de `/api/voice/speak`.
 
 Por qué una lista: el servidor es local y puede publicarse en `0.0.0.0` dentro
 de Docker; enumerar los recursos evita servir por accidente `index.html`
@@ -450,15 +483,17 @@ los únicos archivos de `web/` no servidos son `img/CREDITOS.md` y los tres
 
 1. La ruta debe estar en la lista literal (`/api/free`, `validate`, `evaluate`,
    `countermodel`, `spanish`, `proof`, `parse`, `load`, `lexicon/{search,suggest,
-   preview,add,remove}`, `voice/{status,transcribe}`) o empezar por
+   preview,add,remove}`, `voice/{status,voices,speak,transcribe}`) o empezar por
    `/api/notebook/` o `/api/practice/`. Si no, `send_error(404)` (cuerpo HTML).
 2. `Content-Length` obligatorio y `0 < size <= 1 MB` (5 MB para
    `voice/transcribe`); si no, 413 con JSON. No admite `Transfer-Encoding: chunked`.
 3. `voice/transcribe` exige `Content-Type: audio/webm` (415 si no) y lee el cuerpo
-   crudo; el resto parsea JSON y llama a `handle_api(route, data)`.
+   crudo. `voice/speak` parsea JSON `{text, voice, rate}` y responde **audio**
+   (`Content-Type: audio/wav`, `Cache-Control: no-store`), no JSON; es la única
+   ruta de la API con esa forma. El resto parsea JSON y llama a `handle_api(route, data)`.
 4. El código HTTP es 200 si `response["status"]` ∈ `ok, found, unknown, single,
    ambiguous, proved, refuted` y 400 en otro caso (`invalid_input`).
-5. Se capturan `VoiceInputError` (503 si `voice_unavailable`, si no 400),
+5. Se capturan `VoiceOutputError` y `VoiceInputError` (503 si `voice_unavailable`, si no 400),
    `json.JSONDecodeError`, `LogosError` (incluye `ProofError`), `TypeError`,
    `ValueError` (esta incluye `UnicodeDecodeError`). Todos devuelven 400 con
    `{schema_version, status:"invalid_input", errors:[diagnóstico]}`.
@@ -484,7 +519,9 @@ Independiente del transporte (las pruebas lo llaman directamente). Exige que
 | `/api/load` | `text` (archivo `.logos` o JSON exportado) | `parse_model_file`, valida con `build_interpretation`, evalúa hasta 200 fórmulas con `evaluar`; cada fila trae `value`, `summary`, y `expected`/`matches` si el archivo lo declara. |
 | `/api/lexicon/*` | ver 2.14 | `search` (60 por página, filtros `category` y `source`, `offset`), `suggest` (si la palabra no está, propone con el etiquetador), `preview`, `add`, `remove`. |
 | `/api/notebook/*`, `/api/practice/*` | ver 2.15, 2.16 | Delegan en `notebook.api` y `practice.api`. |
-| `/api/voice/status`, `/api/voice/transcribe` | — | `availability()` / `transcribe(audio)`. |
+| `/api/voice/status`, `/api/voice/transcribe` | — / audio `audio/webm` | `voice_input.availability()` / `transcribe(audio)`. |
+| `/api/voice/voices` | `{}` | `voice_output.availability()`: `available`, `engine`, `voices` (`id`, `label`, `lang`), `hint`. |
+| `/api/voice/speak` | `text`, `voice`, `rate` | `voice_output.synthesize`: responde un WAV (no JSON). |
 
 ### 3.4 `/api/proof` en detalle
 
@@ -519,25 +556,26 @@ contramodelos 2 s.
 
 ### 3.5 Esquema JSON y variables de entorno
 
-Esquema: `docs/specs/JSON_CONTRACTS.md` (ver discrepancias en la sección 9). Toda
-respuesta lleva `schema_version: "1"`.
+Esquema: `docs/specs/JSON_CONTRACTS.md` (actualizado; las discrepancias antiguas
+están resueltas, sección 9). Toda respuesta JSON lleva `schema_version: "1"`.
 
 | Variable | Dónde se lee | Efecto |
 |---|---|---|
-| `LOGOS_NOTEBOOKS` | `notebook.folder()` | Carpeta de cuadernos (por defecto `datos/cuadernos/` bajo la raíz del repo). |
-| `LOGOS_LEXICON` | `lexicon.user_path()` | Archivo TSV de palabras del usuario (por defecto `datos/lexico_usuario.tsv`). |
-| `LOGOS_WHISPER_CLI`, `LOGOS_WHISPER_MODEL` | `voice_input` | Rutas de la voz local. |
-| `LOGOS_PORT` | solo `docker-compose.yml` | Puerto publicado en `127.0.0.1` del anfitrión. |
+| `BATZ_NOTEBOOKS` | `notebook.folder()` | Carpeta de cuadernos (por defecto `datos/cuadernos/` bajo la raíz del repo). |
+| `BATZ_LEXICON` | `lexicon.user_path()` | Archivo TSV de palabras del usuario (por defecto `datos/lexico_usuario.tsv`). |
+| `BATZ_WHISPER_CLI`, `BATZ_WHISPER_MODEL` | `voice_input` | Rutas de la voz local. |
+| `BATZ_PORT` | solo `docker-compose.yml` | Puerto publicado en `127.0.0.1` del anfitrión. |
+| `BATZ_BASE_URL`, `BATZ_PRACTICE_FIXTURES` | `scripts/validate_practice_browser.cjs` | Dirección del servidor y archivo de ejercicios para la validación opcional de Practicar en navegador. |
 
 ### 3.6 Límites resumidos
 
-Cuerpo 1 MB (5 MB audio); `/api/proof`: 8 premisas × 200 caracteres;
+Cuerpo 1 MB (5 MB audio entrante); `/api/voice/speak`: 600 caracteres y 8 MB de audio saliente; `/api/proof`: 8 premisas × 200 caracteres;
 `/api/parse`: 12 fórmulas × 400; `/api/load`: 200 fórmulas; frase en español: 40
 palabras y 512 árboles; cuaderno: ver 2.15; práctica: 100 jugadas; voz: 5 MB.
 
 ---
 
-## 4. Frontend: `src/logos/web`
+## 4. Frontend: `src/batz/web`
 
 ### 4.1 Carga y estructura
 
@@ -574,7 +612,7 @@ dictionary, learn y tres páginas de persona `godel`, `turing`, `church` con
 | 517–690 | Visor de árboles | SVG propio sin dependencias: `prepareTree`, `layoutTree`, `treeCanvas`, `treeViewer({semantic, syntax})` con dos vistas (Evaluación y Estructura), `treeToggle`, `explanationElement` (explicación plegable). |
 | 691–773 | `evaluateFormula` | Ver 5.3. |
 | 774–870 | Asistente de Evaluar | Pasos 1 Modelo → 2 Fórmula → 3 Resultado: `setStep`, `updateStepper`, `modelIsReady`. El paso 2 exige modelo listo y el 3 un resultado vigente (`evalDone`); si no, `setStep` retrocede. `loadExample` carga un caso (con «Deshacer» vía `snapshotEvaluate`/`restoreEvaluate`), `useSpanishReading`. |
-| 905–1002 | Importar/exportar | `exportJSON` (descarga `logos-interpretacion.json`), `applyPackage(payload, model)` (reconstruye símbolos, dominio y tablas desde un paquete), `batchRow` y `loadFile` (≤ 500 kB; vía `/api/load`; arrastrar y soltar en toda la página). |
+| 905–1002 | Importar/exportar | `exportJSON` (descarga `batz-interpretacion.json`), `applyPackage(payload, model)` (reconstruye símbolos, dominio y tablas desde un paquete), `batchRow` y `loadFile` (≤ 500 kB; vía `/api/load`; arrastrar y soltar en toda la página). |
 | 1002–1135 | Contramodelo y español | `searchCountermodel` (`/api/countermodel`, descarta con `searchRequest`, «Cargar este modelo en las tablas»), `showSpanishReadings` (`/api/spanish`; muestra supuestos y ofrece «Añadir al diccionario»), `recordSpanish` (MediaRecorder `audio/webm`, 12 s máximo, `/api/voice/transcribe`; el texto queda en el campo para confirmar). |
 | 1135–1347 | Demostrar | `proofInput`, `scheduleProofCheck`/`checkProofSyntax` (debounce de 220 ms a `/api/parse`, con `proofCheckRequest` para descartar; cada fórmula con su estado, árbol y «Ir a la entrada»), `proveFormula` (ver 5.4), `fitchElement`, `valuationElement`, `truthList`, `contrastElement`, `openInEvaluate`. |
 | 1348–1634 | Diccionario | Estado `dictState`, búsqueda con filtros y paginación (`/api/lexicon/search`), detalle, formulario de alta con `preview`, consulta de palabra (`suggest`), vuelta al módulo de origen (`dictRenderOrigin`), `openDictionaryWith(word)`. |
@@ -607,13 +645,13 @@ pantalla completa, conservando el paso).
 ### 4.5 Navegación por hash
 
 `go(mode)` hace `history.pushState` del hash (`hashFor`), `setMode` y emite
-`logos-route`. `hashchange` (Atrás/Adelante) llama solo a `setMode`.
+`batz-route`. `hashchange` (Atrás/Adelante) llama solo a `setMode`.
 `setMode(mode)`: muestra la sección, marca `aria-current` en el enlace, fija
 título y texto de ayuda, muestra u oculta «Importar modelo» y «Ejemplo», cierra
 el menú, pausa explicaciones si hubo cambio, y por modo: `prove` →
 `checkProofSyntax`, `dictionary` → primera búsqueda, `notebook` →
 `openNotebookMode` (abre el último cuaderno recordado o el más reciente),
-`practice` → dispara el evento `logos-practice` que arranca `practice.js`.
+`practice` → dispara el evento `batz-practice` que arranca `practice.js`.
 Al cambiar, vuelve al inicio de la página y enfoca el título.
 
 ### 4.6 `features/`
@@ -694,15 +732,16 @@ prevalece sobre `responsive.css`.
 
 ### 4.10 `localStorage`
 
-Todas las claves, encontradas con `grep` en `src/logos/web`:
+Todas las claves, encontradas con `grep` en `src/batz/web`:
 
 | Clave | Quién | Contenido |
 |---|---|---|
-| `logos-sidebar` | `app.js` | `collapsed` o `expanded`. |
-| `logos-cuaderno` | `app.js` | Id del último cuaderno abierto. |
-| `logos-recorrido` | `tour/tour.js` | `completado` u `omitido`. |
-| `logos-tarjetas` | `learn/deck.js` | `{v:1, known:[], review:[]}` de las tarjetas de teoría. |
-| `logos.practice.v1` | `practice.js` | Progreso por ejercicio: jugadas, borrador, pistas, `revision`, `previous`. |
+| `batz-sidebar` | `app.js` | `collapsed` o `expanded`. |
+| `batz-cuaderno` | `app.js` | Id del último cuaderno abierto. |
+| `batz-voz` | `explanation-player/events.js` | Voz elegida en el reproductor: `auto`, `browser:<voiceURI>` o `server:<id>`. |
+| `batz-recorrido` | `tour/tour.js` | `completado` u `omitido`. |
+| `batz-tarjetas` | `learn/deck.js` | `{v:1, known:[], review:[]}` de las tarjetas de teoría. |
+| `batz.practice.v1` | `practice.js` | Progreso por ejercicio: jugadas, borrador, pistas, `revision`, `previous`. |
 
 Todas las lecturas y escrituras están dentro de `try/catch`; sin almacenamiento
 la aplicación funciona durante la sesión. No se guardan fórmulas, modelos ni
@@ -733,16 +772,23 @@ Implementación (`explanation-player/index.js`):
   presentation: closed|minimized|expanded, index, total, playing, voiceEnabled,
   threeDEnabled, rate}`.
 - Audio desactivado por defecto; velocidades 0,75/1/1,25/1,5. La narración usa
-  `speechSynthesis` con una voz española **local** o, si no hay, avanza por
-  temporizador (`readingTime`). Solo un reproductor activo habla (`activePlayer`
+  `speechSynthesis` con una voz española **local**, con la voz de `espeak-ng` del
+  servidor o, si no hay ninguna, avanza por temporizador (`readingTime`). Solo un reproductor activo habla (`activePlayer`
   de módulo). Los callbacks viejos se invalidan con un contador `run`. Se pausa al
   ocultarse la pestaña.
 - La escena 3D se importa dinámicamente (`import('../../story3d.js')`) solo al
   abrir; un `sceneGeneration` evita que una carga pendiente recree una escena
   tras `clear`, `load` o `destroy`. Si falla (sin WebGL, GLB, dominio > 12), queda
   el texto y la vista 2D (botones del dominio navegables con teclado).
-- **Método adicional no contemplado en el contrato**: `exitFullscreen()`, que
-  `app.js` usa en `pauseExplanations`.
+- **`exitFullscreen()`**: sale de pantalla completa sin cerrar el reproductor.
+  `app.js` lo usa en `pauseExplanations` al cambiar de sección. Ya figura en el
+  contrato (`docs/specs/EXPLANATION_PLAYER.md` §3).
+- **Selector de voz**: la lista une las voces locales del navegador y las de
+  `espeak-ng` que ofrece el servidor (`POST /api/voice/voices`; el audio llega
+  de `POST /api/voice/speak`). «Automática» elige primero el navegador y luego el
+  equipo; hay «Probar voz» y, si no hay ninguna, «Volver a buscar voces». La
+  preferencia se guarda en `batz-voz`. Si no hay voz alguna, el recorrido sigue
+  sin audio.
 
 Uso desde `app.js`: `explanationFor(origin)` crea una instancia por módulo
 con el host `#player-evaluate`, `#player-prove` o `#player-notebook`;
@@ -824,7 +870,7 @@ Un «paquete» es `{signature, interpretation|model, formula|formulas}`:
 
 ## 6. Pruebas
 
-### 6.1 Python (`unittest`; 315 pruebas, 1 omitida, unos 37 s)
+### 6.1 Python (`unittest`; 325 pruebas, 1 omitida, unos 37 s)
 
 `PYTHONPATH=src:tests python3 -m unittest discover -s tests`. Se omite una
 prueba solo de Windows (nombres cortos 8.3) y puede omitirse una de Cuadernos
@@ -850,14 +896,15 @@ si no hay etiquetador.
 | `test_lexicon.py`, `test_lexicon_audit.py`, `test_derived.py`, `test_synonyms.py` | Flexión, alta/baja de palabras, auditoría, diminutivos/participios, sinónimos y sentidos. |
 | `test_notebook.py` | Oraciones, premisas con cita, respuestas, límites, API (vía `handle_api`). |
 | `test_practice.py` | Tutor: reglas, contextos del servidor, jugadas inválidas, soluciones de los 50 ejercicios. |
-| `test_voice_input.py` | Localización de ejecutables y de modelos, límites de audio (con procesos simulados). |
+| `test_voice_input.py`, `test_voice_output.py` | Localización de ejecutables y de modelos, límites de audio, lectura de la lista de voces de espeak-ng, validación de texto, voz y velocidad (con procesos simulados). |
 | `test_project_integration.py` | Casos de clase de primer orden, matriz negativa y un `ThreadingHTTPServer` real en puerto efímero (sirve la UI, `/api/free`, `/evaluate`, `/countermodel`, `/spanish`, `/proof`). |
 
-### 6.2 Node (`node --test tests/frontend/app/*.test.mjs`; 41 pruebas)
+### 6.2 Node (`node --test tests/frontend/app/*.test.mjs`; 48 pruebas)
 
-`bios`, `export`, `learn` (17), `navigation` (6), `people`, `tour`: solo lógica
-pura (rutas, estado del recorrido, progreso de tarjetas, construcción de HTML de
-exportación, datos). No hay DOM.
+`bios` (4), `css` (1: llaves balanceadas en todas las hojas), `export` (5),
+`learn` (17), `navigation` (6), `people` (5), `tour` (5) y `voices` (5: elección
+de voz, preferencia guardada, boca por palabra, mensaje según la causa): solo
+lógica pura. No hay DOM.
 
 ### 6.3 Navegador (opcionales, requieren Playwright externo)
 
@@ -893,7 +940,7 @@ exportación, datos). No hay DOM.
 ## 7. Seguridad y privacidad
 
 - **Solo local por defecto.** `--host` es `127.0.0.1`. Docker publica
-  `127.0.0.1:${LOGOS_PORT}:8765`; el contenedor escucha en `0.0.0.0` porque lo
+  `127.0.0.1:${BATZ_PORT}:8765`; el contenedor escucha en `0.0.0.0` porque lo
   exige Docker, pero el mapeo del compose lo limita al anfitrión.
 - **Lista controlada de archivos estáticos** (3.1); sin listado de directorios.
 - **Sin red externa en tiempo de ejecución.** No hay `fetch` a otros orígenes:
@@ -906,6 +953,9 @@ exportación, datos). No hay DOM.
   guarda solo preferencias y progreso (4.10). Sin analítica.
 - **Voz local.** El audio se procesa con ffmpeg y whisper.cpp locales dentro de un
   directorio temporal que se borra; `availability()` no filtra rutas absolutas.
+  La voz de salida usa `espeak-ng` local: el texto se pasa por la entrada estándar
+  del proceso (no por la línea de órdenes) y la voz debe estar en la lista que el
+  propio motor devuelve.
 - **Validación de entrada.** Tamaños, tipos y límites explícitos en cada ruta
   (3.6); identificadores de cuaderno validados por regex; archivos de cuaderno
   escritos con `.tmp` + `replace`; el cliente de Practicar nunca aporta contextos
@@ -975,8 +1025,8 @@ Solo lo que se vio leyendo o ejecutando.
 - `PRACTICE_COUNT = 50` en `features/home/home.js` se mantiene a mano
   (comentario incluido); hoy coincide con `len(practice_bank.EXERCISES)` = 50, pero
   ninguna prueba lo vigila.
-- `do_GET` reconstruye el diccionario de 63 rutas en cada petición y no manda
-  `Cache-Control`; la lista se mantiene a mano (3.1).
+- `do_GET` reconstruye el diccionario de rutas en cada petición; la lista se
+  mantiene a mano (3.1). (Ya manda `Cache-Control: no-cache`.)
 - `server.py` importa privados de otros módulos (`_Parser`, `_MATRIX`,
   `lexicon._validate`); `notebook.py` importa `_MATRIX`.
 - El servidor no usa `propositional.decide` ni `result_to_dict`: construye sus
@@ -1003,16 +1053,32 @@ Solo lo que se vio leyendo o ejecutando.
 
 ---
 
-## 9. Discrepancias entre documentación y código
+## 9. Discrepancias entre documentación y código: resueltas
 
-| Documento | Dice | El código |
+Una lectura anterior de este documento encontró ocho discrepancias entre la
+documentación y el código. Todas se corrigieron en la rama de documentación de
+la entrega. La tabla queda como registro de qué se encontró y dónde está
+corregido.
+
+| Documento | Se decía | Estado ahora |
 |---|---|---|
-| `docs/architecture/ARCHITECTURE.md` §2 | `countermodel.py` «Fase 4», `spanish/` «Fase 5» y `explain/` «Fase 7» están planeados. | Existen como `countermodels.py` (+ `modelfinder.py`), `spanish.py`/`spanish_cyk.py`/`spanish_semantics.py` y `explain.py`/`story.py`/`proof_story.py`. La tabla tampoco lista `project.py`, `interpretation.py`, `modelfinder.py`, `notebook.py`, `practice*.py`, `voice_input.py`, `tree.py`, `story.py`, `proof_story.py`, `proof/fitch.py` ni `proof/render.py`. |
-| `docs/architecture/ARCHITECTURE.md` §5 | La interfaz será React + Three.js/R3F; el modo de llegar al navegador está pendiente (Q1). | Servidor local en `server.py` con JavaScript nativo, sin React; Three.js va copiado en `web/vendor/`. |
-| `docs/specs/JSON_CONTRACTS.md` §5 | Contramodelo con `assignment` como mapa y bloque `search` (`explored_sizes`, `max_size`, `minimal_in_explored`); «se implementa en Fase 4». | `CountermodelSearch.to_dict()` devuelve `status`, `explored`, `completed_sizes`, `log`, `model`, `explanation`, `story`; `ConsequenceSearch.to_dict()` añade `assignment` como lista de pares, `premises`, `signature`, `loadable`. No hay `search` ni `minimal_in_explored`. |
-| `JSON_CONTRACTS.md` §6 | Evento con `step_ref`, `kind: "apply_rule"`, `highlight`. | Los eventos reales usan `trace_path`, `kind` ∈ `predicate`, `equality`, `quantifier`, `connective`, `bottom`, `proof`, `search`, `premise`, y para pruebas `step_id`, `line`, `rule`, `rule_label`, `refs`, `context`, `depth`, `steps`; no existen `step_ref` ni `highlight`. |
-| `JSON_CONTRACTS.md` §7 | `status` ∈ `proved`, `counterexample`, `inconsistent`, `unknown`, `invalid_input`; error en `diagnostic`. | `/api/proof` responde `proved`, `refuted`, `unknown` o `invalid_input`, con `errors` (lista) en lugar de `diagnostic`, y campos propios (`mode`, `fitch`, `story`, `contrast`, `valuation`, `countermodel`, `search`). `counterexample` y `diagnostic` solo salen de `serialize.result_to_dict`. |
-| `JSON_CONTRACTS.md` §8 | Lista solo `free`, `validate`, `evaluate`, `countermodel`, `spanish`, `proof` (y `story`). | El servidor tiene además `/api/parse`, `/api/load`, `/api/lexicon/*`, `/api/notebook/*`, `/api/practice/*` y `/api/voice/*`, sin documentar en ese archivo. `/api/evaluate` también devuelve `tree` y `syntax`. |
-| `docs/specs/EXPLANATION_PLAYER.md` (cabecera) | «Los módulos y métodos siguientes todavía no existen en la base `40e636a`». | Existen (`index.js`, `events.js`, `fullscreen.js`, `player.css`, `story3d.js`) y `app.js` los usa. El reproductor añade `exitFullscreen()`, no listado en §3. |
-| `README.md` y `AGENTS.md` | El rediseño está «documentado y pendiente de implementación»; «la barra superior cambia entre cinco modos»; botones «Ejemplo» y «Cargar archivo». | En esta rama la interfaz está implementada con barra lateral y siete secciones (Inicio, Evaluar modelo, Demostrar, Practicar, Cuadernos, Diccionario, Aprender); los botones se llaman «Cargar ejemplo» e «Importar modelo». Los comentarios de `ejemplos/*.logos` también dicen «Cargar archivo». El README también habla de `#practicar`; la ruta actual es `#/practicar` (el antiguo se tolera). |
-| `docs/plans/entregas/INTEGRACION.md` | `navigation.test.mjs` tiene 4 pruebas. | Tiene 6 (se añadieron las rutas de personas). |
+| `docs/architecture/ARCHITECTURE.md` §2 | `countermodel.py`, `spanish/` y `explain/` figuraban como planeados; faltaban varios módulos. | **Resuelto.** La tabla lista los módulos reales (`countermodels.py`, `modelfinder.py`, `spanish*.py`, `explain.py`, `story.py`, `proof_story.py`, `project.py`, `interpretation.py`, `notebook.py`, `practice*.py`, `voice_*.py`, `tree.py`, `proof/fitch.py`, `proof/render.py`). |
+| `docs/architecture/ARCHITECTURE.md` §5 | La interfaz sería React + R3F, con el modo de llegar al navegador pendiente. | **Resuelto.** Servidor local `server.py`, JavaScript nativo con módulos ES y Three.js copiado en `web/vendor/`. |
+| `docs/specs/JSON_CONTRACTS.md` §5 | Contramodelo «definido» con `assignment` como mapa y un bloque `search`. | **Resuelto.** Documenta `CountermodelSearch.to_dict()` y `ConsequenceSearch.to_dict()` tal como salen. |
+| `JSON_CONTRACTS.md` §6 | Evento con `step_ref`, `apply_rule`, `highlight`. | **Resuelto.** Documenta `trace_path`, los `kind` reales y los campos de las pruebas. |
+| `JSON_CONTRACTS.md` §7 | `/api/proof` con `counterexample` y `diagnostic`. | **Resuelto.** Documenta `proved`, `refuted`, `unknown`, `invalid_input` con `errors`; separa el sobre de `serialize.result_to_dict`. |
+| `JSON_CONTRACTS.md` §8 | Solo seis rutas. | **Resuelto.** Lista todas, incluidas `/api/parse`, `/api/load`, `/api/lexicon/*`, `/api/notebook/*`, `/api/practice/*`, `/api/voice/*` (con `voices` y `speak`). |
+| `docs/specs/EXPLANATION_PLAYER.md` | Los módulos «todavía no existen»; `exitFullscreen()` no figuraba. | **Resuelto.** Cabecera actualizada; `exitFullscreen()` y el selector de voz están documentados. |
+| `README.md` y `AGENTS.md` | Rediseño «pendiente»; «cinco modos»; botones «Ejemplo» y «Cargar archivo». | **Resuelto.** README nuevo; `AGENTS.md` dice que está implementado. La interfaz tiene siete secciones y los botones se llaman «Cargar ejemplo» e «Importar modelo». Los comentarios de `ejemplos/*.logos` siguen diciendo «Cargar archivo» (están en código, fuera de esta rama de documentación). |
+| `docs/plans/entregas/INTEGRACION.md` | `navigation.test.mjs` con 4 pruebas. | **Resuelto.** Tiene 6. |
+
+### 9.1 Novedades posteriores a la lectura original
+
+- **Voz local con espeak-ng** (`voice_output.py`, `/api/voice/voices`,
+  `/api/voice/speak`; 2.17 y 3.3) y selector de voz en el reproductor.
+- **Docker con `espeak-ng`**: la imagen lo instala, y la lista de voces no repite
+  ids aunque Debian liste varias filas por idioma.
+- **`Cache-Control: no-cache`** en los archivos estáticos (3.1).
+- Mensaje de «sin voz» según la causa real (servidor antiguo, sin servidor, sin
+  motor) y botón «Volver a buscar voces».
+- Pruebas: 325 de Python (1 omitida) y 48 de Node.

@@ -1,5 +1,7 @@
 # Ejecución en paralelo: Claude y Codex
 
+> Estado: protocolo **ya ejecutado**; el rediseño está integrado (ver [INTEGRACION.md](entregas/INTEGRACION.md)). Se conserva como registro de cómo se repartió el trabajo.
+
 Fecha: 2026-11-16. Este protocolo divide la implementación del
 [plan de interfaz](REDISENO_INTERFAZ.md). Contrato compartido:
 [EXPLANATION_PLAYER.md](../specs/EXPLANATION_PLAYER.md).
