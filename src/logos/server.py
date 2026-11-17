@@ -19,7 +19,7 @@ from .parser import _Parser, parse
 from .printer import to_string
 from .transform import free_vars
 from .modelfile import parse_model_file
-from . import lexicon, spanish_tagger as tagger
+from . import lexicon, notebook, spanish_tagger as tagger
 from .propositional import atoms, is_propositional, valuation_model, valuations, value as prop_value
 from .resolution import ResolutionConfig, resolve, _MATRIX as MATRIX
 from .semantics import is_countermodel
@@ -199,6 +199,8 @@ def handle_api(route, data):
         return {"schema_version": SCHEMA_VERSION, **translate_spanish(data.get("text")).to_dict()}
     if route.startswith("/api/lexicon/"):
         return {"schema_version": SCHEMA_VERSION, "status": "ok", **_lexicon_api(route.rsplit("/", 1)[1], data)}
+    if route.startswith("/api/notebook/"):
+        return {"schema_version": SCHEMA_VERSION, "status": "ok", **notebook.api(route.rsplit("/", 1)[1], data)}
     if route == "/api/voice/status":
         return {"schema_version": SCHEMA_VERSION, "status": "ok", **availability()}
     if route == "/api/proof":
@@ -353,7 +355,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         route = urlsplit(self.path).path
-        if route not in ("/api/free", "/api/validate", "/api/evaluate", "/api/countermodel", "/api/spanish", "/api/proof", "/api/parse", "/api/load", "/api/lexicon/search", "/api/lexicon/suggest", "/api/lexicon/preview", "/api/lexicon/add", "/api/lexicon/remove", "/api/voice/status", "/api/voice/transcribe"):
+        if route not in ("/api/free", "/api/validate", "/api/evaluate", "/api/countermodel", "/api/spanish", "/api/proof", "/api/parse", "/api/load", "/api/lexicon/search", "/api/lexicon/suggest", "/api/lexicon/preview", "/api/lexicon/add", "/api/lexicon/remove", "/api/voice/status", "/api/voice/transcribe") and not route.startswith("/api/notebook/"):
             self.send_error(404)
             return
         try:

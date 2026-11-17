@@ -31,7 +31,7 @@ docker compose up --build      # detener: docker compose down
 
 La interfaz queda en `http://127.0.0.1:8765/`, publicada solo en este equipo. Otro puerto: `LOGOS_PORT=9000 docker compose up --build`.
 
-Abre `http://127.0.0.1:8765/` y pulsa «Ejemplo» (carga uno del modo en que estás), o «Cargar archivo» con uno de `ejemplos/*.logos`. La barra superior cambia entre tres modos: evaluar una fórmula en un modelo, demostrar una consecuencia y el diccionario. La explicación se construye desde una traza verificada; cada nodo tiene un resumen, detalles desplegables y posición en la fórmula. Guía de defensa: `docs/DEFENSA.md`.
+Abre `http://127.0.0.1:8765/` y pulsa «Ejemplo» (carga uno del modo en que estás), o «Cargar archivo» con uno de `ejemplos/*.logos`. La barra superior cambia entre cuatro modos: evaluar una fórmula en un modelo, demostrar una consecuencia, el diccionario y el cuaderno. La explicación se construye desde una traza verificada; cada nodo tiene un resumen, detalles desplegables y posición en la fórmula. Guía de defensa: `docs/DEFENSA.md`.
 
 La sección «Buscar un modelo donde sea falsa» busca una interpretación estricta que falsifique una **sentencia**. Usa tamaños de dominio 1–3, hasta 5000 candidatos o 2 segundos; si no encuentra uno, devuelve `unknown` y no afirma validez universal. El hallazgo se muestra como tablas (la relación binaria, como matriz) y se puede cargar en las tablas del modelo. «Exportar JSON» guarda firma, interpretación y fórmula; «Cargar archivo» valida el modelo antes de cargarlo.
 
@@ -65,6 +65,21 @@ Un archivo `.logos` describe un modelo y sus fórmulas en texto plano; el format
 El tercer modo de la interfaz muestra el diccionario del español (`src/logos/lexicon.tsv`, unos 6200 entradas más 2700 deducidas por reglas con sus formas) y permite añadir palabras; las tuyas se guardan en `datos/lexico_usuario.tsv`. Con Docker esa carpeta es un volumen, así que no se pierden al reconstruir.
 
 Para ampliarlo en lote: `PYTHONPATH=src python3 scripts/lexicon_queue.py mine texto.txt` (cola de candidatas), `next` (propuestas del modelo), `accept` (añade las revisadas). Ver `docs/plans/PLAN_MM3032.md` §10.
+
+## Cuaderno: preguntas a tus propias fuentes
+
+El cuarto modo reúne textos en español («fuentes») y contesta preguntas usando solo lo que ellos dicen. Abre la pestaña «Cuaderno» y pulsa «Ejemplo».
+
+- **Fuentes.** Pega un texto o sube un `.txt`. Cada oración pasa por el español controlado: si tiene una sola lectura, es una premisa; si tiene varias, o si hubo que suponer la categoría de una palabra, espera a que elijas; si queda fuera de la gramática, se marca con el motivo y no se usa. Al abrir una fuente, el color de cada oración dice en cuál de los tres casos está, y al tocarla se ve su fórmula.
+- **Preguntas.** Se escriben como una afirmación entre signos de pregunta («¿Juan aprueba?»). Hay cinco respuestas: **Sí** (hay prueba verificada), **No** (hay prueba verificada de lo contrario), **No lo deciden** (ni una ni otra: se muestran un modelo donde es falsa y otro donde es verdadera), **No se sigue** y **Sin respuesta** (se agotaron los límites).
+- **Citas.** Cada premisa que usa la prueba lleva un número que abre la fuente en la oración de donde salió. La derivación solo lista las premisas que usa, aunque el cuaderno tenga muchas más.
+- **Avisos.** Si las fuentes se contradicen entre sí, la respuesta lo dice; si la pregunta usa una palabra que ninguna premisa menciona, también.
+
+«Se sigue de tus fuentes» quiere decir que hay una prueba desde lo que dicen, no que lo que dicen sea cierto. Ningún modelo de lenguaje interviene: una oración que la gramática no entiende no se interpreta «más o menos», se deja fuera.
+
+Los cuadernos se guardan en `datos/cuadernos/` (otra carpeta: variable `LOGOS_NOTEBOOKS`), uno por archivo, y se exportan e importan como un solo `.json`. En disco solo van los textos y las lecturas elegidas; el análisis y las respuestas se recalculan cada vez, así que siguen al diccionario actual. Límites: 20 fuentes por cuaderno, 20 000 caracteres y 150 oraciones por fuente, 80 premisas por pregunta.
+
+Para que haya contramodelos con muchas premisas, `modelfinder.py` busca modelos desplegando los cuantificadores sobre dominios pequeños en vez de enumerar interpretaciones completas; lo que encuentra se vuelve a evaluar con el evaluador antes de mostrarse. Código: `src/logos/notebook.py`, `src/logos/modelfinder.py`; pruebas: `tests/test_notebook.py`, `tests/test_modelfinder.py`.
 
 ## Español controlado
 
