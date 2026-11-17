@@ -95,7 +95,7 @@ class LocalHTTP(unittest.TestCase):
 
     def test_serves_ui_and_api(self):
         with urlopen(self.url + "/", timeout=3) as response:
-            self.assertIn(b"Laboratorio de l", response.read())
+            self.assertIn(b"Batz", response.read())
         for asset in ("/app.js", "/style.css", "/story3d.js",
                       "/vendor/three.module.js", "/vendor/three.core.js"):
             with urlopen(self.url + asset, timeout=3) as response:
