@@ -1017,6 +1017,14 @@ function scheduleProofCheck() {
   proofCheckTimer = setTimeout(checkProofSyntax, 220);
 }
 
+/** Lleva el foco a la premisa o a la conclusión con error y selecciona el tramo señalado. */
+function goToProofInput(index, premiseCount, start, end) {
+  if (index >= premiseCount) { const c = $('proof-conclusion'); c.focus(); c.setSelectionRange(start, end); return; }
+  const box = $('proof-premises'); let seen = -1, offset = 0;
+  for (const line of box.value.split('\n')) { if (line.trim() && ++seen === index) { offset += line.length - line.trimStart().length; break; } offset += line.length + 1; }
+  box.focus(); box.setSelectionRange(offset + start, offset + Math.max(end, start));
+}
+
 async function checkProofSyntax() {
   const request = ++proofCheckRequest;
   const {premises, conclusion, constants} = proofInput();
@@ -1044,6 +1052,9 @@ async function checkProofSyntax() {
       const shown = node('code');
       shown.append(document.createTextNode(formulas[i].slice(0, start)), node('mark', formulas[i].slice(start, end) || '␣'), document.createTextNode(formulas[i].slice(end)));
       item.append(shown, node('span', entry.error.message, 'syntax-message'));
+      const go = node('button', 'Ir a la entrada', 'button secondary small'); go.type = 'button';
+      go.addEventListener('click', () => goToProofInput(i, premises.length, start, end));
+      item.append(go);
     }
     list.append(item);
   });
@@ -1154,7 +1165,7 @@ async function proveFormula() {
       const logic = node('span', result.mode === 'propositional' ? 'Lógica proposicional' : 'Primer orden', 'chip logic');
       if (result.status === 'proved') {
         const how = result.method === 'kalmar' ? 'construidas con el lema de Kalmár' : 'de deducción natural';
-        box.append(verdictElement('Demostrada', 'true', countLine('', result.fitch.length,
+        box.append(verdictElement('Prueba verificada', 'true', countLine('', result.fitch.length,
           ` ${result.fitch.length === 1 ? 'línea' : 'líneas'} ${how}, aceptadas por el verificador independiente.`, '', 'small')));
         const head = node('div', undefined, 'result-head'); head.append(node('h3', 'Derivación'), logic);
         box.append(head, fitchElement(result.fitch));
@@ -1163,7 +1174,7 @@ async function proveFormula() {
         return 'done';
       }
       if (result.status === 'refuted' && result.mode === 'propositional') {
-        box.append(verdictElement('No se sigue', 'false', 'Esta valuación hace verdaderas las premisas y falsa la conclusión; la tabla de verdad lo confirma.'));
+        box.append(verdictElement('Contramodelo verificado', 'false', 'No se sigue. Esta valuación hace verdaderas las premisas y falsa la conclusión; la tabla de verdad lo confirma.'));
         const head = node('div', undefined, 'result-head'); head.append(node('h3', 'Valuación que lo refuta'), logic);
         box.append(head, valuationElement(result.valuation), truthList(result.premises, result.conclusion.formula));
         if (result.contrast) box.append(contrastElement(result.contrast));
@@ -1171,7 +1182,7 @@ async function proveFormula() {
       }
       if (result.status === 'refuted') {
         const found = result.countermodel;
-        box.append(verdictElement('No se sigue', 'false', countLine('Contramodelo verificado tras revisar ', found.explored,
+        box.append(verdictElement('Contramodelo verificado', 'false', countLine('No se sigue: se verificó un contramodelo tras revisar ', found.explored,
           ` ${found.explored === 1 ? 'interpretación' : 'interpretaciones'}: las premisas son verdaderas y la conclusión, falsa.`, '', 'small')));
         const head = node('div', undefined, 'result-head'); head.append(node('h3', 'Contramodelo'), logic);
         box.append(head, modelElement(found.model, {assignment: found.assignment}), truthList(found.premises, found.explanation.formula));
@@ -1193,8 +1204,8 @@ async function proveFormula() {
         ? 'La resolución saturó sin contradicción, así que existe un modelo de las premisas donde la conclusión falla. No apareció entre los de 1 a 3 elementos: puede necesitar más, o ser infinito.'
         : result.reason === 'too_many_atoms_for_kalmar'
           ? 'La tabla de verdad no tiene ninguna fila con las premisas verdaderas y la conclusión falsa, así que la consecuencia vale; pero con más de 6 letras no se construye el certificado de Kalmár y la búsqueda no halló uno más corto.'
-          : `No se encontró prueba dentro de ${limit}${result.search ? ', ni un contramodelo de hasta 3 elementos' : ''}. Eso no decide la consecuencia.`;
-      box.append(verdictElement(saturated ? 'No se sigue' : 'Sin prueba', saturated ? 'false' : 'neutral', detail));
+          : `No se encontró prueba dentro de ${limit}${result.search ? ', ni un contramodelo de hasta 3 elementos' : ''}. Inconcluso no significa falso: la consecuencia queda sin decidir.`;
+      box.append(verdictElement(saturated ? 'No se sigue' : 'Búsqueda inconclusa', saturated ? 'false' : 'neutral', detail));
       if (result.contrast) box.append(contrastElement(result.contrast));
       return 'none';
     } catch (exc) { box.replaceChildren(node('p', exc.message || 'No se pudo buscar la prueba.', 'error')); return 'fail'; }

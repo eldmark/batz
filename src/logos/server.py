@@ -341,6 +341,7 @@ class Handler(BaseHTTPRequestHandler):
                  "/styles/shell.css": ("styles/shell.css", "text/css; charset=utf-8"),
                  "/app/navigation.js": ("app/navigation.js", "text/javascript; charset=utf-8"),
                  "/features/home/home.js": ("features/home/home.js", "text/javascript; charset=utf-8"),
+                 "/styles/responsive.css": ("styles/responsive.css", "text/css; charset=utf-8"),
                  "/styles/tour.css": ("styles/tour.css", "text/css; charset=utf-8"),
                  "/features/tour/tour.js": ("features/tour/tour.js", "text/javascript; charset=utf-8"),
                  "/tokens.css": ("tokens.css", "text/css; charset=utf-8"),
