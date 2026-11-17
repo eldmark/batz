@@ -69,7 +69,7 @@ p.hint { margin-top: var(--s2); max-width: 64ch; }
 
 /* ── Campos (emph-1): quietos hasta el foco ── */
 input:not([type=checkbox]), select, textarea {
-  font: inherit; color: var(--emph-1-fg); background: var(--emph-1-bg); border: 1px solid var(--emph-1-border);
+  font: inherit; color: var(--emph-1-fg); background: var(--emph-1-bg); border: 1px solid var(--neutral-500);   /* 3.05:1 sobre la superficie (1.4.11) */
   border-radius: var(--r); padding: 7px 10px; min-height: 38px; caret-color: var(--accent-600);
   transition: border-color .12s ease-out, background-color .12s ease-out;
 }

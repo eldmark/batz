@@ -44,7 +44,7 @@
   const categoryExercises = id => bank.exercises.filter(ex => ex.category === id);
   const categoryCompleted = id => categoryExercises(id).filter(ex => record(ex.id).complete).length;
   function progressBar() {
-    const bar = el('div', 'pr-progress');
+    const bar = el('div', 'pr-progress'); bar.setAttribute('role', 'img');
     const exercises = current ? categoryExercises(current.category) : bank.exercises;
     bar.setAttribute('aria-label', `${exercises.filter(ex=>record(ex.id).complete).length} de ${exercises.length} ejercicios completados${current ? ' en ' + categoryOf(current.category).title : ''}`);
     if (!current) {
@@ -101,10 +101,10 @@
     const grid = el('div', 'pr-grid');
     for (const ex of categoryExercises(activeCategory)) {
       const card = button('', `pr-exercise ${record(ex.id).complete ? 'is-complete' : ''}`, () => open(ex.id));
-      card.setAttribute('aria-label', `Abrir ejercicio ${ex.id}: ${ex.title}${record(ex.id).complete ? ', completado' : ''}`);
       const top = el('div', 'pr-card-top');
       top.append(el('span', 'pr-number', record(ex.id).complete ? '✓' : ex.id),
         el('span', 'pr-small', record(ex.id).complete ? 'Completado' : ex.topic), el('span', 'pr-card-arrow', '↗'));
+      top.lastChild.setAttribute('aria-hidden', 'true');
       card.append(top, el('h4', '', ex.title), formula(ex.goal)); grid.append(card);
     }
     section.append(grid); root.append(section);

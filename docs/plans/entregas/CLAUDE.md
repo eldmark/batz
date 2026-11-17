@@ -65,3 +65,26 @@ menú lateral y lo cierra al salir; navegar a otra sección cierra el recorrido.
 Archivos: `web/features/tour/tour.js`, `web/styles/tour.css`, `tests/frontend/app/tour.test.mjs`; conexión mínima en
 `app.js` (import, instancia, botón y `maybeOffer()` tras el `setMode` inicial), `index.html` (css y botón en la ayuda)
 y `server.py` (2 rutas estáticas). Verificación: unittest, `node --test`, `--check` de `app.js` y Playwright a 1440/768/390 px.
+
+## F7 accesibilidad
+
+Rama `rediseno/a11y`. Auditoría con axe-core 4.x (copia local, sin red) en 1440 y 390 px sobre Inicio, Evaluar, Demostrar,
+Practicar y Cuadernos (estados vacíos y con resultado), más sondas propias con Playwright: IDs duplicados, un solo `main` y un
+solo `h1`, foco tras cambiar de ruta (siempre al `h1`), recorrido con Tab por cada ruta (sin elementos invisibles ni sin
+indicador de foco), menú móvil, subpestañas, árboles y objetivos táctiles. Contrastes medidos con la fórmula WCAG (script propio).
+
+Corregido:
+- Practicar: `--pr-muted` y otros grises fijos pasan a `var(--text-muted)` (4.36, 3.94 y 3.28:1 pasan a 5.5-6.5:1); las tarjetas
+  de ejercicio ya no usan un `aria-label` que contradecía el texto visible; la barra de progreso tiene `role="img"`; la flecha es decorativa.
+- Menú móvil: con el menú abierto, Tab y Mayús+Tab recorren solo los enlaces (antes el foco escapaba al contenido de detrás).
+- Subpestañas (Cuadernos, Diccionario, Evaluar; función genérica del shell): se añaden Inicio y Fin a las flechas.
+- Móvil: enlaces del menú y «Saltar al contenido» de 44 px.
+- Avisos en vivo: `#proof-check` ya no anuncia en cada pulsación (se enlaza con `aria-describedby` desde sus campos);
+  `#nb-evidence` ya no duplica el anuncio de `#nb-answer`.
+- Campos: el borde usa `--neutral-500` (3.05:1) en lugar de `--emph-1-border` (1.71:1, incumplía 1.4.11). tokens.css no cambia.
+
+Comprobado sin hallazgos: IDs únicos, landmark único, foco al `h1` en las 6 rutas, árboles (Enter/Espacio, `aria-expanded`,
+nombre con verdadero/falso), V/F con letra además de color, `prefers-reduced-motion` (sin animaciones en curso en Demostrar).
+
+No corregido: ver el informe de la entrega (Evaluar queda a cargo del asistente de 3 pasos; reproductor, Diccionario y recorrido no se editaron).
+No se revisó con lector de pantalla real ni en teléfono real; solo emulación de Chromium.
