@@ -127,3 +127,9 @@ en móvil (fuera de alcance).
 ## Marca Batz («hilo») y motivos de cuerda
 
 Nombre visible cambiado de LOGOS a Batz (títulos, barra lateral, ayudas, taller de Practicar); el paquete Python, las rutas de la API y las claves `localStorage` conservan `logos` para no romper datos. `styles/thread.css`: marca provisional (hilo con nudo, sustituible por el logotipo que envíe el usuario), cuerda trenzada como filo del encabezado y de los separadores, hilo vertical con nudo en la barra lateral, pasos de Evaluar enhebrados y título con hilo corto. Añadidos: guía de símbolos y «Modo presentación» (letra grande, sin barra lateral) en el panel de Ayuda; el texto de Cuadernos explica que son apuntes interrogables.
+
+## Banner de Inicio
+
+Rama `rediseno/banner`. Banner ancho en Inicio (`features/home/home.js`, `renderBanner`; estilos en `styles/home.css`, registrado en `server.py` y enlazado con una línea en `index.html`) con Kurt Gödel (completitud 1929, incompletitud 1931), Alan Turing (máquina de Turing y problema de la parada, 1936; indecidibilidad de la validez en primer orden junto con Church) y el objetivo de practicar, con enlace `<a href="#/practicar">`. Cada bloque conecta con la página: Evaluar = semántica, Demostrar = sintaxis, completitud como puente; «inconclusa» no es «falso».
+
+Retratos locales en `web/img/` (`godel.jpg`, `turing.jpg`, ambos de dominio público en Commons), servidos desde la lista explícita de `do_GET`. Autor, licencia y origen en `web/img/CREDITOS.md` y como pie de foto enlazado. Duotono solo con CSS (`mix-blend-mode`), un hilo SVG une los retratos; con `prefers-reduced-motion` el hilo no se anima. Si una imagen falta o falla, queda una tarjeta con iniciales. Para cambiar un retrato, sustituir el archivo y su fila en CREDITOS.md.
