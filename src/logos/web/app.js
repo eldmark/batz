@@ -131,9 +131,11 @@ document.addEventListener('pointerdown', event => {
   wave.addEventListener('animationend', () => wave.remove());
 });
 
+let storyWordTimers = [];                          // ritmo simulado de la boca (voces que no avisan cada palabra)
 function stopStoryAudio() {
   if (storyTimer) clearTimeout(storyTimer);
   storyTimer = null;
+  storyWordTimers.forEach(clearTimeout); storyWordTimers = [];
   if ('speechSynthesis' in window) window.speechSynthesis.cancel();
   storyScene?.talking(false);
 }
@@ -327,14 +329,35 @@ function narrateCurrent() {
     const utterance = new SpeechSynthesisUtterance(event.text_es);
     utterance.lang = voice.lang; utterance.voice = voice; utterance.rate = .92;
     const index = storyState.index;
-    // La boca del avatar sigue a la voz: cada palabra que empieza abre y cierra sus vocales.
-    utterance.onstart = () => storyScene?.talking(true);
+    // La boca del avatar sigue a la voz: cada palabra que empieza se parte en sílabas al ritmo medido de la voz.
+    let spoken = 0, gotWord = false;                  // hasta dónde llegó la voz en el texto
+    // Algunas voces no avisan cuándo empieza cada palabra. Por eso, al empezar, la boca sigue un ritmo estimado a
+    // partir del texto (unas 0,185 s por sílaba y una pausa en cada coma o punto); con el primer aviso real de
+    // palabra ese ritmo se cancela y manda la voz.
+    const simulate = () => {
+      let at = 0;
+      for (const raw of event.text_es.match(/\S+/g) || []) {
+        const word = raw.replace(/[,.;:!?¡¿()]/g, ''), pause = /[,.;:!?)]$/.test(raw);
+        const beats = storyScene?.syllableCount?.(word) ?? ((word.normalize('NFD').match(/[aeiouy]+/gi) || []).length || 1);
+        storyWordTimers.push(setTimeout(() => storyScene?.say(word, utterance.rate), at));
+        at += Math.max(1, beats) * 185 / utterance.rate + (pause ? 300 : 35);
+      }
+    };
+    utterance.onstart = () => { storyScene?.talking(true); simulate(); };
     utterance.onboundary = boundary => {
       if (boundary.name && boundary.name !== 'word') return;
+      if (!gotWord) { storyWordTimers.forEach(clearTimeout); storyWordTimers = []; }   // la voz sí avisa: manda ella
+      gotWord = true;
       const word = event.text_es.slice(boundary.charIndex, boundary.charIndex + (boundary.charLength || 12)).split(/[\s,.;:]/)[0];
-      storyScene?.say(word, utterance.rate);
+      const pause = /[,.;:!?¡¿()]/.test(event.text_es.slice(spoken, boundary.charIndex));   // coma, punto: el hueco no es ritmo
+      spoken = boundary.charIndex + word.length;
+      storyScene?.say(word, utterance.rate, pause);
     };
-    const finish = () => { storyScene?.talking(false); if (storyPlaying && storyState?.index === index) advanceStory(); };
+    const finish = () => {
+      storyWordTimers.forEach(clearTimeout); storyWordTimers = [];   // la voz terminó: el ritmo simulado también
+      storyScene?.talking(false);
+      if (storyPlaying && storyState?.index === index) advanceStory();
+    };
     utterance.onend = finish;
     utterance.onerror = finish;
     window.speechSynthesis.speak(utterance);
@@ -1466,10 +1489,28 @@ floatKeyboard($('proof-keyboard'), [$('proof-premises'), $('proof-conclusion')])
 // el iPhone no la ofrece para estos elementos, así que ahí la sección cubre la ventana (respaldo).
 function storyFullscreenElement() { return document.fullscreenElement || document.webkitFullscreenElement || null; }
 function storyIsFullscreen() { return $('story-section').classList.contains('is-fullscreen'); }
+// Al entrar, la sección sale del flujo y la página se acorta: el navegador recorta el desplazamiento y, al salir,
+// la página quedaba más arriba. Se guarda dónde estaba la sección y se devuelve ahí al salir.
+let storyReturn = null;
+function rememberStoryScroll() { storyReturn = {top: $('story-section').getBoundingClientRect().top}; }
+function restoreStoryScroll() {
+  const saved = storyReturn; storyReturn = null;
+  if (!saved) return;
+  const align = () => {
+    if ($('story-section').hidden) return;
+    const drift = $('story-section').getBoundingClientRect().top - saved.top;
+    if (Math.abs(drift) > 1) window.scrollTo({top: window.scrollY + drift, behavior: 'instant'});
+  };
+  // primero cuando la sección vuelve al flujo; luego otra vez, porque la ventana termina de cambiar de tamaño después
+  requestAnimationFrame(() => requestAnimationFrame(align));
+  for (const ms of [150, 400, 800]) setTimeout(align, ms);
+}
 function syncStoryFullscreen() {
   const section = $('story-section'), fallback = section.classList.contains('story-fallback-fullscreen');
   const on = fallback || storyFullscreenElement() === section;
+  const was = section.classList.contains('is-fullscreen');
   section.classList.toggle('is-fullscreen', on);
+  if (was && !on) restoreStoryScroll();
   document.documentElement.classList.toggle('story-locked', fallback);
   if (!on) try { screen.orientation?.unlock?.(); } catch { /* sin bloqueo que soltar */ }
   const button = $('story-fullscreen'), label = on ? 'Salir de pantalla completa' : 'Pantalla completa';
@@ -1477,6 +1518,7 @@ function syncStoryFullscreen() {
 }
 async function enterStoryFullscreen() {
   const section = $('story-section');
+  rememberStoryScroll();
   const request = section.requestFullscreen || section.webkitRequestFullscreen;
   if (request && (document.fullscreenEnabled ?? document.webkitFullscreenEnabled ?? true)) {
     try {
