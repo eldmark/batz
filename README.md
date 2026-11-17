@@ -2,6 +2,17 @@
 
 Laboratorio de lógica de primer orden. Plan vigente del proyecto MM3032 (evaluador semántico): `docs/plans/PLAN_MM3032.md`. Fases originales en `docs/`.
 
+## Rediseño de interfaz: instrucciones para agentes
+
+La especificación del rediseño está documentada y pendiente de implementación:
+
+- [Plan de pantallas, navegación y ubicación del avatar 3D](docs/plans/REDISENO_INTERFAZ.md).
+- [Contrato del reproductor de explicaciones](docs/specs/EXPLANATION_PLAYER.md).
+- [Reparto entre Claude y Codex, preparación de ramas y mensajes de inicio](docs/plans/REDISENO_PARALELO.md).
+
+Leer también [AGENTS.md](AGENTS.md) antes de implementar. Se conservan colores,
+fuentes, avatar y motores lógicos existentes.
+
 ## Fachada del proyecto MM3032 (M1)
 
 ```python

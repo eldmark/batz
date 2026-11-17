@@ -1,5 +1,14 @@
 # LOGOS — Laboratorio de lógica de primer orden
 
+## Rediseño de interfaz (2026-11-16)
+
+Para implementar la reorganización actual, leer el
+[plan de interfaz](plans/REDISENO_INTERFAZ.md), el
+[contrato del reproductor](specs/EXPLANATION_PLAYER.md) y el
+[protocolo de trabajo paralelo Claude/Codex](plans/REDISENO_PARALELO.md).
+Estos documentos especifican trabajo pendiente; las fases y estados históricos
+que siguen no describen por sí solos la implementación actual.
+
 ## Visión
 Construir para una competencia de lógica matemática un lexer, parser e intérprete propios para lógica de predicados de primer orden (FOL), ampliados con búsqueda de pruebas, verificador independiente, contraejemplos finitos y, solo después, traducción de español controlado, interfaz interactiva Three.js y narración sincronizada.
 
