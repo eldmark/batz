@@ -59,17 +59,20 @@ blender -b rig_src.blend --python build_body.py -- D/ out.blend out.glb  # esque
     - **Costados:** los perfiles, con el color igualado al de la mejilla de frente; se usan en orejas, patillas, pelo y cuello.
     - **Piel lisa:** el tono se toma de la propia cara.
     - **Ojos:** los de la foto de frente; el iris procedural solo cubre lo que la foto no ve.
-    - **Boca:** el interior va oscuro.
+    - **Boca:** todo el túnel de la boca va oscuro (mide unos 10 cm). Se pinta solo lo que queda a más de 4 mm detrás de la superficie visible; la nuca y las fosas nasales quedan fuera.
     - **Tono:** al final se baja un 22 % la saturación de la piel (más blanca, sin el rojo saturado).
 - **`build_body.py`**:
   - Mueve los huesos del esqueleto a las articulaciones medidas en la malla y pesa con calor. La cabeza queda rígida sobre el hueso `head` y es un 5 % más grande respecto al cuerpo.
-  - Cerca del cuello, la parte de arriba del hombro la mueve el pecho y no el brazo. El esqueleto no tiene clavícula, y sin esto el escote se rompe al levantar los brazos.
+  - Hombro: el esqueleto no tiene clavícula. El brazo solo mueve lo que está más allá de la articulación, en la dirección del brazo; el techo del hombro y la zona junto al cuello los mueve el pecho. Sin esto, al levantar el brazo el hombro hace joroba y el escote se rompe.
   - Arma la ropa como copias suavizadas de la piel: camiseta azul marino de manga recta hasta medio brazo, pantalón gris carbón y zapatos. Cada vértice de ropa toma los pesos de la piel que tiene justo debajo.
   - El pantalón es de corte recto: cada pierna es un tubo redondo que cae derecho (radio de unos 9 cm arriba a 6,4 cm en la bota), así no marca muslo, rodilla ni entrepierna. En la cadera conserva su forma, y el frente de la entrepierna no sobresale del de los muslos.
   - Borra la piel tapada; la que queda bajo los bordes se mete 4 mm.
   - La camiseta cuelga como tela: bajo el pecho cae recta y la cintura casi no se angosta, así no marca busto ni cintura de reloj de arena.
   - Los bordes de la ropa se alisan con Taubin (no encoge el aro, así el escote no se aplana en cuello de bote).
   - El cuello redondo lleva un ribete: una banda más oscura que sube del borde del escote y abraza el cuello.
-  - Crea las formas `Boca_abierta` (mandíbula que gira), `Boca_redonda` y `Parpadeo`, y exporta. En `Parpadeo` los párpados giran alrededor del centro del ojo, con el ángulo medido en los bordes de los párpados de la foto.
+  - Agrega dientes: dos bandas curvas al inicio de la cavidad, unos 13,5 mm detrás de los labios. En reposo quedan fuera de la ranura entre los labios.
+  - Crea las formas `Boca_abierta`, `Boca_redonda` y `Parpadeo`, y exporta.
+    - **`Boca_abierta`:** la mandíbula gira. El labio inferior se detecta por la malla (desde el mentón hacia arriba, sin cruzar las comisuras), así los labios se separan justo en la ranura y la abertura se afina hacia las comisuras. Los dientes de abajo giran con la mandíbula y el labio superior sube un poco para mostrar los de arriba. Todo usa las coordenadas de la cabeza ya agrandada.
+    - **`Parpadeo`:** los párpados giran alrededor del centro del ojo, con el ángulo medido en los bordes de los párpados de la foto.
 
 `shots.py` tiene la cámara y las luces de los renders de control.

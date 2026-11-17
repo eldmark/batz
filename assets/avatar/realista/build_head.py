@@ -242,7 +242,7 @@ field = np.r_[field, np.array([field[orig[v]] for v in new_verts])]
 from mathutils.bvhtree import BVHTree
 _bm = bmesh.new(); _bm.from_mesh(me); _tree = BVHTree.FromBMesh(_bm); _bm.free()
 mc = (B[13] + B[14]) / 2
-box = (np.abs(V[:, 0] - mc[0]) < .036) & (np.abs(V[:, 2] - mc[2]) < .022) & (V[:, 1] < mc[1] + .055) & ~is_hair & ~is_eye
+box = (np.abs(V[:, 0] - mc[0]) < .055) & (np.abs(V[:, 2] - mc[2]) < .036) & (V[:, 1] < mc[1] + .11)       & ~((V[:, 2] > mc[2] + .012) & (np.abs(V[:, 0] - mc[0]) < .026) & (V[:, 1] < min(B[0, 1], B[17, 1]) + .02))   # las fosas nasales no & ~is_hair & ~is_eye   # el túnel de la boca mide ~10 cm; la nuca queda mucho más atrás
 is_mouth = np.zeros(nV, bool)
 for i in np.nonzero(box)[0]:
     hit = _tree.ray_cast(Vector((V[i, 0], -1.0, V[i, 2])), Vector((0, 1, 0)))     # superficie visible de frente
@@ -403,7 +403,17 @@ for sgn, (C, rad, S) in EC.items():
     use_ph = (fr[m] > .5)[:, None] * smooth01((a_face[m] - .5) / .3)[:, None]
     col[m] = c * (1 - use_ph) + phc[m] * use_ph
 mo = (p_m1[..., 0] > .5)
-col[mo] = np.array([.16, .07, .07])
+# interior de la boca: oscuro y más oscuro hacia adentro; dientes pintados justo detrás de los labios
+y_lips = float(min(B[0, 1], B[17, 1]))                       # frente de los labios
+hw = float(abs(B[291, 0] - B[61, 0]) / 2)
+Pm = P3[mo]; depth = Pm[:, 1] - y_lips; dzm = Pm[:, 2] - mc[2]; dxm = np.abs(Pm[:, 0] - mc[0])
+inner = np.array([.07, .025, .03]) * (1 - .5 * smooth01((depth - .01) / .02))[:, None]
+arch = smooth01((hw * .8 - dxm) / (hw * .25))                  # los dientes no llegan a las comisuras
+up_t = smooth01((depth - .003) / .002) * smooth01((.014 - depth) / .003) * smooth01((dzm + .0035) / .0012) * arch
+lo_t = smooth01((depth - .003) / .002) * smooth01((.012 - depth) / .003) * smooth01((-.0045 - dzm) / .0012) * smooth01((dzm + .011) / .0015) * arch * .9
+tooth = np.array([.86, .83, .76]) * (1 - .12 * smooth01((dxm - hw * .35) / (hw * .4)))[:, None]   # hacia los lados, más en sombra
+tt = np.zeros((len(Pm), 1))                                    # los dientes ahora son geometría (build_body)
+col[mo] = inner * (1 - tt) + tooth * tt
 hd = (hair_t * smooth01((field_t - .5) / .2))[..., None] * .6     # la cáscara tira al color del pelo de frente
 col = col * (1 - hd) + hair_flat * hd
 col[~cov] = skin

@@ -94,6 +94,23 @@ for b in bones:
         if Wt[b][i] > 1e-4: g.add([int(i)], float(Wt[b][i]), 'REPLACE')
         else: g.remove([int(i)])
 print('hombros: vértices con peso movido al pecho', len(idx_m))
+# hombro: el brazo solo arrastra lo que está más allá de la articulación en la dirección del brazo; lo que queda
+# encima (el techo del hombro) lo mueve el pecho. Sin clavícula, si no, al levantar el brazo se dobla y hace joroba.
+for s_ in 'LR':
+    jh = np.array(J[f'upper_arm.{s_}'][0], float); jt = np.array(J[f'upper_arm.{s_}'][1], float)
+    dA = (jt - jh) / np.linalg.norm(jt - jh)
+    tA = (V - jh) @ dA
+    near_s = (np.linalg.norm(V - jh, axis=1) < .17) & ~fix
+    gA = smooth01((tA + .015) / .055)
+    ua = Wt[f'upper_arm.{s_}']; new_ua = np.where(near_s, ua * gA, ua); take = ua - new_ua
+    Wt[f'upper_arm.{s_}'] = new_ua; Wt['chest'] = Wt['chest'] + take
+    idx_s = np.nonzero(take > 1e-5)[0]
+    for b in (f'upper_arm.{s_}', 'chest'):
+        g = body.vertex_groups[b]
+        for i in idx_s:
+            if Wt[b][i] > 1e-4: g.add([int(i)], float(Wt[b][i]), 'REPLACE')
+            else: g.remove([int(i)])
+    print('hombro', s_, ': vértices que pasan al pecho', len(idx_s))
 
 # cabeza 5 % más grande respecto al cuerpo (escala por el peso del hueso «head», alrededor de la base del cráneo)
 piv = np.array(J['head'][0], float)
@@ -326,6 +343,36 @@ for i in range(len(rows) if closed else len(rows) - 1):
 bmesh.ops.recalc_face_normals(bm, faces=band)
 print('ribete: caras', len(band), 'cerrado', closed)
 
+# dientes: dos bandas curvas detrás de los labios (arriba fijos a la cabeza; abajo giran con la mandíbula)
+def Sh(q): return Vector(piv) + (Vector(q) - Vector(piv)) * 1.05
+mcT = Sh(hi['mouth']); hwT = (Sh(hi['mouth_r']).x - Sh(hi['mouth_l']).x) / 2
+M_TEETH = mat('Dientes', '#e6e0d4', .35, False)
+head_i = body.vertex_groups['head'].index
+lips_front = V[(np.abs(V[:, 2] - mcT.z) < .004) & (np.abs(V[:, 0] - mcT.x) < hwT)]
+def front_y(x):
+    near_ = lips_front[np.abs(lips_front[:, 0] - x) < .004]
+    return float(near_[:, 1].min()) if len(near_) else float(lips_front[:, 1].min())
+cols_x = np.linspace(-hwT * .78, hwT * .78, 13) + mcT.x
+teeth_faces = []
+for z_top, z_bot in ((mcT.z + .0085, mcT.z + .0009), (mcT.z - .0008, mcT.z - .0095)):   # en reposo quedan fuera de la ranura entre los labios
+    grid = []
+    for x in cols_x:
+        k = abs(x - mcT.x) / (hwT * .78)
+        yb = front_y(x) + .0135 + .004 * k * k                       # justo donde empieza la cavidad (los labios miden ~1,2 cm); la arcada se va hacia atrás en los lados
+        col = []
+        for zz in np.linspace(z_top, z_bot, 3):
+            tv = bm.verts.new((x, yb + .0006 * (1 - abs(zz - (z_top + z_bot) / 2) / (abs(z_top - z_bot) / 2)), zz))
+            tv[dl].clear(); tv[dl][head_i] = 1.0; col.append(tv)
+        grid.append(col)
+    for c in range(len(grid) - 1):
+        for r in range(2):
+            f = bm.faces.new((grid[c][r], grid[c + 1][r], grid[c + 1][r + 1], grid[c][r + 1])); f.material_index = M_TEETH; f.smooth = True
+            teeth_faces.append(f)
+for f in teeth_faces:                                              # que miren hacia afuera (hacia −y)
+    f.normal_update()
+    if f.normal.y > 0: f.normal_flip()
+print('dientes: caras', len(teeth_faces))
+
 # piel tapada por la ropa: fuera (se deja un anillo bajo los bordes)
 cov = COVERED.copy()
 core = cov.copy()
@@ -348,30 +395,66 @@ print('vértices finales', len(me.vertices))
 for m in me.materials:
     if m and m.name.startswith('Pelo'): m.node_tree.nodes['Principled BSDF'].inputs['Roughness'].default_value = .82
 # ── 4. boca: formas para hablar ──
-mc = Vector(hi['mouth']); ml, mr = Vector(hi['mouth_l']), Vector(hi['mouth_r'])
+# la cabeza se agrandó un 5 % alrededor de «piv»: la boca medida antes hay que llevarla a esas coordenadas
+def Sh(q): return Vector(piv) + (Vector(q) - Vector(piv)) * 1.05
+mc = Sh(hi['mouth']); ml, mr = Sh(hi['mouth_l']), Sh(hi['mouth_r'])
+chin_s = float(piv[2] + (chin - piv[2]) * 1.05)
 half_w = (mr.x - ml.x) / 2
 body.shape_key_add(name='Basis')
 opn = body.shape_key_add(name='Boca_abierta'); rnd = body.shape_key_add(name='Boca_redonda')
 from mathutils import Matrix
 pivot = Vector((0, mc.y + .075, mc.z + .018))          # bisagra de la mandíbula, detrás de la boca
-rot = Matrix.Rotation(math.radians(9), 3, 'X')
+rot = Matrix.Rotation(math.radians(10), 3, 'X')
+# labio inferior por conectividad: desde el mentón hacia arriba, dentro de la boca y sin llegar a las comisuras
+# (los labios de la malla están separados por la ranura de la boca; así se abren justo ahí)
+Vm = np.array([v.co[:] for v in me.vertices])
+adjm = [[] for _ in range(len(Vm))]
+for e in me.edges:
+    a_, b_ = e.vertices; adjm[a_].append(b_); adjm[b_].append(a_)
+boxm = (np.abs(Vm[:, 0] - mc.x) < half_w * .85) & (np.abs(Vm[:, 2] - mc.z) < .022) & (Vm[:, 1] < mc.y + .022)
+lower = None
+cand = np.nonzero(boxm & (Vm[:, 2] < mc.z - .012) & (np.abs(Vm[:, 0] - mc.x) < .006))[0]
+cand_up = np.nonzero(boxm & (Vm[:, 2] > mc.z + .007) & (np.abs(Vm[:, 0] - mc.x) < .006))[0]
+if len(cand) and len(cand_up):
+    seed = cand[np.argmin(Vm[cand, 1])]; up_seed = cand_up[np.argmin(Vm[cand_up, 1])]
+    reg = np.zeros(len(Vm), bool); reg[seed] = True; stack = [seed]
+    while stack:
+        i = stack.pop()
+        for j in adjm[i]:
+            if boxm[j] and not reg[j]: reg[j] = True; stack.append(j)
+    if not reg[up_seed]: lower = reg
+    print('boca: labio inferior', int(reg.sum()), 'vértices;', 'separado del superior' if lower is not None else 'se filtra al superior (regla de altura)')
+mt_i = [m.name for m in me.materials].index('Dientes_v2')
+lower_teeth = {vi for poly in me.polygons if poly.material_index == mt_i and poly.center.z < mc.z for vi in poly.vertices}   # todo lo que está bajo la costura gira con la mandíbula
+all_teeth = {vi for poly in me.polygons if poly.material_index == mt_i for vi in poly.vertices}
 for v in me.vertices:
-    p = v.co
-    if p.z < chin - .06 or p.z > mc.z + .02 or abs(p.x - mc.x) > .085 or p.y > mc.y + .085: continue
-    lat = smooth01((.072 - abs(p.x - mc.x)) / .03)
-    below = smooth01((mc.z + .0006 - p.z) / .0035)
-    neck = smooth01((p.z - (chin - .045)) / .03)
+    p = v.co; i = v.index
+    if p.z < chin_s - .06 or p.z > mc.z + .02 or abs(p.x - mc.x) > .085 or p.y > mc.y + .085: continue
+    dx = abs(p.x - mc.x)
+    lat = smooth01((.072 - dx) / .03)
+    neck = smooth01((p.z - (chin_s - .045)) / .03)
+    deep = smooth01((mc.z - .012 - p.z) / .01)                       # más abajo: mentón entero con la mandíbula
+    jaw = smooth01((mc.z - .004 - p.z) / .006) * deep
+    if i in lower_teeth:
+        below = 1.0
+    elif lower is not None and boxm[i]:
+        lip = (1 - min(1.0, dx / (half_w * .95)) ** 2) ** .6 if lower[i] else 0.0   # la abertura se afina hacia las comisuras
+        below = max(lip, jaw)
+    elif lower is None:
+        below = smooth01((mc.z - p.z) / .0015)                        # respaldo: corte nítido en la línea de la boca
+    else:
+        below = jaw
     w = float(lat * below * neck)
     if w > 0:
         q = pivot + rot @ (p - pivot)
-        opn.data[v.index].co = p + (q - p) * w
-    elif p.z > mc.z and p.z < mc.z + .015 and abs(p.x - mc.x) < half_w:   # el labio superior sube apenas
-        k = (1 - (p.z - mc.z) / .015) * (1 - abs(p.x - mc.x) / half_w)
-        opn.data[v.index].co = p + Vector((0, 0, .0018 * k))
+        opn.data[i].co = p + (q - p) * w
+    elif p.z > mc.z - .001 and p.z < mc.z + .015 and dx < half_w and not (lower is not None and lower[i]) and i not in all_teeth:   # el labio superior sube apenas (los dientes no)
+        k = (1 - max(0.0, p.z - mc.z) / .015) * (1 - dx / half_w)
+        opn.data[i].co = p + Vector((0, 0, .0055 * k))
     d = math.hypot((p.x - mc.x) / (half_w * 1.35), (p.z - mc.z) / .03)
-    if d < 1 and p.y < mc.y + .02:                 # redonda: comisuras al centro, labios adelante
+    if d < 1 and p.y < mc.y + .02 and i not in all_teeth:   # redonda: comisuras al centro, labios adelante
         ww = (1 - d) ** 1.1
-        rnd.data[v.index].co = p + Vector((-(p.x - mc.x) * .28 * ww, -.004 * ww, 0))
+        rnd.data[i].co = p + Vector((-(p.x - mc.x) * .28 * ww, -.004 * ww, 0))
 # parpadeo: los párpados giran alrededor del centro del ojo (no atraviesan el globo). El ángulo sale de los
 # bordes de los párpados medidos en la foto (MediaPipe 159/145 y 386/374), llevados a la cabeza ya escalada.
 blk = body.shape_key_add(name='Parpadeo', from_mix=False)
