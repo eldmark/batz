@@ -342,6 +342,7 @@ class Handler(BaseHTTPRequestHandler):
                  "/styles/evaluator.css": ("styles/evaluator.css", "text/css; charset=utf-8"),
                  "/styles/thread.css": ("styles/thread.css", "text/css; charset=utf-8"),
                  "/features/export/export.js": ("features/export/export.js", "text/javascript; charset=utf-8"),
+                 "/styles/motion.css": ("styles/motion.css", "text/css; charset=utf-8"),
                  "/styles/shell.css": ("styles/shell.css", "text/css; charset=utf-8"),
                  "/styles/dictionary.css": ("styles/dictionary.css", "text/css; charset=utf-8"),
                  "/app/navigation.js": ("app/navigation.js", "text/javascript; charset=utf-8"),

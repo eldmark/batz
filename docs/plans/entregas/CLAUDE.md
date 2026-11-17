@@ -150,3 +150,7 @@ Rama `rediseno/aprender`. Sección nueva `#/aprender` (id de modo `learn`, enlac
 ## Logotipo Bat’z
 
 El usuario envió el logotipo (una V de hilo crema tejida con tres hilos y un gancho a la derecha, y el nombre con apóstrofo): el nombre visible pasa a **Bat’z** y la marca se redibujó en vectores con los colores de Batz (verde de marca `#006f50`/`#003726`, V en `#e8fcf3`, hilos en ámbar `signal-300`). Archivos: `favicon.svg` (icono de aplicación), `img/batz-icono.svg`, `img/batz-marca-claro.svg` y `img/batz-marca-oscuro.svg`; en la barra lateral la marca es un SVG en línea (`.brand-mark`, hilos que se dibujan al cargar salvo con movimiento reducido). Es una reconstrucción a partir de las capturas enviadas, no el archivo original: si hay un SVG de origen, conviene sustituirla.
+
+## Micro-interacciones globales
+
+`styles/motion.css` (todo bajo `prefers-reduced-motion: no-preference`; solo transform/opacity): entrada de sección, pasos de Evaluar que entran de lado con el hilo entre pasos que se llena, nudo de la barra lateral que «aterriza», hilo del veredicto que se dibuja, presión y brillo en botones, borde de campos teñido de hilo al enfocar, resultados con ascenso. Comprobado: con reducedMotion emulado no hay animaciones propias en curso; el flujo de Evaluar y las exportaciones siguen funcionando.

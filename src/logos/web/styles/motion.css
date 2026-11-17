@@ -1,0 +1,47 @@
+/* Micro-interacciones globales. Solo transform/opacity/clip-path; todo bajo «sin preferencia de movimiento reducido». */
+@media (prefers-reduced-motion: no-preference) {
+  /* Cambio de sección: el contenido entra con un fundido corto y un leve ascenso */
+  .main > section:not([hidden]) { animation: route-in .32s var(--out) backwards; }
+  @keyframes route-in { from { opacity: 0; transform: translateY(8px); } }
+
+  /* Asistente de Evaluar: cada paso entra desde el lado hacia el que se avanza */
+  .wz-panel:not([hidden]) { animation: step-in .38s var(--out) backwards; }
+  @keyframes step-in { from { opacity: 0; transform: translateX(14px); } }
+  .wizard-steps::after { content: ""; position: absolute; left: 6%; top: 50%; height: 3px; width: 0; transform: translateY(-50%); background: var(--thread, var(--brand-500)); border-radius: 2px; transition: width .5s var(--out); z-index: 0; }
+  #mode-evaluate[data-step="2"] .wizard-steps::after { width: 44%; }
+  #mode-evaluate[data-step="3"] .wizard-steps::after { width: 88%; }
+  .wz-step { transition: transform .18s var(--out), background-color .2s, border-color .2s; }
+  .wz-step:not([aria-disabled=true]):hover { transform: translateY(-2px); }
+  .wz-step:not([aria-disabled=true]):active { transform: translateY(0) scale(.98); }
+
+  /* Barra lateral: el icono se desplaza al pasar el puntero y el nudo de la sección activa «aterriza» */
+  .nav-link .icon { transition: transform .2s var(--out); }
+  .nav-link:hover .icon, .nav-link:focus-visible .icon { transform: translateX(3px); }
+  .nav-link[aria-current=page]::before { animation: knot-in .5s var(--spring) backwards; }
+  @keyframes knot-in { from { transform: scale(0); } }
+
+  /* Veredicto: el hilo bajo el resultado se dibuja de izquierda a derecha */
+  #wz-result .verdict::after { transform-origin: left; animation: thread-draw .9s .35s var(--out) backwards; }
+  @keyframes thread-draw { from { transform: scaleX(0); } }
+
+  /* Botones: presión y un brillo que cruza el botón principal al pasar el puntero */
+  .button { transition: transform .15s var(--out), box-shadow .2s, background-color .2s; }
+  .button.primary { position: relative; overflow: hidden; }
+  .button.primary::after { content: ""; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 35%, rgb(255 255 255 / .22) 50%, transparent 65%); transform: translateX(-120%); pointer-events: none; }
+  @media (hover: hover) {
+    .button.primary:hover::after { transform: translateX(120%); transition: transform .7s var(--out); }
+    .button:not(:disabled):hover { transform: translateY(-1px); }
+  }
+  .button:not(:disabled):active { transform: scale(.97); }
+
+  /* Campos: el borde se tiñe de hilo al enfocar */
+  input, textarea, select { transition: border-color .2s, box-shadow .2s; }
+  textarea:focus-visible, input:focus-visible { box-shadow: 0 0 0 3px color-mix(in oklab, var(--thread, var(--brand-500)) 28%, transparent); }
+
+  /* Casos de ejemplo y resultados: aparecen con un leve ascenso */
+  .result > *, .batch-list > li, .nb-cites > li { animation: rise .3s var(--out) backwards; }
+  @keyframes rise { from { opacity: 0; transform: translateY(6px); } }
+
+  /* Modo presentación: la barra lateral se retira sin saltos */
+  body.presenting .main { animation: route-in .3s var(--out) backwards; }
+}
