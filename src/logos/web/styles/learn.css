@@ -6,7 +6,7 @@
 .learn-block > h3 { font: 500 clamp(24px, 2.2vw, 30px)/1.15 var(--serif); letter-spacing: -.01em; text-wrap: balance; }
 .learn-block > h3:focus, .fc-done-title:focus { outline: none; }
 .learn-block > h3:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 3px; }
-.learn-filters { margin-bottom: 0; }
+.learn-filters, .learn-page .filters { flex-wrap: wrap; overflow: visible; margin-inline: 0; padding: 0; margin-bottom: 0; gap: var(--s2); }
 .learn-count { margin-top: var(--s2); }
 
 /* ── Línea de tiempo ── */
@@ -88,3 +88,4 @@
   .fc-card[data-flipped=true] .fc-front { display: none; }
   .fc-card[data-flipped=true] .fc-back { display: flex; }
 }
+.tl-where a, .fc-example a { color: var(--link); text-underline-offset: 2px; }
