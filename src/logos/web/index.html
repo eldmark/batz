@@ -4,11 +4,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#006f50">
-  <title>Inicio · LOGOS</title>
+  <title>Inicio · Batz</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/tokens.css">
   <link rel="stylesheet" href="/style.css">
   <link rel="stylesheet" href="/styles/shell.css">
+  <link rel="stylesheet" href="/styles/thread.css">
   <link rel="stylesheet" href="/styles/evaluator.css">
   <link rel="stylesheet" href="/features/explanation-player/player.css">
   <link rel="stylesheet" href="/styles/tour.css">
@@ -23,7 +24,7 @@
   <div class="app">
     <aside id="sidebar" class="sidebar" aria-label="Navegación principal">
       <div class="sidebar-head">
-        <p class="wordmark">LOGOS <span>Laboratorio de lógica</span></p>
+        <p class="wordmark"><svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><path class="thread" d="M4 24c0-9 10-15 15-9s-3 12-9 8 1-14 11-15c5-.6 7 3 7 6"/><circle class="knot" cx="28" cy="14" r="2.2"/></svg><span class="brand-name">Batz</span> <span class="brand-sub">hilo de la lógica</span></p>
         <button id="sidebar-collapse" class="sidebar-toggle" type="button" aria-pressed="false" aria-label="Contraer el menú lateral" title="Contraer el menú lateral"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M12.5 4.5 7 10l5.5 5.5"/></svg></button>
       </div>
       <nav id="nav" class="nav">
@@ -49,7 +50,23 @@
           <input id="import-file" type="file" accept=".logos,.txt,.json,application/json,text/plain" hidden>
         </div>
       </header>
-      <div id="help-panel" class="help-panel" role="region" aria-label="Ayuda de la sección" hidden><p id="help-text"></p><button id="tour-open" class="button secondary help-tour" type="button">Ver el recorrido</button></div>
+      <div id="help-panel" class="help-panel" role="region" aria-label="Ayuda de la sección" hidden><p id="help-text"></p><button id="tour-open" class="button secondary help-tour" type="button">Ver el recorrido</button>
+        <details class="symbol-guide"><summary>Guía de símbolos</summary>
+          <table><thead><tr><th>Símbolo</th><th>Se lee</th><th>Ejemplo</th></tr></thead><tbody>
+            <tr><td>∀</td><td>para todo</td><td><code>∀x P(x)</code></td></tr>
+            <tr><td>∃</td><td>existe al menos un</td><td><code>∃x P(x)</code></td></tr>
+            <tr><td>¬</td><td>no</td><td><code>¬P(x)</code></td></tr>
+            <tr><td>∧</td><td>y</td><td><code>P(x) ∧ Q(x)</code></td></tr>
+            <tr><td>∨</td><td>o (inclusivo)</td><td><code>P(x) ∨ Q(x)</code></td></tr>
+            <tr><td>→</td><td>si… entonces</td><td><code>P(x) → Q(x)</code></td></tr>
+            <tr><td>↔</td><td>si y solo si</td><td><code>P(x) ↔ Q(x)</code></td></tr>
+            <tr><td>=</td><td>es igual a</td><td><code>x = y</code></td></tr>
+            <tr><td>⊢</td><td>se demuestra / se sigue</td><td><code>P(a) ⊢ ∃x P(x)</code></td></tr>
+          </tbody></table>
+        </details>
+        <p><button id="present-toggle" class="button secondary small" type="button" aria-pressed="false">Modo presentación</button> <span class="hint">Letra grande y sin barra lateral, para proyectar.</span></p>
+      </div>
+      <div class="presenting-bar"><button id="present-exit" class="button primary small" type="button">Salir del modo presentación</button></div>
       <div id="toasts" class="toasts" role="status" aria-live="polite"></div>
       <main id="main" class="main" tabindex="-1">
       <section id="mode-home" class="home" aria-labelledby="home-heading">
@@ -243,7 +260,7 @@
     </div>
     <section id="nb-sources-panel" class="pane model" aria-labelledby="nb-heading">
       <h2 id="nb-heading" class="pane-title">Fuentes</h2>
-      <p class="pane-lede">Reúne textos en español. Cada oración que se entiende pasa a ser una premisa, y las respuestas citan de qué oración salió cada una.</p>
+      <p class="pane-lede">Tus apuntes, pero que se pueden interrogar: pega o sube los textos de la clase en español. Cada oración que Batz entiende pasa a ser una premisa, y cada respuesta cita la oración exacta de la que salió, con su prueba o con un contramodelo. Se guardan en este equipo.</p>
 
       <div id="nb-empty" class="block" hidden>
         <h3>Todavía no hay cuadernos</h3>
@@ -281,7 +298,7 @@
         </div>
 
         <details class="more"><summary>Exportar, importar o borrar</summary>
-          <p class="hint">El archivo exportado lleva las fuentes y las lecturas que elegiste; se puede abrir en otro equipo con LOGOS.</p>
+          <p class="hint">El archivo exportado lleva las fuentes y las lecturas que elegiste; se puede abrir en otro equipo con Batz.</p>
           <div class="actions"><button id="nb-export" class="button secondary" type="button">Exportar cuaderno</button><button id="nb-import" class="button secondary" type="button">Importar cuaderno</button>
             <input id="nb-import-file" type="file" accept=".json,application/json" hidden><button id="nb-delete" class="button secondary" type="button">Borrar cuaderno</button></div>
         </details>

@@ -123,3 +123,7 @@ reproductor abierto y en pantalla completa. Fallos simulados (WebGL nulo, GLB ab
 movimiento reducido): el texto, los pasos y los controles siguen operativos; WebGL y GLB fallidos muestran el aviso y la
 vista 2D. Cero solicitudes a hosts externos. No probado: voz española real, teléfono físico, Evaluar en el modelo grande
 en móvil (fuera de alcance).
+
+## Marca Batz («hilo») y motivos de cuerda
+
+Nombre visible cambiado de LOGOS a Batz (títulos, barra lateral, ayudas, taller de Practicar); el paquete Python, las rutas de la API y las claves `localStorage` conservan `logos` para no romper datos. `styles/thread.css`: marca provisional (hilo con nudo, sustituible por el logotipo que envíe el usuario), cuerda trenzada como filo del encabezado y de los separadores, hilo vertical con nudo en la barra lateral, pasos de Evaluar enhebrados y título con hilo corto. Añadidos: guía de símbolos y «Modo presentación» (letra grande, sin barra lateral) en el panel de Ayuda; el texto de Cuadernos explica que son apuntes interrogables.

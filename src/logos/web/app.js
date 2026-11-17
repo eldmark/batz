@@ -1327,7 +1327,7 @@ async function proveFormula() {
 const DICT_FEATURES = {N: [['M', 'Masculino'], ['F', 'Femenino'], ['C', 'Los dos']], NP: [['M', 'Masculino'], ['F', 'Femenino']],
   V: [['I', 'Sin objeto (duerme)'], ['T', 'Con objeto (admira a…)'], ['IT', 'Las dos (lee / lee un libro)']], ADJ: [['-', 'Se flexiona solo']]};
 const DICT_FORMS = ['él/ella, presente', 'ellos, presente', 'él/ella, subjuntivo', 'ellos, subjuntivo', 'él/ella, pasado', 'ellos, pasado'];
-const DICT_SOURCE = {base: ['base', 'Léxico base: viene con LOGOS y no se edita.'],
+const DICT_SOURCE = {base: ['base', 'Léxico base: viene con Batz y no se edita.'],
   usuario: ['tuya', 'Añadida por ti. Se guarda en este equipo, aparte del léxico base.'],
   auto: ['automática', 'Deducida sola: diminutivo o participio de otra palabra.']};
 const DICT_ORIGIN_LABEL = {evaluate: 'Evaluar modelo', prove: 'Demostrar', notebook: 'Cuadernos', practice: 'Practicar'};
@@ -1830,7 +1830,7 @@ async function notebookFile(file) {
     const text = await file.text();
     if (/\.json$/i.test(file.name)) {
       let data;
-      try { data = JSON.parse(text); } catch { throw Error('El archivo no es un cuaderno de LOGOS.'); }
+      try { data = JSON.parse(text); } catch { throw Error('El archivo no es un cuaderno de Batz.'); }
       const result = await nbCall('import', {notebook: data});
       nbOpen = null; setNotebook(result.notebook);
       toast(`Cuaderno «${nb.title}» importado.`, 'success');
@@ -2058,7 +2058,7 @@ const SECTION_HELP = {
   evaluate: 'Evaluar comprueba si una fórmula es verdadera en UNA interpretación: dominio, símbolos y tablas. Verdadera aquí no significa válida en todos los modelos.',
   practice: 'Practicar propone ejercicios progresivos de demostración. Cada jugada se comprueba con el verificador; puedes pedir una pista o ver la solución.',
   prove: 'Demostrar pregunta si la conclusión se sigue de las premisas en TODOS los modelos. No hay una interpretación concreta: la respuesta es una prueba o un contramodelo.',
-  notebook: 'Un cuaderno reúne fuentes en español; cada oración entendida es una premisa. Las respuestas citan de qué oración salió cada una. «Se sigue de tus fuentes» no dice que lo que dicen sea cierto.',
+  notebook: 'Un cuaderno son tus apuntes (por ejemplo los de la clase) en español, pero interrogables: cada oración entendida es una premisa y cada respuesta cita la oración exacta de la que salió, con prueba o contramodelo. «Se sigue de tus fuentes» no dice que lo que dicen sea cierto: solo que lo concluyes de ellas.',
   dictionary: 'El diccionario enlaza palabras y formas conjugadas con su lema, categoría y símbolo. Las palabras que añadas se guardan aparte del léxico base.',
 };
 const SAMPLE_LABEL = {evaluate: 'Ejemplo de evaluación', prove: 'Ejemplo de demostración', dictionary: 'Ejemplo de consulta', notebook: 'Cuaderno de ejemplo'};
@@ -2075,7 +2075,7 @@ function setMode(mode) {
     const link = $(`tab-${route.id}`);
     if (route.id === mode) link.setAttribute('aria-current', 'page'); else link.removeAttribute('aria-current');
   }
-  document.title = `${titleFor(mode)} · LOGOS`;
+  document.title = `${titleFor(mode)} · Batz`;
   $('page-title').textContent = titleFor(mode);
   $('help-text').textContent = SECTION_HELP[mode];
   $('help-panel').hidden = true; $('help-button').setAttribute('aria-expanded', 'false');
@@ -2148,6 +2148,14 @@ const applyAutoSidebar = () => { if (!sidebarSaved && !document.body.dataset.sid
 if (sidebarSaved) setSidebarCollapsed(sidebarSaved === 'collapsed', false); else applyAutoSidebar();
 narrowDesktop.addEventListener('change', applyAutoSidebar);
 
+function setPresenting(on) {
+  document.body.classList.toggle('presenting', on);
+  $('present-toggle').setAttribute('aria-pressed', String(on));
+  if (on) { $('help-panel').hidden = true; $('help-button').setAttribute('aria-expanded', 'false'); toast('Modo presentación: letra grande, sin barra lateral.', 'info', 2500); }
+  else $('help-button').focus();
+}
+$('present-toggle').addEventListener('click', () => setPresenting(!document.body.classList.contains('presenting')));
+$('present-exit').addEventListener('click', () => setPresenting(false));
 $('help-button').addEventListener('click', () => {
   const open = $('help-panel').hidden;
   $('help-panel').hidden = !open; $('help-button').setAttribute('aria-expanded', String(open));

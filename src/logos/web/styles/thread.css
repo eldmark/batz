@@ -1,0 +1,69 @@
+/* Batz = «hilo». Motivos de cuerda: el hilo une los pasos, marca dónde estás y trenza los separadores.
+   Todo con los tokens existentes; el logotipo definitivo sustituirá a .brand-mark cuando llegue. */
+:root {
+  --thread: var(--brand-500);
+  --thread-soft: var(--brand-300);
+  --rope: repeating-linear-gradient(135deg, var(--brand-600) 0 3px, var(--brand-300) 3px 6px);
+}
+
+/* ── Marca ── */
+.wordmark { display: flex; align-items: center; gap: var(--s2); flex-wrap: wrap; }
+.brand-mark { flex: none; width: 34px; height: 34px; }
+.brand-mark .thread { fill: none; stroke: var(--brand-200); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.brand-mark .knot { fill: var(--signal-300); }
+.wordmark .brand-name { display: inline; margin: 0; font: 600 26px/1 var(--serif); letter-spacing: .04em; color: var(--brand-50); }
+.wordmark .brand-sub { flex-basis: 100%; margin: 0; font: 400 12px/1.2 var(--sans); letter-spacing: 0; color: var(--brand-100); }
+body[data-sidebar=collapsed] .brand-mark { margin-inline: auto; }
+body[data-sidebar=collapsed] .brand-name, body[data-sidebar=collapsed] .brand-sub { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* ── Encabezado: una cuerda trenzada como filo inferior ── */
+.appbar { position: relative; border-bottom: 0; }
+.appbar::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: var(--rope); opacity: .55; }
+
+/* ── Barra lateral: un hilo vertical con un nudo en la sección activa ── */
+.nav { position: relative; }
+.nav::before { content: ""; position: absolute; left: -4px; top: 8px; bottom: 8px; width: 2px; background: repeating-linear-gradient(to bottom, var(--brand-400) 0 6px, transparent 6px 10px); opacity: .45; }
+.nav-link { position: relative; z-index: 1; }
+.nav-link[aria-current=page]::before { content: ""; position: absolute; left: -8px; top: 50%; width: 9px; height: 9px; margin-top: -4.5px; border-radius: 50%; background: var(--signal-300); box-shadow: 0 0 0 3px var(--emph-4-bg); }
+
+/* ── Asistente de Evaluar: los pasos van enhebrados ── */
+.wizard-steps { position: relative; }
+.wizard-steps::before { content: ""; position: absolute; left: 6%; right: 6%; top: 50%; height: 3px; transform: translateY(-50%); background: repeating-linear-gradient(90deg, var(--border-strong) 0 8px, transparent 8px 13px); }
+.wizard-steps li { position: relative; z-index: 1; }
+.wz-step { box-shadow: 0 0 0 4px var(--canvas); }
+.wz-step[data-done=true]:not([aria-current=step]) { border-color: var(--brand-400); }
+.wz-step[aria-current=step]::after { content: ""; position: absolute; right: -9px; top: 50%; width: 10px; height: 10px; margin-top: -5px; border-radius: 50%; background: var(--signal-400); box-shadow: 0 0 0 3px var(--canvas); }
+
+/* ── Títulos de panel: un hilo corto con nudo, y separadores de cuerda ── */
+.wizard .pane-title::after, .home-question::after { content: ""; display: block; width: 72px; height: 10px; margin-top: var(--s2);
+  background: radial-gradient(circle at 5px 5px, var(--signal-400) 0 4px, transparent 4.5px), linear-gradient(var(--thread), var(--thread)) 12px 4px / 60px 2px no-repeat; }
+.more, .wizard .spanish-panel, .wz-back, .nb-history { border-top: 0; position: relative; }
+.more::before, .wizard .spanish-panel::before, .wz-back::before, .nb-history::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3px; background: var(--rope); opacity: .35; border-radius: 2px; }
+.result-formula { padding-left: var(--s3); border-left: 3px solid var(--thread-soft); }
+#wz-result .verdict { position: relative; }
+#wz-result .verdict::after { content: ""; position: absolute; left: var(--s4); right: var(--s4); bottom: 0; height: 4px; background: var(--rope); opacity: .5; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .brand-mark .thread { stroke-dasharray: 90; stroke-dashoffset: 90; animation: thread-in 1.1s .15s var(--out) forwards; }
+}
+@keyframes thread-in { to { stroke-dashoffset: 0; } }
+@media (max-width: 720px) { .wizard-steps::before { display: none; } .wz-step[aria-current=step]::after { display: none; } }
+
+/* ── Modo presentación: letra grande y solo lo esencial ── */
+body.presenting { font-size: 18px; }
+body.presenting .sidebar, body.presenting .shell > footer { display: none; }
+body.presenting .app { display: block; }
+body.presenting .menu-button { display: none; }
+body.presenting .pane-lede, body.presenting .hint { font-size: 16px; }
+body.presenting textarea, body.presenting input:not([type=checkbox]) { font-size: 22px; }
+.presenting-bar { display: none; }
+body.presenting .presenting-bar { display: block; position: fixed; right: var(--s4); bottom: var(--s4); z-index: 40; }
+
+/* ── Guía de símbolos (panel de Ayuda) ── */
+.symbol-guide { margin-top: var(--s3); }
+.symbol-guide summary { cursor: pointer; font-weight: 600; }
+.symbol-guide table { width: 100%; margin-top: var(--s2); border-collapse: collapse; font-size: 14px; }
+.symbol-guide th, .symbol-guide td { padding: 4px var(--s2); text-align: left; border-bottom: 1px solid color-mix(in oklab, var(--info-solid) 35%, transparent); vertical-align: top; }
+.symbol-guide td:first-child { font: 600 16px/1.3 var(--mono); white-space: nowrap; }
+
+.wz-step[aria-disabled=true] { opacity: 1; background: var(--surface-sunken); color: var(--text-muted); }
