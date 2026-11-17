@@ -17,3 +17,8 @@ test('Practicar tiene ruta y el enlace anterior #practicar sigue funcionando', (
   assert.equal(routeFromHash('#practicar'), 'practice');
   assert.ok(isKnownHash('#practicar'));
 });
+test('Aprender tiene ruta #/aprender con id learn', () => {
+  assert.equal(routeFromHash('#/aprender'), 'learn');
+  assert.equal(hashFor('learn'), '#/aprender');
+  assert.ok(isKnownHash('#/aprender/'));
+});

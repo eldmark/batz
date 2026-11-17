@@ -1,6 +1,7 @@
 import {ROUTES, routeFromHash, hashFor, titleFor, isKnownHash} from '/app/navigation.js';
 import {renderHome} from '/features/home/home.js';
 import {buildEvaluationHtml, buildProofHtml, download, printHtml} from '/features/export/export.js';
+import {initLearn} from '/features/learn/learn.js';
 import {createExplanationPlayer} from '/features/explanation-player/index.js';
 import {EXAMPLE_GROUPS, EXAMPLES, defaultExample, examplePackage, SPANISH_PHRASES} from '/features/evaluator/examples.js';
 import {createTour} from '/features/tour/tour.js';
@@ -2071,13 +2072,14 @@ $('nb-question').addEventListener('input', clearNotebookAnswer);
 confirmClick($('nb-history-clear'), '¿Vaciar la lista?', () => nbChange('clear-chat', {}, {keepAnswer: true}));
 
 // --- navegación: rutas con hash, sidebar y encabezado ---
-const MODES = ['evaluate', 'prove', 'practice', 'dictionary', 'notebook'];
+const MODES = ['evaluate', 'prove', 'practice', 'dictionary', 'notebook', 'learn'];
 const SECTION_HELP = {
   home: 'Elige una herramienta o empieza con uno de los tres ejercicios. Puedes volver aquí desde «Inicio».',
   evaluate: 'Evaluar comprueba si una fórmula es verdadera en UNA interpretación: dominio, símbolos y tablas. Verdadera aquí no significa válida en todos los modelos.',
   practice: 'Practicar propone ejercicios progresivos de demostración. Cada jugada se comprueba con el verificador; puedes pedir una pista o ver la solución.',
   prove: 'Demostrar pregunta si la conclusión se sigue de las premisas en TODOS los modelos. No hay una interpretación concreta: la respuesta es una prueba o un contramodelo.',
   notebook: 'Un cuaderno son tus apuntes (por ejemplo los de la clase) en español, pero interrogables: cada oración entendida es una premisa y cada respuesta cita la oración exacta de la que salió, con prueba o contramodelo. «Se sigue de tus fuentes» no dice que lo que dicen sea cierto: solo que lo concluyes de ellas.',
+  learn: 'Aprender reúne una línea de tiempo con la historia de la lógica matemática y de predicados, y tarjetas de teoría para estudiar: voltéalas, filtra por tema, marca las que sabías y repasa las demás. Tu progreso se guarda solo en este navegador.',
   dictionary: 'El diccionario enlaza palabras y formas conjugadas con su lema, categoría y símbolo. Las palabras que añadas se guardan aparte del léxico base.',
 };
 const SAMPLE_LABEL = {evaluate: 'Ejemplo de evaluación', prove: 'Ejemplo de demostración', dictionary: 'Ejemplo de consulta', notebook: 'Cuaderno de ejemplo'};
@@ -2100,7 +2102,7 @@ function setMode(mode) {
   $('help-panel').hidden = true; $('help-button').setAttribute('aria-expanded', 'false');
   $('import-json').hidden = mode !== 'evaluate';
   if (mode === 'evaluate') setStep(wizardStep, {focus: false});
-  $('sample').hidden = mode === 'home' || mode === 'practice' || mode === 'evaluate';
+  $('sample').hidden = mode === 'home' || mode === 'practice' || mode === 'evaluate' || mode === 'learn';
   if (mode !== 'home') $('sample').querySelector('.label').textContent = SAMPLE_LABEL[mode];
   closeMenu();
   pillHosts().forEach(placePill);
@@ -2307,6 +2309,7 @@ pillHosts().forEach(host => { pillObserver.observe(host); placePill(host); });
 document.fonts?.ready.then(() => pillHosts().forEach(placePill));
 addSymbol('P', 'predicate', 1);
 prepare();
+initLearn($('mode-learn'));
 if (location.hash && !isKnownHash(location.hash)) history.replaceState(null, '', hashFor('home'));
 setMode(routeFromHash(location.hash));
 const tour = createTour({go, openMenu, closeMenu, storage: (() => { try { return localStorage; } catch { return null; } })()});
