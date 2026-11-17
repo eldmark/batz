@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {HISTORY, HISTORY_TOPICS, CARDS, CARD_TOPICS} from '../../../src/logos/web/features/learn/data.js';
+import {PEOPLE, person, initials} from '../../../src/logos/web/features/people/people.js';
+import {visibleMilestones, clampIndex, stepIndex, neighbors, isFirst, isLast, indexAfterFilter, nearestIndex, swipeDelta, trackYear, peopleOf, unknownSlugs, needsVisibleCredit, announce} from '../../../src/logos/web/features/learn/timeline.js';
 import {shuffle, filterCards, emptyProgress, sanitizeProgress, loadProgress, saveProgress, clearProgress, mark, statusOf, summary, buildQueue, step, STORAGE_KEY} from '../../../src/logos/web/features/learn/deck.js';
 
 const seeded = seed => () => (seed = (seed * 1664525 + 1013904223) % 4294967296) / 4294967296;
@@ -82,4 +84,68 @@ test('sanitizeProgress: descarta ids ajenos, duplicados y solapes', () => {
   assert.deepEqual(p, {known: ['termino'], review: ['atomo']});
   assert.deepEqual(sanitizeProgress('x', CARDS), emptyProgress());
   assert.deepEqual(sanitizeProgress({known: 'termino'}, CARDS), emptyProgress());
+});
+
+// ───────── Línea del tiempo ─────────
+test('historia: 18 hitos en orden cronológico por año de inicio', () => {
+  assert.equal(HISTORY.length, 18);
+  const start = h => { const m = /\d{3,4}/.exec(h.year); return m ? +m[0] : h.year.includes('a. C.') ? -400 : 1650; };
+  const ys = HISTORY.map(start);
+  assert.deepEqual([...ys].sort((a, b) => a - b), ys);
+});
+test('mapeo hito→personas: slugs válidos contra people.js, sin repetir y con el nombre en el texto', () => {
+  assert.deepEqual(unknownSlugs(HISTORY, person), []);
+  for (const h of HISTORY) {
+    assert.ok(h.slugs.length >= 1, h.id);
+    assert.equal(new Set(h.slugs).size, h.slugs.length);
+    for (const slug of h.slugs) { const last = PEOPLE[slug].name.split(' ').pop(); assert.ok(h.people.includes(last), `${h.id}: ${last} en «${h.people}»`); }
+  }
+  const by = id => HISTORY.find(h => h.id === id).slugs;
+  assert.deepEqual(by('principia').sort(), ['russell', 'whitehead']);
+  assert.deepEqual(by('godel-completitud'), ['godel']);
+  assert.deepEqual(by('church-turing'), ['church', 'turing']);
+  assert.equal(peopleOf(HISTORY[0], person)[0].name, 'Aristóteles');
+  assert.deepEqual(peopleOf({slugs: ['nadie', 'godel']}, person).map(p => p.slug), ['godel']);
+  assert.deepEqual(peopleOf({}, person), []);
+});
+test('retratos: el archivo existe; sin foto hay iniciales; CC exige crédito visible con enlace', async () => {
+  const {existsSync} = await import('node:fs');
+  const used = new Set(HISTORY.flatMap(h => h.slugs));
+  for (const slug of used) {
+    const p = PEOPLE[slug];
+    if (p.image) assert.ok(existsSync(new URL('../../../src/logos/web' + p.image, import.meta.url)), slug); else assert.ok(initials(slug).length >= 2, slug);
+    if (needsVisibleCredit(p)) { assert.ok(p.credit && /^https:\/\//.test(p.creditUrl), slug); }
+  }
+  assert.deepEqual([...used].filter(s => needsVisibleCredit(PEOPLE[s])).sort(), ['gentzen', 'lowenheim', 'robinson', 'tarski']);
+  assert.deepEqual([...used].filter(s => !PEOPLE[s].image).sort(), ['church', 'fitch', 'jaskowski']);
+});
+test('vecinos antes/después y límites en el primero y el último', () => {
+  const list = visibleMilestones(HISTORY, 'todos');
+  assert.deepEqual(neighbors(list, 0), {prev: null, next: list[1]});
+  assert.deepEqual(neighbors(list, 5), {prev: list[4], next: list[6]});
+  assert.deepEqual(neighbors(list, 17), {prev: list[16], next: null});
+  assert.deepEqual(neighbors([], 0), {prev: null, next: null});
+  assert.deepEqual(neighbors([list[0]], 0), {prev: null, next: null});
+  assert.ok(isFirst(0) && !isFirst(1) && isLast(17, 18) && !isLast(16, 18) && !isLast(0, 0));
+});
+test('stepIndex / clampIndex: sin dar la vuelta', () => {
+  assert.equal(stepIndex(0, 18, -1), 0); assert.equal(stepIndex(17, 18, 1), 17); assert.equal(stepIndex(3, 18, 1), 4);
+  assert.equal(clampIndex(99, 5), 4); assert.equal(clampIndex(-3, 5), 0); assert.equal(clampIndex(NaN, 5), 0); assert.equal(clampIndex(2, 0), 0);
+});
+test('filtro por tema: solo recorre los hitos del tema y conserva el actual si sigue visible', () => {
+  assert.equal(visibleMilestones(HISTORY, 'todos').length, 18);
+  for (const t of HISTORY_TOPICS) { const l = visibleMilestones(HISTORY, t.id); assert.ok(l.length >= 1 && l.every(h => h.topic === t.id), t.id); }
+  assert.equal(visibleMilestones(HISTORY, 'no-existe').length, 0);
+  const lim = visibleMilestones(HISTORY, 'limites');
+  assert.equal(indexAfterFilter(lim, 'godel-incompletitud'), lim.findIndex(h => h.id === 'godel-incompletitud'));
+  assert.equal(indexAfterFilter(lim, 'boole'), 0);
+  assert.equal(neighbors(lim, 0).prev, null);
+  assert.equal(neighbors(lim, lim.length - 1).next, null);
+});
+test('arrastre, deslizamiento y etiquetas del hilo', () => {
+  assert.equal(nearestIndex([10, 60, 110], 70), 1); assert.equal(nearestIndex([10, 60, 110], -50), 0); assert.equal(nearestIndex([10, 60, 110], 999), 2);
+  assert.equal(swipeDelta(-80, 5), 1); assert.equal(swipeDelta(80, 5), -1); assert.equal(swipeDelta(20, 0), 0); assert.equal(swipeDelta(-80, 70), 0);
+  assert.equal(trackYear('1847 y 1854'), '1847'); assert.equal(trackYear('década de 1880'), '1880s'); assert.equal(trackYear('s. IV a. C.'), 'IV a. C.');
+  assert.equal(trackYear('s. XVII'), 'XVII'); assert.equal(trackYear('1901–1902'), '1901');
+  assert.equal(announce(HISTORY[3], 3, 18), 'Hito 4 de 18: 1879, «Begriffsschrift»: cuantificadores y predicados.');
 });
