@@ -338,6 +338,8 @@ class Handler(BaseHTTPRequestHandler):
                  "/features/explanation-player/events.js": ("features/explanation-player/events.js", "text/javascript; charset=utf-8"),
                  "/features/explanation-player/fullscreen.js": ("features/explanation-player/fullscreen.js", "text/javascript; charset=utf-8"),
                  "/features/explanation-player/player.css": ("features/explanation-player/player.css", "text/css; charset=utf-8"),
+                 "/features/evaluator/examples.js": ("features/evaluator/examples.js", "text/javascript; charset=utf-8"),
+                 "/styles/evaluator.css": ("styles/evaluator.css", "text/css; charset=utf-8"),
                  "/styles/shell.css": ("styles/shell.css", "text/css; charset=utf-8"),
                  "/app/navigation.js": ("app/navigation.js", "text/javascript; charset=utf-8"),
                  "/features/home/home.js": ("features/home/home.js", "text/javascript; charset=utf-8"),

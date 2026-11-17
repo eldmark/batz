@@ -1,6 +1,7 @@
 import {ROUTES, routeFromHash, hashFor, titleFor, isKnownHash} from '/app/navigation.js';
 import {renderHome} from '/features/home/home.js';
 import {createExplanationPlayer} from '/features/explanation-player/index.js';
+import {EXAMPLE_GROUPS, EXAMPLES, defaultExample, examplePackage, SPANISH_PHRASES} from '/features/evaluator/examples.js';
 import {createTour} from '/features/tour/tour.js';
 
 const $ = (id) => document.getElementById(id);
@@ -459,8 +460,10 @@ function refreshReady() {
   $('evaluate').disabled = !ready || !formulaBox.value.trim();
   $('export-json').disabled = !ready;
   $('find-countermodel').disabled = !preparedSignature || !formulaBox.value.trim();
-  $('model-state').textContent = ready ? '✓' : '';
-  $('model-state').title = ready ? 'Modelo completo' : '';
+  $('go-question').disabled = !ready;
+  $('model-next-note').textContent = ready ? '' : note;
+  evalDone = false;
+  updateStepper();
 }
 
 async function api(route, payload) {
@@ -684,7 +687,9 @@ function explanationElement(data, root = false) {
 async function evaluateFormula() {
   clearStory('evaluate');
   const resultBox = $('result'); resultBox.replaceChildren();
-  await withBusy($('evaluate'), 'Evaluando…', async () => {
+  $('result-actions').querySelectorAll('.story-open').forEach(button => button.remove());
+  $('run-error').hidden = true;
+  await withBusy($('evaluate'), 'Verificando…', async () => {
     try {
       const model = interpretation();
       const assignment = {};
@@ -698,10 +703,11 @@ async function evaluateFormula() {
       if (result.status !== 'ok') {
         const error = result.errors?.[0] || {message: 'Entrada inválida.'};
         showFormulaError(error);
-        resultBox.append(node('p', error.message, 'error'));
+        showRunError(error.message);
         return 'fail';
       }
       showFormulaError(null);
+      renderResultFormula(assignment);
       resultBox.append(verdictElement(result.value ? 'Verdadero' : 'Falso', result.value ? 'true' : 'false', result.explanation.summary));
       const reasons = node('div', undefined, 'reasons');
       const tree = explanationElement(result.explanation, true);
@@ -719,18 +725,19 @@ async function evaluateFormula() {
       const choose = key => {
         for (const b of switcher.children) b.setAttribute('aria-pressed', String(b.dataset.key === key));
         reasons.hidden = key !== 'reasons';
-        if (key === 'tree') { treePanel ||= (() => { const v = treeViewer({semantic: result.tree, syntax: result.syntax}); resultBox.insertBefore(v, reasons.nextSibling); return v; })(); }
+        if (key === 'tree') { treePanel ||= (() => { const v = treeViewer({semantic: result.tree, syntax: result.syntax}); reasons.after(v); return v; })(); }
         if (treePanel) treePanel.hidden = key !== 'tree';
       };
       for (const [key, label] of [['reasons', 'Razones'], ['tree', 'Árbol']]) {
         const b = node('button', label, 'view'); b.type = 'button'; b.dataset.key = key; b.addEventListener('click', () => choose(key)); switcher.append(b);
       }
       head.append(node('h3', 'Por qué'), switcher);
-      resultBox.append(head, reasons); choose('reasons');
-      showStory(result.story, result.model, resultBox, {origin: 'evaluate', kind: 'evaluation', title: 'Evaluación semántica'});
-      if (phoneLayout()) resultBox.scrollIntoView({behavior: reduceMotion() ? 'auto' : 'smooth', block: 'start'});
+      const why = node('details', undefined, 'why more'); why.append(node('summary', 'Ver por qué'), head, reasons);
+      resultBox.append(why); choose('reasons');
+      showStory(result.story, result.model, $('result-actions'), {origin: 'evaluate', kind: 'evaluation', title: 'Evaluación semántica'});
+      evalDone = true; setStep(3);
       return 'done';
-    } catch (exc) { resultBox.append(node('p', exc.message || 'No se pudo evaluar.', 'error')); return 'fail'; }
+    } catch (exc) { showRunError(exc.message || 'No se pudo evaluar.'); return 'fail'; }
   });
 }
 
@@ -756,20 +763,133 @@ function loadDictionarySample() {
   toast('Ejemplo: «duermen» se encuentra por su lema, dormir.');
 }
 
-function loadSample() {
-  symbolsBody.replaceChildren();
-  addSymbol('a', 'constant', 0); addSymbol('P', 'predicate', 1); addSymbol('Q', 'predicate', 1);
-  $('domain').value = '0, 1'; prepare();
-  interpretationBox.querySelector('[data-constant]').value = '0';
-  for (const row of interpretationBox.querySelectorAll('tr[data-predicate]')) {
-    const args = JSON.parse(row.dataset.args);
-    row.querySelector('input').checked = row.dataset.predicate === 'P' ? args[0] === 0 : args[0] === 1;
+function loadSample() { return loadExample(defaultExample); }
+
+
+// ── Evaluar como asistente de tres pasos: Modelo → Fórmula → Resultado ──
+let wizardStep = 1;
+let evalDone = false;    // hay un resultado vigente para el paso 3
+const wizardPanels = () => [...$('mode-evaluate').querySelectorAll('[data-step-panel]')];
+function modelIsReady() { try { return !!preparedSignature && !!interpretation(); } catch { return false; } }
+
+function updateStepper() {
+  for (const button of $('wizard-steps').querySelectorAll('.wz-step')) {
+    const n = Number(button.dataset.step);
+    const reachable = n === 1 || (n === 2 && modelIsReady()) || (n === 3 && evalDone);
+    button.setAttribute('aria-disabled', String(!reachable));
+    if (n === wizardStep) button.setAttribute('aria-current', 'step'); else button.removeAttribute('aria-current');
+    button.dataset.done = String(n < wizardStep || (n === 2 && modelIsReady()) || (n === 3 && evalDone));
   }
-  formulaBox.value = '∀x (P(x) → Q(x))'; updateFree(); refreshReady();
-  $('result').replaceChildren();
-  setPane($('mode-evaluate'), 'question');
-  toast('Ejemplo cargado: D = {0, 1}, P = {0}, Q = {1}.');
 }
+function renderModelSummary() {
+  const parts = [];
+  if (domain.length) parts.push(`D = {${domain.map(valueLabel).join(', ')}}`);
+  if (preparedSignature) {
+    const sig = preparedSignature;
+    const names = [...sig.constants, ...Object.entries(sig.functions).map(([n, a]) => `${n}/${a}`), ...Object.entries(sig.predicates).map(([n, a]) => `${n}/${a}`)];
+    if (names.length) parts.push(`Lenguaje: ${names.join(', ')}`);
+  }
+  $('model-summary-text').textContent = parts.join(' · ') || 'Aún no hay modelo.';
+}
+function renderResultFormula(assignment = {}) {
+  const box = $('result-formula'); box.replaceChildren(node('code', formulaBox.value.trim()));
+  const env = Object.entries(assignment);
+  if (env.length) box.append(node('span', env.map(([k, v]) => `${k} = ${valueLabel(v)}`).join(', '), 'chip'));
+}
+function showRunError(message) { const box = $('run-error'); box.textContent = message; box.hidden = false; }
+
+function setStep(step, {focus = true} = {}) {
+  if (step === 2 && !modelIsReady()) step = 1;
+  if (step === 3 && !evalDone) step = 2;
+  const changed = step !== wizardStep;
+  wizardStep = step;
+  $('mode-evaluate').dataset.step = String(step);
+  for (const panel of wizardPanels()) panel.hidden = Number(panel.dataset.stepPanel) !== step;
+  if (step === 2) renderModelSummary();
+  updateStepper();
+  if (focus && changed) {
+    const heading = {1: 'model-heading', 2: 'formula-heading', 3: 'result-title'}[step];
+    window.scrollTo({top: 0, behavior: 'auto'});
+    $(heading).focus({preventScroll: true});
+  }
+}
+for (const button of $('wizard-steps').querySelectorAll('.wz-step')) {
+  button.addEventListener('click', () => { if (button.getAttribute('aria-disabled') !== 'true') setStep(Number(button.dataset.step)); });
+}
+$('edit-model').addEventListener('click', () => setStep(1));
+$('back-model').addEventListener('click', () => setStep(1));
+$('change-formula').addEventListener('click', () => { setStep(2); formulaBox.focus(); });
+
+/** Copia del estado de Evaluar para poder deshacer un reemplazo. */
+function snapshotEvaluate() {
+  try { return preparedSignature ? {payload: {schema_version: '1', signature: preparedSignature, interpretation: interpretation(), formula: formulaBox.value}} : null; }
+  catch { return null; }
+}
+async function restoreEvaluate(snapshot) {
+  const loaded = await api('/api/load', {text: JSON.stringify(snapshot.payload)});
+  if (loaded.status !== 'ok') return toast('No se pudo restaurar el modelo anterior.', 'error');
+  await applyPackage({signature: loaded.signature, formula: snapshot.payload.formula}, loaded.model);
+  setStep(modelIsReady() ? 2 : 1);
+}
+
+/** Carga un caso de ejemplo completo (modelo y fórmula) y deja el paso de la fórmula listo para verificar. */
+async function loadExample(example, {announce = true} = {}) {
+  const had = formulaBox.value.trim() !== '' || symbolsBody.rows.length > 1;
+  const snapshot = had ? snapshotEvaluate() : null;
+  const pack = examplePackage(example);
+  evalInputs++; $('batch').hidden = true;
+  await applyPackage({signature: pack.signature, formula: pack.formula}, pack.model);
+  for (const select of $('assignment').querySelectorAll('select[data-variable]')) {
+    const value = example.assignment?.[select.dataset.variable];
+    const index = domain.findIndex(item => sameValue(item, value));
+    if (index >= 0) select.value = String(index);
+  }
+  refreshReady();
+  setStep(2);
+  if (announce) toast(`Caso cargado: ${example.title}.${example.note ? ` ${example.note}` : ''}`, 'success', 7000, had && snapshot ? {label: 'Deshacer', run: () => restoreEvaluate(snapshot)} : null);
+}
+
+/** Frase en español: la lectura elegida fija la fórmula. Solo se añaden al lenguaje los símbolos que falten. */
+function useSpanishReading(reading, box) {
+  const have = new Map([...symbolsBody.rows].map(row => {
+    const [name, kind, arity] = [...row.querySelectorAll('input,select')].map(x => x.value.trim());
+    return [name, `${kind}/${kind === 'constant' ? 0 : arity}`];
+  }));
+  const wanted = [...reading.signature.constants.map(n => [n, 'constant', 0]),
+    ...Object.entries(reading.signature.functions).map(([n, a]) => [n, 'function', a]),
+    ...Object.entries(reading.signature.predicates).map(([n, a]) => [n, 'predicate', a])];
+  const missing = wanted.filter(([name]) => !have.has(name));
+  const clash = wanted.filter(([name, kind, arity]) => have.has(name) && have.get(name) !== `${kind}/${arity}`);
+  if (clash.length) { box.replaceChildren(node('p', `«${clash[0][0]}» ya existe en el modelo con otro tipo o aridad. Cámbialo en el paso 1.`, 'error')); return; }
+  formulaBox.value = reading.formula;
+  box.replaceChildren(node('p', `Lectura ${reading.id} elegida.`, 'hint'));
+  if (!missing.length) { evalInputs++; updateFree(); refreshReady(); toast('Lectura elegida: la fórmula está lista para verificar.', 'success'); return; }
+  const snapshot = snapshotEvaluate();
+  for (const [name, kind, arity] of missing) addSymbol(name, kind, arity);
+  prepare(); setStep(1);
+  toast(`Añadí ${missing.map(([n]) => n).join(', ')} al lenguaje: completa su interpretación y sigue.`, 'warning', 9000, snapshot && {label: 'Deshacer', run: () => restoreEvaluate(snapshot)});
+}
+
+function fillExampleSelects() {
+  for (const select of document.querySelectorAll('[data-example-select]')) {
+    select.append(Object.assign(document.createElement('option'), {value: '', textContent: 'Elige un caso…'}));
+    for (const group of EXAMPLE_GROUPS) {
+      const optgroup = document.createElement('optgroup'); optgroup.label = group.title;
+      for (const item of group.items) optgroup.append(Object.assign(document.createElement('option'), {value: item.id, textContent: item.title}));
+      select.append(optgroup);
+    }
+    select.addEventListener('change', () => {
+      const example = EXAMPLES.find(item => item.id === select.value);
+      select.value = '';
+      if (example) loadExample(example);
+    });
+  }
+  const phrases = $('spanish-example');
+  phrases.append(Object.assign(document.createElement('option'), {value: '', textContent: 'Frases de ejemplo…'}));
+  for (const phrase of SPANISH_PHRASES) phrases.append(Object.assign(document.createElement('option'), {value: phrase, textContent: phrase}));
+  phrases.addEventListener('change', () => { if (phrases.value) { $('spanish-input').value = phrases.value; phrases.value = ''; showSpanishReadings(); } });
+}
+fillExampleSelects();
 
 function exportJSON() {
   try {
@@ -857,7 +977,7 @@ async function loadFile(file) {
     const count = loaded.results.length;
     toast(`${file.name}: modelo cargado` + (count ? `, ${plural(count, 'fórmula evaluada', 'fórmulas evaluadas')}` : '') +
       (wrong ? `; ${wrong === 1 ? 'una tiene' : `${wrong} tienen`} error o un valor distinto del esperado.` : '.'), wrong ? 'warning' : 'success', 6000);
-    setPane($('mode-evaluate'), 'question');
+    setStep(2);
   } catch (exc) { toast(`No se pudo cargar: ${exc.message}`, 'error', 7000); }
   $('import-file').value = '';
 }
@@ -895,8 +1015,8 @@ async function searchCountermodel() {
       const load = node('button', 'Cargar este modelo en las tablas', 'button secondary'); load.type = 'button';
       load.addEventListener('click', () => {
         applyPackage({signature: preparedSignature, formula: formulaBox.value}, result.model);
-        setPane($('mode-evaluate'), 'model');
-        toast('Contramodelo cargado en las tablas.', 'success');
+        setStep(2);
+        toast('Contramodelo cargado como modelo: puedes verificar la fórmula en él.', 'success');
       });
       box.append(load, node('h3', '¿Por qué es falsa?'), explanationElement(result.explanation, true));
       showStory(result.story, result.model, box, {origin: 'evaluate', kind: 'countermodel', title: 'Búsqueda de contramodelo'});
@@ -940,19 +1060,9 @@ async function showSpanishReadings() {
     for (const reading of result.readings) {
       const row = node('div', undefined, 'spanish-reading');
       row.append(node('strong', reading.note), node('code', reading.formula));
-      const use = node('button', 'Usar esta lectura y preparar el modelo', 'button secondary');
+      const use = node('button', 'Usar esta lectura', 'button secondary');
       use.type = 'button';
-      use.addEventListener('click', () => {
-        symbolsBody.replaceChildren();
-        for (const name of reading.signature.constants) addSymbol(name, 'constant', 0);
-        for (const [name, arity] of Object.entries(reading.signature.functions)) addSymbol(name, 'function', arity);
-        for (const [name, arity] of Object.entries(reading.signature.predicates)) addSymbol(name, 'predicate', arity);
-        formulaBox.value = reading.formula;
-        prepare();
-        box.replaceChildren(node('p', `Lectura ${reading.id} elegida. Completa la interpretación para evaluarla.`, 'hint'));
-        setPane($('mode-evaluate'), 'model');
-        toast('Lectura elegida: ya están los símbolos. Completa la interpretación.', 'success');
-      });
+      use.addEventListener('click', () => useSpanishReading(reading, box));
       row.append(use);
       if (reading.tree) row.append(treeToggle('Ver árbol', () => treeViewer({syntax: reading.tree})));
       box.append(row);
@@ -1110,8 +1220,8 @@ async function openInEvaluate(found) {
     if (index >= 0) select.value = String(index);
   }
   refreshReady();
-  setPane($('mode-evaluate'), 'question');
-  toast('Contramodelo abierto en Evaluar con la conclusión: pulsa «Evaluar» para ver que es falsa.', 'success', 6000);
+  setStep(2);
+  toast('Contramodelo abierto en Evaluar con la conclusión: pulsa «Verificar» para ver que es falsa.', 'success', 6000);
 }
 
 const PROOF_LIMITS = {depth: 'la profundidad', nodes: 'el número de nodos', timeout: 'el tiempo',
@@ -1819,7 +1929,8 @@ function setMode(mode) {
   $('help-text').textContent = SECTION_HELP[mode];
   $('help-panel').hidden = true; $('help-button').setAttribute('aria-expanded', 'false');
   $('import-json').hidden = mode !== 'evaluate';
-  $('sample').hidden = mode === 'home' || mode === 'practice';
+  if (mode === 'evaluate') setStep(wizardStep, {focus: false});
+  $('sample').hidden = mode === 'home' || mode === 'practice' || mode === 'evaluate';
   if (mode !== 'home') $('sample').querySelector('.label').textContent = SAMPLE_LABEL[mode];
   closeMenu();
   pillHosts().forEach(placePill);
@@ -1887,13 +1998,7 @@ async function runExercise(exercise) {
   go(exercise.route);
   let undo = null;
   if (exercise.id === 'evaluate') {
-    const had = formulaBox.value.trim() !== '';
-    try { if (had && preparedSignature) undo = {kind: 'evaluate', payload: {schema_version: '1', signature: preparedSignature, interpretation: interpretation(), formula: formulaBox.value}}; } catch { /* tablas incompletas: no hay copia posible */ }
-    loadSample();
-    if (had) toast('Se reemplazó lo que había en Evaluar.', 'warning', 9000, undo && {label: 'Deshacer', run: async () => {
-      const loaded = await api('/api/load', {text: JSON.stringify(undo.payload)});
-      if (loaded.status === 'ok') applyPackage({signature: loaded.signature, formula: undo.payload.formula}, loaded.model);
-    }});
+    await loadExample(defaultExample);
   } else if (exercise.id === 'prove') {
     const before = ['proof-premises', 'proof-conclusion', 'proof-constants'].map(id => $(id).value);
     const had = before.some(value => value.trim());
@@ -1918,7 +2023,7 @@ function setPane(workspace, pane) {
   }
   placePill(workspace.querySelector(':scope > .subtabs'));
 }
-for (const workspace of [$('mode-evaluate'), $('mode-dictionary'), $('mode-notebook')]) {
+for (const workspace of [$('mode-dictionary'), $('mode-notebook')]) {
   const tabs = [...workspace.querySelectorAll(':scope > .subtabs .subtab')];
   tabs.forEach(tab => tab.addEventListener('click', () => {
     setPane(workspace, tab.id.endsWith('evidence') ? 'evidence' : tab.id.endsWith('question') ? 'question' : 'model');
@@ -1932,7 +2037,7 @@ for (const workspace of [$('mode-evaluate'), $('mode-dictionary'), $('mode-noteb
     setPane(workspace, next); tabs[names.indexOf(next)].focus();
   });
 }
-$('go-question').addEventListener('click', () => { setPane($('mode-evaluate'), 'question'); $('mode-evaluate').scrollIntoView({block: 'start'}); });
+$('go-question').addEventListener('click', () => setStep(2));
 $('add-symbol').addEventListener('click', () => { addSymbol(); invalidateTables(); });
 $('prepare').addEventListener('click', prepare);
 $('domain').addEventListener('input', invalidateTables);

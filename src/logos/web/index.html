@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="/tokens.css">
   <link rel="stylesheet" href="/style.css">
   <link rel="stylesheet" href="/styles/shell.css">
+  <link rel="stylesheet" href="/styles/evaluator.css">
   <link rel="stylesheet" href="/features/explanation-player/player.css">
   <link rel="stylesheet" href="/styles/tour.css">
   <link rel="stylesheet" href="/practice.css">
@@ -57,15 +58,18 @@
     <div id="practice-root"><p class="pr-loading" role="status">Preparando tus ejercicios…</p></div>
   </section>
 
-  <section id="mode-evaluate" class="workspace" aria-label="Evaluar modelo" data-pane="model">
-    <div class="subtabs" role="tablist" aria-label="Paso del modo Evaluar">
-      <span class="pill" aria-hidden="true"></span>
-      <button id="pane-model" class="subtab" role="tab" type="button" aria-selected="true" aria-controls="pane-model-panel">1 · Modelo <span id="model-state" class="subtab-state" aria-hidden="true"></span></button>
-      <button id="pane-question" class="subtab" role="tab" type="button" aria-selected="false" aria-controls="pane-question-panel" tabindex="-1">2 · Fórmula</button>
-    </div>
-    <section id="pane-model-panel" class="pane model" aria-labelledby="model-heading">
+  <section id="mode-evaluate" class="workspace wizard" aria-label="Evaluar modelo" data-step="1">
+    <ol id="wizard-steps" class="wizard-steps" aria-label="Pasos para evaluar">
+      <li><button class="wz-step" type="button" data-step="1" aria-current="step"><span class="wz-n" aria-hidden="true">1</span><span class="wz-label">Construye el modelo</span></button></li>
+      <li><button class="wz-step" type="button" data-step="2" aria-disabled="true"><span class="wz-n" aria-hidden="true">2</span><span class="wz-label">Escribe la fórmula</span></button></li>
+      <li><button class="wz-step" type="button" data-step="3" aria-disabled="true"><span class="wz-n" aria-hidden="true">3</span><span class="wz-label">Resultado</span></button></li>
+    </ol>
+
+    <section id="wz-model" class="pane wz-panel" aria-labelledby="model-heading" data-step-panel="1">
       <p class="step-kicker">Paso 1 de 3</p>
-      <h2 id="model-heading" class="pane-title">Construye el modelo</h2>
+      <h2 id="model-heading" class="pane-title" tabindex="-1">Construye el modelo</h2>
+      <p class="pane-lede">Un modelo dice de qué hablamos: un dominio, los símbolos del lenguaje y qué hace cierto a cada uno. Después escribirás la fórmula que quieres comprobar en él.</p>
+      <div class="example-row"><label for="example-model">¿Prefieres empezar de un caso de ejemplo?</label><select id="example-model" class="example-select" data-example-select></select></div>
 
       <div class="block" aria-labelledby="language-heading">
         <h3 id="language-heading">Lenguaje</h3>
@@ -81,47 +85,57 @@
         <div id="interpretation"></div>
         <div class="actions"><button id="export-json" class="button secondary" type="button" disabled>Exportar JSON</button></div>
       </div>
-      <div class="pane-next"><button id="go-question" class="button primary" type="button">Siguiente: la fórmula</button></div>
+      <div class="pane-next"><button id="go-question" class="button primary" type="button" disabled>Siguiente: escribir la fórmula</button><span id="model-next-note" class="hint" role="status"></span></div>
     </section>
 
-    <section id="pane-question-panel" class="pane question" aria-labelledby="formula-heading">
-      <div class="question-inner">
-        <p class="step-kicker">Pasos 2 y 3 · escribe la fórmula, evalúa y comprende</p>
-        <h2 id="formula-heading" class="pane-title">Evalúa una fórmula</h2>
+    <section id="wz-formula" class="pane wz-panel" aria-labelledby="formula-heading" data-step-panel="2" hidden>
+      <p class="step-kicker">Paso 2 de 3</p>
+      <h2 id="formula-heading" class="pane-title" tabindex="-1">Escribe la fórmula</h2>
+      <div class="model-summary" id="model-summary"><span class="ms-text" id="model-summary-text"></span><button id="edit-model" class="button secondary small" type="button">Editar el modelo</button></div>
+      <div class="example-row"><label for="example-formula">Casos de ejemplo</label><select id="example-formula" class="example-select" data-example-select></select></div>
 
-        <div id="batch" class="batch" hidden>
-          <h3 id="batch-heading">Fórmulas del archivo</h3>
-          <ol id="batch-list" class="batch-list" aria-labelledby="batch-heading"></ol>
-        </div>
-
-        <label for="formula" class="sr-only">Expresión formal</label>
-        <textarea id="formula" rows="2" spellcheck="false" placeholder="∀x (P(x) → Q(x))"></textarea>
-        <div id="symbols-keyboard" class="keyboard" aria-label="Símbolos lógicos"></div>
-        <div id="formula-markup" class="formula-markup" aria-live="polite"></div>
-        <p id="formula-error" class="error" role="alert" hidden></p>
-
-        <div class="run">
-          <div class="run-env">
-            <h3 id="result-heading">Entorno</h3>
-            <div id="assignment" class="assignment"></div>
-          </div>
-          <div class="run-action"><button id="evaluate" class="button primary" type="button" disabled>Evaluar</button><span id="ready-note" class="hint">Completa la interpretación.</span></div>
-        </div>
-
-        <div id="result" class="result" aria-live="polite"></div>
-
-        <details class="more"><summary>Buscar un modelo donde sea falsa</summary>
-          <p class="hint">Explora interpretaciones de la sentencia de arriba con dominios pequeños. Tiene límites (5000 modelos o 2 segundos): no encontrar uno no prueba que sea válida.</p>
-          <div class="actions"><label for="max-size" class="inline-label">Tamaño máximo de D <select id="max-size"><option value="1">1</option><option value="2">2</option><option value="3" selected>3</option></select></label><button id="find-countermodel" class="button secondary" type="button">Buscar contramodelo</button></div>
-          <div id="countermodel-result" class="result" aria-live="polite"></div>
-        </details>
-
-        <details class="more spanish-panel"><summary>Escribir la fórmula en español</summary>
-          <label for="spanish-input">Frase</label><input id="spanish-input" placeholder="Todos los estudiantes leyeron un libro" spellcheck="true">
-          <div class="actions"><button id="translate-spanish" class="button secondary" type="button">Mostrar lecturas</button><button id="record-spanish" class="button secondary" type="button">Grabar frase</button><button id="stop-spanish" class="button secondary" type="button" disabled>Detener</button><span id="record-status" class="hint" role="status"></span></div>
-          <div id="spanish-readings" aria-live="polite"></div>
-        </details>
+      <div id="batch" class="batch" hidden>
+        <h3 id="batch-heading">Fórmulas del archivo</h3>
+        <ol id="batch-list" class="batch-list" aria-labelledby="batch-heading"></ol>
       </div>
+
+      <label for="formula">Fórmula que quieres comprobar</label>
+      <textarea id="formula" rows="2" spellcheck="false" placeholder="∀x (P(x) → Q(x))"></textarea>
+      <div id="symbols-keyboard" class="keyboard" aria-label="Símbolos lógicos"></div>
+      <div id="formula-markup" class="formula-markup" aria-live="polite"></div>
+      <p id="formula-error" class="error" role="alert" hidden></p>
+
+      <div class="spanish-panel">
+        <h3>O escríbela en español</h3>
+        <label for="spanish-input">Frase</label>
+        <input id="spanish-input" placeholder="Todos los estudiantes leyeron un libro" spellcheck="true" list="spanish-phrases">
+        <datalist id="spanish-phrases"></datalist>
+        <div class="actions"><select id="spanish-example" class="example-select" aria-label="Frases de ejemplo"></select><button id="translate-spanish" class="button secondary" type="button">Mostrar lecturas</button><button id="record-spanish" class="button secondary" type="button">Grabar frase</button><button id="stop-spanish" class="button secondary" type="button" disabled>Detener</button><span id="record-status" class="hint" role="status"></span></div>
+        <div id="spanish-readings" aria-live="polite"></div>
+      </div>
+
+      <div class="run">
+        <div class="run-env">
+          <h3 id="result-heading">Valores de las variables libres</h3>
+          <div id="assignment" class="assignment"></div>
+        </div>
+        <div class="run-action"><button id="evaluate" class="button primary" type="button" disabled>Verificar</button><span id="ready-note" class="hint">Completa la interpretación.</span></div>
+      </div>
+      <p id="run-error" class="error" role="alert" hidden></p>
+    </section>
+
+    <section id="wz-result" class="pane wz-panel" aria-labelledby="result-title" data-step-panel="3" hidden>
+      <p class="step-kicker">Paso 3 de 3</p>
+      <h2 id="result-title" class="pane-title" tabindex="-1">¿Es verdadera en el modelo?</h2>
+      <p id="result-formula" class="result-formula"></p>
+      <div id="result" class="result" aria-live="polite"></div>
+      <div id="result-actions" class="result-actions">
+        <label for="max-size" class="inline-label">Tamaño máximo de D <select id="max-size"><option value="1">1</option><option value="2">2</option><option value="3" selected>3</option></select></label>
+        <button id="find-countermodel" class="button secondary" type="button">Buscar dónde sea falsa</button>
+      </div>
+      <p class="hint">Buscar explora dominios pequeños con límites (5000 modelos o 2 segundos): no encontrar uno no prueba que sea válida.</p>
+      <div id="countermodel-result" class="result" aria-live="polite"></div>
+      <div class="wz-back"><button id="change-formula" class="button secondary" type="button">Cambiar la fórmula</button><button id="back-model" class="button secondary" type="button">Editar el modelo</button></div>
     </section>
     <div id="player-evaluate" class="player-row"></div>
   </section>

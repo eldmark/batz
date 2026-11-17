@@ -1,0 +1,41 @@
+/* Evaluar como asistente de tres pasos: Modelo → Fórmula → Resultado. Usa los tokens existentes. */
+#mode-evaluate.wizard { display: block; max-width: 980px; margin: 0 auto; padding: var(--s5) var(--gutter) var(--s7); }
+.wizard-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s2); margin: 0 0 var(--s6); padding: 0; list-style: none; }
+.wz-step { display: flex; align-items: center; gap: var(--s2); width: 100%; min-height: 48px; padding: 0 var(--s3); border: 1px solid var(--border-strong); border-radius: 99px; background: var(--surface); color: var(--text-muted); font: 600 14px/1.2 var(--sans); text-align: left; cursor: pointer; }
+.wz-step[aria-disabled=true] { opacity: .6; cursor: not-allowed; }
+.wz-step[aria-current=step] { background: var(--emph-4-bg); border-color: var(--emph-4-bg); color: var(--emph-4-fg); }
+.wz-n { flex: none; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--surface-sunken); color: var(--text); font-weight: 700; }
+.wz-step[aria-current=step] .wz-n { background: var(--brand-50); color: var(--brand-900); }
+.wz-step[data-done=true]:not([aria-current=step]) .wz-n { background: var(--success-bg); color: var(--success-fg); }
+.wz-step[data-done=true]:not([aria-current=step]) .wz-n::after { content: "✓"; }
+.wz-step[data-done=true]:not([aria-current=step]) .wz-n { font-size: 0; } .wz-step[data-done=true]:not([aria-current=step]) .wz-n::after { font-size: 14px; }
+
+.wizard .pane { padding: 0; }
+.wizard .pane-title { outline: none; }
+.wizard .pane-next { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s3); margin-top: var(--s5); }
+.example-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2) var(--s3); margin: var(--s4) 0; }
+.example-row label { margin: 0; }
+.example-select { width: auto; max-width: 100%; min-width: 220px; }
+.model-summary { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s2) var(--s3); margin: var(--s3) 0 var(--s2); padding: var(--s2) var(--s3); border-radius: var(--r); background: var(--surface-sunken); }
+.ms-text { font: 13px/1.5 var(--mono); color: var(--text-muted); overflow-wrap: anywhere; }
+.wizard .spanish-panel { margin-top: var(--s5); padding-top: var(--s4); border-top: var(--hair); }
+.wizard .spanish-panel h3 { margin-bottom: var(--s2); }
+.wizard .run { margin-top: var(--s5); }
+
+.result-formula { margin: var(--s3) 0 var(--s4); font: 500 clamp(20px, 2.6vw, 32px)/1.45 var(--mono); overflow-wrap: anywhere; }
+.result-formula .chip { margin-left: var(--s3); font-size: 14px; vertical-align: middle; }
+#wz-result .verdict { font-size: clamp(56px, 8vw, 110px); }
+.result-actions { display: flex; flex-wrap: wrap; gap: var(--s3); align-items: center; margin-top: var(--s5); }
+.result-actions .story-open { margin-top: 0; }
+#wz-result .why { margin-top: var(--s5); }
+.wz-back { display: flex; flex-wrap: wrap; gap: var(--s3); margin-top: var(--s6); padding-top: var(--s4); border-top: var(--hair); }
+
+@media (max-width: 720px) {
+  .wz-label { font-size: 12px; }
+  .wz-step { padding: 0 var(--s2); gap: var(--s1); min-height: var(--tap); }
+  .wizard-steps { gap: var(--s1); }
+  #mode-evaluate.wizard { padding-top: var(--s4); }
+  .example-select { width: 100%; }
+  .result-actions .button, .wz-back .button, .wizard .pane-next .button { width: 100%; }
+}
+#wz-result .verdict { margin-inline: 0; border-radius: var(--r); }

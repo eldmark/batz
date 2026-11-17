@@ -27,6 +27,12 @@ Estado: en curso
   exacta, con «Volver a la evidencia». Una pregunta nueva o un cambio de fuentes limpia la evidencia anterior y descarta
   respuestas en vuelo (`nbAskRev`). La barra lateral se contrae sola en 901–1100 px si no hay preferencia guardada.
 
+- Evaluar como asistente de 3 pasos (a petición del usuario): 1 Construye el modelo (enfocado, con selector de casos),
+  2 Escribe la fórmula (modelo y lenguaje resumidos en una línea, teclado lógico, escritura en español visible con
+  frases de ejemplo y selector de casos), 3 Resultado (solo veredicto y fórmula; «Ver por qué» plegado; botones
+  «Buscar dónde sea falsa» y «Explicación guiada»). 18 casos de ejemplo en `features/evaluator/examples.js`, todos
+  comprobados contra el motor real. Una lectura en español solo añade al lenguaje los símbolos que falten (con «Deshacer»).
+
 ## Archivos
 
 Nuevos: `web/app/navigation.js`, `web/features/home/home.js`, `web/styles/shell.css`,

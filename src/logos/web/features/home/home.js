@@ -9,7 +9,7 @@ export const CARDS = [
   {route: 'dictionary', title: 'Diccionario', purpose: 'Consulta palabras, formas, categorías y símbolos; añade las que falten.', example: '«abandonar»'},
 ];
 export const EXERCISES = [
-  {id: 'evaluate', route: 'evaluate', title: '1 · Evalúa una fórmula', does: 'Carga D = {0, 1}, P = {0}, Q = {1} y ∀x (P(x) → Q(x)).', watch: 'Pulsa «Evaluar» y observa por qué es falsa: x = 0 cumple P y no cumple Q.'},
+  {id: 'evaluate', route: 'evaluate', title: '1 · Evalúa una fórmula', does: 'Carga D = {0, 1}, P = {0}, Q = {1} y ∀x (P(x) → Q(x)), y te deja en el paso de la fórmula.', watch: 'Pulsa «Verificar» y observa por qué es falsa: x = 0 cumple P y no cumple Q.'},
   {id: 'prove', route: 'prove', title: '2 · Demuestra una consecuencia', does: 'Carga las premisas ∀x (Humano(x) → Mortal(x)) y Humano(socrates), con la conclusión Mortal(socrates).', watch: 'Pulsa «Buscar prueba» y sigue cada línea Fitch con su regla.'},
   {id: 'notebook', route: 'notebook', title: '3 · Consulta unas fuentes', does: 'Crea el cuaderno de ejemplo con textos en español.', watch: 'Pregunta «¿Juan aprueba?» y abre la cita que respalda la respuesta.'},
 ];
