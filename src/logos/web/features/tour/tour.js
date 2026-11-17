@@ -67,7 +67,7 @@ export function createTour({go, openMenu = () => {}, closeMenu = () => {}, stora
   function open({fromHelp = false} = {}) {
     if (root) return;
     opener = doc.activeElement && doc.activeElement !== doc.body ? doc.activeElement : null;
-    if (fromHelp) go('home');
+    if (fromHelp) { opener = doc.getElementById('help-button') ?? opener; go('home'); }
     index = 0;
     root = el('div', {id: 'tour', className: 'tour', role: 'dialog'});
     root.setAttribute('aria-modal', 'false');
