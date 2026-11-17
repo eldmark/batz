@@ -40,19 +40,7 @@ body[data-sidebar=collapsed] .nav-group { margin: 0; }
 .help-panel { padding: var(--s3) var(--gutter); background: var(--info-bg); color: var(--info-fg); border-bottom: 1px solid var(--info-solid); max-width: none; }
 .shell > footer { padding: var(--s4) var(--gutter); }
 
-/* ── Inicio ── */
-.home { padding: var(--s6) var(--gutter) var(--s7); max-width: 1100px; }
-.home-question { font: 600 clamp(28px, 4vw, 40px)/1.15 var(--serif); color: var(--brand-900); margin-bottom: var(--s5); }
-.home h3 { margin: var(--s6) 0 var(--s1); font: 600 22px/1.2 var(--serif); }
-.home-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: var(--s4); margin: 0; padding: 0; list-style: none; }
-.home-card { display: flex; flex-direction: column; gap: var(--s2); height: 100%; padding: var(--s4); color: var(--text); text-decoration: none; background: var(--surface); border: 1px solid var(--emph-2-border); border-radius: var(--r); }
-.home-card strong { font: 600 19px/1.2 var(--serif); color: var(--emph-2-fg); }
-.home-card code { margin-top: auto; padding: var(--s1) var(--s2); background: var(--surface-sunken); border-radius: 4px; overflow-wrap: anywhere; }
-.home-card:hover { border-color: var(--brand-600); }
-.home-exercises { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--s4); margin: var(--s4) 0 0; padding: 0; list-style: none; }
-.home-exercises li { display: flex; flex-direction: column; gap: var(--s2); align-items: flex-start; padding: var(--s4); background: var(--surface); border: var(--hair); border-radius: var(--r); }
-.home-exercises strong { font: 600 17px/1.2 var(--serif); }
-.home-exercises .button { margin-top: auto; }
+/* ── Inicio: las reglas .home* están en styles/home.css ── */
 
 /* ── Móvil: menú lateral con botón, fondo y cierre ── */
 @media (max-width: 900px) {

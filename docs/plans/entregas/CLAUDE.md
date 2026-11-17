@@ -154,3 +154,13 @@ El usuario envió el logotipo (una V de hilo crema tejida con tres hilos y un ga
 ## Micro-interacciones globales
 
 `styles/motion.css` (todo bajo `prefers-reduced-motion: no-preference`; solo transform/opacity): entrada de sección, pasos de Evaluar que entran de lado con el hilo entre pasos que se llena, nudo de la barra lateral que «aterriza», hilo del veredicto que se dibuja, presión y brillo en botones, borde de campos teñido de hilo al enfocar, resultados con ascenso. Comprobado: con reducedMotion emulado no hay animaciones propias en curso; el flujo de Evaluar y las exportaciones siguen funcionando.
+
+## Landing minimalista
+
+Rama `rediseno/landing`. Inicio (`#/inicio`) rehecho con menos cajas: titular grande en Literata («El *hilo* que une la matemática en comprobaciones», «hilo» con subrayado que se dibuja), una frase de propuesta, un botón principal «Empezar» (abre Evaluar con el primer ejercicio) y uno secundario («Ver las herramientas», desplaza y enfoca la sección). Después, en una columna acompañada por un hilo trenzado de tres hebras (verde, ciruela, azul; nudos ámbar en cada sección): Cuatro herramientas (lista con filetes y el ejemplo en mono), tres ejercicios como pasos numerados, banner editorial de Gödel y Turing (retratos grandes, duotono que pasa a color suave al pasar el puntero o enfocar, sin editar las fotos) y las tres tarjetas «Practica lo que probaron Gödel y Turing» como lista. El contenido factual y los `runExercise` no cambian.
+
+Archivos: `features/home/home.js` (estructura), `features/home/motion.js` (nuevo: aparición escalonada con IntersectionObserver una sola vez, hilo que se dibuja con el scroll mediante `clip-path`, contadores, foco de luz del puntero; todo se libera en `teardown`), `styles/home.css` y retirada de las reglas `.home*` de `shell.css`. `motion.js` está en la lista de `do_GET`. El titular vive en `index.html`; `renderHome` reescribe su contenido sin tocar el HTML.
+
+Cifras de «33 tarjetas · 18 hitos · 50 ejercicios»: las dos primeras salen de `features/learn/data.js` (`CARDS`, `HISTORY`) y no pueden desfasarse; los 50 ejercicios son la constante `PRACTICE_COUNT` de `home.js`, igual a `len(practice_bank.EXERCISES)`: actualizarla si cambia el banco. Los contadores suben una vez; el texto ya trae la cifra final.
+
+Movimiento: solo `transform`, `opacity` y `clip-path`. Con `prefers-reduced-motion: reduce` no se añade ningún estado oculto, no hay observadores ni animaciones ni transformaciones, y los cambios de hover y foco son instantáneos. El foco de luz solo existe con puntero fino; con teclado la tarjeta se resalta con borde y foco visible.
