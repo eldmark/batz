@@ -218,3 +218,7 @@ Al reordenar el hilo de los pasos de Evaluar (commit «el hilo solo cruza los hu
 ## Diagnóstico de voces
 
 Con `espeak-ng` real (1.52.0) la ruta completa funciona en Chromium: `/api/voice/voices` lista 4 voces, «Probar voz» reproduce 2 s de audio y la narración pide el audio al servidor. Cuando a un usuario «no le detecta la voz», las causas son del entorno: servidor en ejecución anterior a la función (404 en `/api/voice/voices`), servidor lanzado donde `espeak-ng` no está en el `PATH`, o instalación posterior a la carga de la página. El panel de voz ahora dice cuál es la causa real (servidor antiguo, sin servidor, sin motor) y tiene «Volver a buscar voces» sin recargar la página.
+
+## Voz dentro de Docker
+
+El `Dockerfile` instala `espeak-ng` (paquete de Debian, sin recomendados) antes de crear el usuario sin privilegios; la imagen pasa de «solo librería estándar» a «librería estándar + espeak-ng». Probado construyendo la imagen real (250 MB) y arrancándola: dentro del contenedor, como usuario `logos`, `/api/voice/voices` responde `available: true` y `/api/voice/speak` devuelve un WAV de 22,05 kHz. Debian lista varias filas por idioma, así que `parse_voices` deduplica por id (con prueba). Se sigue sin transcripción por voz (whisper) en la imagen.

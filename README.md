@@ -164,7 +164,7 @@ powershell -ExecutionPolicy Bypass -File scripts\instalar_voz.ps1      # Windows
 bash scripts/instalar_voz.sh                                           # Linux o macOS (sin probar en esta entrega)
 ```
 
-whisper.cpp y el modelo quedan en `%LOCALAPPDATA%\LOGOS\voz` (o `~/.local/share/logos/voz`), donde el servidor los encuentra sin variables de entorno; cada descarga se comprueba con su SHA-256. `-Modelo small` es más preciso y más lento. Para quitarlo: borrar esa carpeta y `winget uninstall --id Gyan.FFmpeg -e`. La imagen de Docker no incluye la voz. El texto transcrito siempre se muestra para revisarlo antes de traducirlo.
+whisper.cpp y el modelo quedan en `%LOCALAPPDATA%\LOGOS\voz` (o `~/.local/share/logos/voz`), donde el servidor los encuentra sin variables de entorno; cada descarga se comprueba con su SHA-256. `-Modelo small` es más preciso y más lento. Para quitarlo: borrar esa carpeta y `winget uninstall --id Gyan.FFmpeg -e`. La imagen de Docker no incluye la transcripción por voz (whisper), pero sí `espeak-ng`: la voz de la explicación guiada se genera dentro del contenedor. El texto transcrito siempre se muestra para revisarlo antes de traducirlo.
 
 La procedencia y la licencia de Three.js, whisper.cpp y lo demás están en `docs/THIRD_PARTY.md`.
 

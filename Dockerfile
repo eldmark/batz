@@ -1,8 +1,12 @@
-# Evaluador semántico MM3032: solo librería estándar, sin dependencias que instalar.
+# Evaluador semántico MM3032: solo librería estándar de Python; el único paquete del sistema es espeak-ng
+# (voz de la explicación guiada: genera el audio dentro del contenedor, sin enviar texto a ningún servicio).
 FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
-RUN useradd --create-home logos
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends espeak-ng \
+ && rm -rf /var/lib/apt/lists/* \
+ && useradd --create-home logos
 WORKDIR /app
 COPY evaluador.py ./
 COPY src ./src

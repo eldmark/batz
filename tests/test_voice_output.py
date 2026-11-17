@@ -48,6 +48,16 @@ class FakeEngine(unittest.TestCase):
         return [json.loads(line) for line in self.log.read_text().splitlines()] if self.log.exists() else []
 
 
+class Parsing(unittest.TestCase):
+    def test_duplicate_language_rows_become_one_entry(self):
+        listing = ("Pty Language Age/Gender VoiceName File Other\n"
+                   " 5  es-es  --/M  Spanish_(Spain)  roa/es-es\n"
+                   " 5  es-es  --/M  Spanish_(Spain)  roa/es-es-x-v2\n"
+                   " 5  es-mx  --/M  Spanish_(Mexico)  roa/es-mx\n")
+        ids = [v["id"] for v in voice_output.parse_voices(listing)]
+        self.assertEqual(ids, ["es-es", "es-es+f3", "es-mx", "es-mx+f3"])
+
+
 class Voices(FakeEngine):
     def test_lists_spanish_voices_in_spanish_with_a_female_variant(self):
         status = voice_output.availability()

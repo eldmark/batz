@@ -47,11 +47,15 @@ def _spanish_name(raw: str) -> str:
 def parse_voices(listing: str) -> list[dict]:
     """Lee la salida de `espeak-ng --voices=es`: una fila por voz tras la cabecera."""
     voices: list[dict] = []
+    seen: set[str] = set()
     for line in listing.splitlines()[1:]:
         parts = line.split()
         if len(parts) < 4 or not re.match(r"^es(?:-|$)", parts[1]):
             continue
         language, name = parts[1], _spanish_name(parts[3])
+        if language in seen:   # Debian lista varias filas por idioma: una sola entrada por id
+            continue
+        seen.add(language)
         voices.append({"id": language, "label": f"{name} · masculina", "lang": language})
         voices.append({"id": f"{language}+f3", "label": f"{name} · femenina", "lang": language})
     return voices
