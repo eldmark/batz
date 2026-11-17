@@ -353,6 +353,7 @@ class Handler(BaseHTTPRequestHandler):
                  "/styles/learn.css": ("styles/learn.css", "text/css; charset=utf-8"),
                  "/features/learn/learn.js": ("features/learn/learn.js", "text/javascript; charset=utf-8"),
                  "/features/learn/data.js": ("features/learn/data.js", "text/javascript; charset=utf-8"),
+                 "/features/learn/timeline.js": ("features/learn/timeline.js", "text/javascript; charset=utf-8"),
                  "/features/learn/deck.js": ("features/learn/deck.js", "text/javascript; charset=utf-8"),
                  "/img/godel.jpg": ("img/godel.jpg", "image/jpeg"),
                  "/img/turing.jpg": ("img/turing.jpg", "image/jpeg"),

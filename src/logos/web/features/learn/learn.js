@@ -1,5 +1,7 @@
 // «Aprender»: historia de la lógica (línea de tiempo) y tarjetas de teoría. Módulo nativo, sin dependencias.
 import {HISTORY, HISTORY_TOPICS, CARDS, CARD_TOPICS} from '/features/learn/data.js';
+import {person, initials, lifespan} from '/features/people/people.js';
+import {visibleMilestones, clampIndex, stepIndex, neighbors, isFirst, isLast, indexAfterFilter, nearestIndex, swipeDelta, trackYear, peopleOf, needsVisibleCredit, announce} from '/features/learn/timeline.js';
 import {filterCards, buildQueue, loadProgress, saveProgress, clearProgress, mark, statusOf, summary, step} from '/features/learn/deck.js';
 
 const STATUS_TEXT = {known: 'La sabía', review: 'Por repasar', pending: 'Sin marcar'};
@@ -27,39 +29,146 @@ function pressedGroup(label, options, current, onPick) {
   return wrap;
 }
 
-// ───────── Historia ─────────
+// ───────── Historia: línea del tiempo (un hito grande, con el anterior y el siguiente) ─────────
+function portrait(p) {
+  const mono = () => h('span', {class: 'tl-mono', 'aria-hidden': 'true', text: initials(p.slug)});
+  if (!p.image) return mono();
+  const img = h('img', {class: 'tl-photo', src: p.image, alt: '', width: '56', height: '56', loading: 'lazy', decoding: 'async'});
+  img.addEventListener('error', () => img.replaceWith(mono()), {once: true});
+  return img;
+}
+function personItem(p) {
+  const info = h('span', {class: 'tl-who'}, h('span', {class: 'tl-pname', text: p.name}), h('span', {class: 'tl-life', text: lifespan(p.slug)}));
+  const li = h('li', {class: 'tl-person', 'data-slug': p.slug}, h('span', {class: 'tl-face', title: p.image ? p.credit : 'Sin retrato con licencia verificada'}, portrait(p)), info);
+  if (needsVisibleCredit(p)) info.append(h('a', {class: 'tl-credit', href: p.creditUrl, target: '_blank', rel: 'noopener noreferrer', text: `Foto: ${p.credit}`}));
+  return li;
+}
+
 function buildHistory() {
-  const section = h('section', {class: 'learn-block', id: 'learn-history', 'aria-labelledby': 'learn-history-title'});
+  const section = h('section', {class: 'learn-block tl2-block', id: 'learn-history', 'aria-labelledby': 'learn-history-title'});
   const title = h('h3', {id: 'learn-history-title', tabindex: '-1', text: 'Historia de la lógica matemática y de predicados'});
-  const status = h('p', {class: 'hint learn-count', role: 'status'});
-  const list = h('ol', {class: 'timeline'});
-  const items = HISTORY.map(item => {
+  const count = h('p', {class: 'hint learn-count'});
+  const live = h('p', {class: 'sr-only', role: 'status', 'aria-live': 'polite'});
+  const state = {topic: 'todos', list: visibleMilestones(HISTORY, 'todos'), index: 0};
+  let onFinish = () => {};
+
+  const nodesList = h('ol', {class: 'tl2-nodes'});
+  const track = h('div', {class: 'tl2-track', role: 'group', 'aria-label': 'Línea del tiempo: elige un hito'}, nodesList);
+  const cardBody = h('div', {class: 'tl2-body'});
+  const card = h('article', {class: 'tl2-card tl2-main', 'aria-label': 'Hito elegido'}, cardBody);
+  const sidePrev = h('button', {class: 'tl2-side tl2-prev', type: 'button'});
+  const sideNext = h('button', {class: 'tl2-side tl2-next', type: 'button'});
+  const stage = h('div', {class: 'tl2-stage'}, sidePrev, card, sideNext);
+  const prev = h('button', {class: 'button secondary', type: 'button', text: 'Anterior'});
+  const next = h('button', {class: 'button secondary', type: 'button', text: 'Siguiente'});
+  const pos = h('span', {class: 'tl2-pos'});
+  const controls = h('div', {class: 'actions tl2-controls'}, prev, pos, next);
+  const finishText = h('p', {class: 'tl2-finish-text'});
+  const finishBtn = h('button', {class: 'button primary', type: 'button', text: 'Repasar con las tarjetas'});
+  const finish = h('aside', {class: 'tl2-finish', 'aria-labelledby': 'tl2-finish-title', hidden: true},
+    h('h4', {id: 'tl2-finish-title', text: 'Has recorrido la historia — ahora repásala'}), finishText, finishBtn);
+  finishBtn.addEventListener('click', () => onFinish());
+
+  function renderNodes() {
+    nodesList.replaceChildren(...state.list.map((item, i) => {
+      const b = h('button', {class: 'tl2-node', type: 'button', 'data-i': String(i), 'aria-label': `${item.year}: ${item.title}`}, h('span', {class: 'tl2-dot', 'aria-hidden': 'true'}), h('span', {class: 'tl2-ylab', 'aria-hidden': 'true', text: trackYear(item.year)}));
+      b.addEventListener('click', () => select(i));
+      return h('li', {class: 'tl2-n'}, b);
+    }));
+  }
+  function side(btn, item, dir) {
+    btn.hidden = false;
+    btn.disabled = !item;
+    btn.classList.toggle('is-empty', !item);
+    if (!item) { btn.replaceChildren(h('span', {class: 'tl2-side-dir', text: dir < 0 ? 'Antes' : 'Después'}), h('span', {class: 'tl2-side-empty', text: dir < 0 ? 'Aquí empieza' : 'Aquí termina'})); btn.setAttribute('aria-label', dir < 0 ? 'No hay un hito anterior' : 'No hay un hito siguiente'); return; }
+    btn.replaceChildren(h('span', {class: 'tl2-side-dir', text: dir < 0 ? '‹ Antes' : 'Después ›'}), h('span', {class: 'tl2-side-year', text: item.year}), h('span', {class: 'tl2-side-title', text: item.title}), h('span', {class: 'tl2-side-ppl', text: item.people}));
+    btn.setAttribute('aria-label', `${dir < 0 ? 'Hito anterior' : 'Hito siguiente'}: ${item.year}, ${item.title}`);
+  }
+  function renderCard() {
+    const item = state.list[state.index];
     const where = h('p', {class: 'tl-where'}, h('strong', {text: 'Dónde lo ves en Bat’z. '}), item.where);
     if (item.href) where.append(' ', h('a', {href: item.href, text: `${item.link} →`}));
-    const details = h('details', {class: 'tl-card'},
-      h('summary', {}, h('span', {class: 'tl-year', text: item.year}), h('span', {class: 'tl-name', text: item.title}), h('span', {class: 'tl-people', text: item.people})),
-      h('div', {class: 'tl-body'}, h('p', {text: item.what}), where));
-    const li = h('li', {class: 'tl-item', 'data-topic': item.topic}, h('span', {class: 'tl-node', 'aria-hidden': 'true'}), details);
-    list.append(li);
-    return {li, details};
+    const folks = peopleOf(item, person);
+    cardBody.replaceChildren(
+      h('p', {class: 'tl2-kicker'}, h('span', {class: 'tl2-year', text: item.year}), h('span', {class: 'tl2-topic', text: topicLabel(HISTORY_TOPICS, item.topic)})),
+      h('h4', {class: 'tl2-title', text: item.title}),
+      folks.length ? h('ul', {class: 'tl-people-list', 'aria-label': 'Personas'}, folks.map(personItem)) : h('p', {class: 'tl-people', text: item.people}),
+      h('p', {class: 'tl2-what', text: item.what}), where);
+  }
+  function render({animate = 0, say = false} = {}) {
+    const n = state.list.length, i = state.index, item = state.list[i];
+    count.textContent = `Se recorren ${n} de ${HISTORY.length} hitos, en orden cronológico.`;
+    nodesList.querySelectorAll('.tl2-node').forEach((b, k) => {
+      b.classList.toggle('is-past', k < i);
+      if (k === i) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current');
+      b.tabIndex = k === i ? 0 : -1;
+    });
+    track.style.setProperty('--n', String(n));
+    track.style.setProperty('--tl-progress', n > 1 ? String(i / (n - 1)) : '0');
+    renderCard();
+    const {prev: before, next: after} = neighbors(state.list, i);
+    side(sidePrev, before, -1); side(sideNext, after, 1);
+    prev.disabled = isFirst(i); next.disabled = isLast(i, n);
+    pos.textContent = `Hito ${i + 1} de ${n}`;
+    finish.hidden = !isLast(i, n);
+    if (!finish.hidden) finishText.textContent = `Llegaste al último hito de ${n === HISTORY.length ? 'la historia' : 'este tema'}. Las tarjetas de teoría cubren lo mismo con preguntas: el modo «Estudiar» las baraja y recuerda cuáles ya sabes.`;
+    if (animate && !reduceMotion()) {
+      card.classList.remove('is-in-next', 'is-in-prev'); void card.offsetWidth;
+      card.classList.add(animate > 0 ? 'is-in-next' : 'is-in-prev');
+    }
+    const cur = nodesList.querySelector('.tl2-node[aria-current]');
+    if (document.activeElement?.disabled) cur?.focus({preventScroll: true});
+    if (cur) { const left = cur.offsetLeft + cur.offsetWidth / 2 - track.clientWidth / 2; track.scrollTo({left: Math.max(0, left), behavior: 'auto'}); }
+    if (say) live.textContent = announce(item, i, n);
+  }
+  function select(index, {focus = false} = {}) {
+    const to = clampIndex(index, state.list.length);
+    if (to === state.index) { if (focus) nodesList.querySelector('.tl2-node[aria-current]')?.focus(); return; }
+    const dir = to > state.index ? 1 : -1;
+    state.index = to;
+    render({animate: dir, say: true});
+    if (focus) nodesList.querySelector('.tl2-node[aria-current]')?.focus({preventScroll: true});
+  }
+  const move = delta => select(stepIndex(state.index, state.list.length, delta));
+  prev.addEventListener('click', () => move(-1));
+  next.addEventListener('click', () => move(1));
+  sidePrev.addEventListener('click', () => move(-1));
+  sideNext.addEventListener('click', () => move(1));
+
+  const wrap = h('div', {class: 'tl2', role: 'group', 'aria-label': 'Línea del tiempo de la historia de la lógica'}, track, stage, controls, finish);
+  wrap.addEventListener('keydown', event => {
+    if (event.altKey || event.ctrlKey || event.metaKey || event.target.closest('a')) return;
+    const keys = {ArrowRight: () => move(1), ArrowDown: () => move(1), ArrowLeft: () => move(-1), ArrowUp: () => move(-1), Home: () => select(0), End: () => select(state.list.length - 1), PageDown: () => move(1), PageUp: () => move(-1)};
+    const act = keys[event.key];
+    if (!act || (event.target.matches('button') && !event.target.closest('.tl2-track') && /^Arrow(Up|Down)$/.test(event.key))) return;
+    event.preventDefault();
+    const inTrack = !!event.target.closest('.tl2-track');
+    act();
+    if (inTrack) nodesList.querySelector('.tl2-node[aria-current]')?.focus({preventScroll: true});
   });
-  let topic = 'todos';
-  const apply = () => {
-    let shown = 0;
-    HISTORY.forEach((item, i) => { const visible = topic === 'todos' || item.topic === topic; items[i].li.hidden = !visible; if (visible) shown++; });
-    status.textContent = `Se muestran ${shown} de ${HISTORY.length} hitos, en orden cronológico.`;
-  };
-  const filters = pressedGroup('Filtrar la historia por tema', [{id: 'todos', label: 'Todos'}, ...HISTORY_TOPICS], topic, id => { topic = id; apply(); });
-  const open = h('button', {class: 'button secondary small', type: 'button', text: 'Abrir todos'});
-  const close = h('button', {class: 'button secondary small', type: 'button', text: 'Cerrar todos'});
-  const setAll = value => items.forEach(({li, details}) => { if (!li.hidden) details.open = value; });
-  open.addEventListener('click', () => setAll(true));
-  close.addEventListener('click', () => setAll(false));
+  // Arrastrar con el ratón sobre el hilo: elige el nudo más cercano (con el dedo, el hilo se desplaza y se toca).
+  let dragging = false;
+  const pick = event => select(nearestIndex([...nodesList.querySelectorAll('.tl2-node')].map(b => { const r = b.getBoundingClientRect(); return r.left + r.width / 2; }), event.clientX));
+  track.addEventListener('pointerdown', event => { if (event.pointerType === 'touch' || event.button !== 0) return; dragging = true; track.setPointerCapture?.(event.pointerId); track.classList.add('is-dragging'); pick(event); });
+  track.addEventListener('pointermove', event => { if (dragging) pick(event); });
+  const stopDrag = event => { if (!dragging) return; dragging = false; track.classList.remove('is-dragging'); track.releasePointerCapture?.(event.pointerId); nodesList.querySelector('.tl2-node[aria-current]')?.focus({preventScroll: true}); };
+  track.addEventListener('pointerup', stopDrag); track.addEventListener('pointercancel', stopDrag);
+  // Deslizar con el dedo sobre la tarjeta
+  let touch = null;
+  stage.addEventListener('touchstart', event => { const t = event.touches[0]; touch = event.touches.length === 1 ? {x: t.clientX, y: t.clientY} : null; }, {passive: true});
+  stage.addEventListener('touchend', event => { if (!touch) return; const t = event.changedTouches[0]; const d = swipeDelta(t.clientX - touch.x, t.clientY - touch.y); touch = null; if (d) move(d); }, {passive: true});
+
+  const filters = pressedGroup('Filtrar la historia por tema', [{id: 'todos', label: 'Todos'}, ...HISTORY_TOPICS], state.topic, id => {
+    const currentId = state.list[state.index]?.id;
+    state.topic = id; state.list = visibleMilestones(HISTORY, id);
+    state.index = indexAfterFilter(state.list, currentId);
+    renderNodes(); render({say: true});
+  });
   section.append(title,
-    h('p', {class: 'pane-lede', text: 'Una línea de hilo con un nudo por cada hito. Abre cada nudo para ver qué aportó y dónde lo ves en Bat’z. Las fechas son las de la publicación original.'}),
-    filters, h('div', {class: 'actions learn-actions'}, open, close), status, list);
-  apply();
-  return {section, title};
+    h('p', {class: 'pane-lede', text: 'Elige un hito en el hilo (con un clic, las flechas del teclado o arrastrando) y verás qué aportó, quién lo hizo y dónde lo ves en Bat’z, entre el hito de antes y el de después. Las fechas son las de la publicación original.'}),
+    filters, count, live, wrap);
+  renderNodes(); render();
+  return {section, title, setFinish: fn => { onFinish = fn; }, select: i => select(i), state};
 }
 
 // ───────── Tarjetas ─────────
@@ -207,13 +316,22 @@ function buildCards(storage) {
     h('div', {class: 'fc-meter'}, el.progress, el.bar, h('div', {class: 'actions learn-actions'}, reset), el.note),
     all);
   rebuild();
-  return {section, title};
+  // «Repasar» desde el final de la línea del tiempo: todas las tarjetas, barajadas, en modo Estudiar.
+  function startStudy() {
+    state.topic = 'todos';
+    topics.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.id === 'todos')));
+    setMode('study');
+    section.scrollIntoView({behavior: reduceMotion() ? 'auto' : 'smooth', block: 'start'});
+    (state.done ? done.querySelector('.fc-done-title') : flip)?.focus({preventScroll: true});
+  }
+  return {section, title, startStudy};
 }
 
 export function initLearn(root, {storage = (() => { try { return localStorage; } catch { return null; } })()} = {}) {
   if (!root || root.dataset.ready) return;
   root.dataset.ready = 'yes';
   const history = buildHistory(), cards = buildCards(storage);
+  history.setFinish(() => cards.startStudy());
   const jump = (target) => () => { target.section.scrollIntoView({behavior: reduceMotion() ? 'auto' : 'smooth', block: 'start'}); target.title.focus({preventScroll: true}); };
   const toHistory = h('button', {class: 'button secondary small', type: 'button', text: 'Historia de la lógica'});
   const toCards = h('button', {class: 'button secondary small', type: 'button', text: 'Conceptos como tarjetas'});
