@@ -163,8 +163,8 @@
     const position = el('span', 'pr-position');
     position.append(el('span', `pr-stage pr-stage-${current.category}`, categoryOf(current.category).title),
       el('span', 'pr-small', `EJERCICIO ${current.id} DE ${bank.total}`));
-    toolbar.append(button('← Ejercicios', 'pr-quiet', home), position);
-    if (extras) position.prepend(extras.rulesButton()); root.append(toolbar, progressBar());
+    const back = button('← Ejercicios', 'pr-quiet', home); toolbar.append(back, position);
+    if (extras) back.after(extras.rulesButton()); root.append(toolbar, progressBar());
     const layout = el('div', 'pr-layout');
     const proof = el('section', 'pr-proof');
     proof.append(el('p', 'pr-eyebrow', current.topic), el('h2', 'pr-title', current.title), el('p', 'pr-intro', current.intro));

@@ -73,10 +73,10 @@
 .pg-ex-why { grid-column: 2; font: 400 12px/1.4 var(--sans); color: var(--text-muted); }
 .pg-ex-line.is-focus { background: var(--signal-100); }
 .pg-ex-line.is-focus .pg-ex-f, .pg-ex-line.is-focus .pg-ex-why, .pg-ex-line.is-focus .pg-ex-n { color: var(--signal-900); font-weight: 600; }
-.pr-rules-button { margin-right: auto; }
+.pr-rules-button { margin-right: auto; margin-left: var(--s2); }
 
 /* ── Tutorial: tarjeta flotante, sin velo ── */
-.pt-card { position: fixed; z-index: 40; left: var(--s5); bottom: var(--s5); width: min(410px, calc(100vw - 2 * var(--s4))); padding: var(--s4) var(--s5) var(--s4);
+.pt-card { position: fixed; z-index: 40; left: calc(var(--sidebar-w, 240px) + var(--s5)); bottom: var(--s5); width: min(410px, calc(100vw - 2 * var(--s4))); padding: var(--s4) var(--s5) var(--s4);
   background: var(--surface); color: var(--text); border: 1px solid var(--border-strong); border-top: 4px solid var(--emph-4-bg); border-radius: 12px;
   box-shadow: 0 12px 40px rgb(0 0 0 / .28); animation: pt-in .22s var(--out); }
 .pt-thread { list-style: none; display: flex; align-items: center; margin: 0 0 var(--s3); padding: 0; }
@@ -95,7 +95,7 @@
 .pt-feedback.is-problem { background: var(--danger-bg); color: var(--danger-fg); }
 .pt-feedback.is-good { background: var(--success-bg); color: var(--success-fg); }
 .pt-actions { display: flex; flex-wrap: wrap; gap: var(--s2); justify-content: flex-end; align-items: center; }
-.pt-skip { margin-right: auto; padding-inline: 4px; color: var(--text-muted); text-decoration: underline; text-underline-offset: 3px; }
+.pt-skip { position: absolute; top: var(--s3); right: var(--s3); min-height: 36px; padding: 4px 6px; color: var(--text-muted); text-decoration: underline; text-underline-offset: 3px; }
 .pt-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; margin: 0; }
 /* El control señalado: contorno discontinuo (como una puntada) y un halo que sobrevive al foco */
 .practice .pt-target { outline: 3px dashed var(--accent-600); outline-offset: 4px; box-shadow: 0 0 0 8px color-mix(in srgb, var(--accent-300) 35%, transparent); }
@@ -119,5 +119,15 @@ body.pt-active .practice { padding-bottom: calc(var(--pt-h, 300px) + 56px); }
   .pt-card { left: var(--s3); right: var(--s3); bottom: var(--s3); width: auto; max-height: 52dvh; overflow-y: auto; padding: var(--s3) var(--s4); }
   .pt-text { font-size: 14px; }
 }
-@media (max-width: 900px) and (max-height: 500px) { .pt-card { max-height: 62dvh; } .pt-thread { display: none; } }
+/* Pantallas bajas (móvil en horizontal): barra inferior de dos columnas para no tapar el ejercicio */
+@media (max-height: 520px) {
+  .pt-card { left: var(--s2); right: var(--s2); bottom: var(--s2); width: auto; max-height: none; overflow: visible; padding: var(--s2) var(--s4); }
+  .pt-thread { display: none; }
+  .pt-title { font-size: 17px; margin-bottom: 0; }
+  .pt-text { font-size: 13px; line-height: 1.45; margin: 2px 0 var(--s2); }
+  .pt-feedback { font-size: 12.5px; margin-bottom: var(--s2); padding: 4px var(--s3); }
+  .pt-actions { flex-wrap: nowrap; }
+  .pt-button { min-height: 40px; padding: 6px 14px; }
+  .pr-rules-button { min-height: 40px; }
+}
 @media (prefers-reduced-motion: reduce) { .pt-card { animation: none; } .pg-button, .pt-button { transition: none; } }

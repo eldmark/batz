@@ -85,6 +85,15 @@ export function openRulesDialog({rules, opener, onTutorial, doc = document}) {
   dialog.append(head, body); doc.body.append(dialog);
   dialog.addEventListener('close', () => { dialog.remove(); if (opener?.isConnected) opener.focus(); });
   dialog.addEventListener('click', e => { if (e.target === dialog) dialog.close(); });
+  // El foco se queda dentro: Tab y Mayús+Tab dan la vuelta entre el primer y el último control.
+  dialog.addEventListener('keydown', e => {
+    if (e.key !== 'Tab') return;
+    const items = [...dialog.querySelectorAll('button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')].filter(n => !n.hidden);
+    if (!items.length) return;
+    const first = items[0], last = items[items.length - 1];
+    if (e.shiftKey && (doc.activeElement === first || !dialog.contains(doc.activeElement))) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && (doc.activeElement === last || !dialog.contains(doc.activeElement))) { e.preventDefault(); first.focus(); }
+  });
   dialog.showModal();
   loadGuide().then(guide => {
     status.remove();

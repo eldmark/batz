@@ -670,6 +670,7 @@ Al cambiar, vuelve al inicio de la página y enfoca el título.
 | `learn/data.js`, `deck.js`, `timeline.js`, `learn.js` | «Aprender»: datos de historia (`HISTORY`) y tarjetas (`CARDS`) sin lógica; `deck.js` (progreso en `localStorage`, cola, barajado, saneado), `timeline.js` (navegación y accesibilidad de la línea de tiempo, funciones puras), `learn.js` (`initLearn`, construye el DOM). |
 | `people/people.js`, `bios.js`, `person.js` | Datos de personas (años, crédito, licencia, retrato; `image: null` muestra iniciales), biografías (`BIO_SLUGS` = godel, turing, church), `renderPerson` y `portrait`. Los enlaces de crédito llevan `rel="noopener noreferrer"`. |
 | `tour/tour.js` | Recorrido de primer acceso. `readTourState`/`writeTourState`/`shouldOfferTour` son puras; `createTour` pinta una tarjeta flotante y señala elementos con `.tour-target`. Solo se ofrece en Inicio y una vez. |
+| `practice-tutorial/` | Reglas y tutorial de Practicar. `tutorial.js` (puro: estado `batz-practice-tutorial`, evaluación de cada paso, copia/restauración del registro `progress['01']`), `steps.js` (datos), `card.js` (tarjeta flotante no modal y controlador), `guide.js` (panel «Cómo se juega» y diálogo nativo con la chuleta), `index.js` (`attach(puente)`), `rules-guide.json` (familias y ejemplo verificado de cada una de las 22 reglas; `tests/test_practice_rules_guide.py` lo compara con `RULES` y lo ejecuta con `build`). Estilos en `styles/practice-tutorial.css`. `practice.js` lo carga con `import()` y le pasa un puente (único punto de unión, sin globals); emite `batz-practice-view` y `batz-practice-checked` en `#practice-root`. |
 
 `practice.js` (fuera de `features/`) es el tutor de Practicar: carga el catálogo
 (`/api/practice/catalog`), mantiene el progreso en `localStorage`, **revalida las
@@ -740,6 +741,7 @@ Todas las claves, encontradas con `grep` en `src/batz/web`:
 | `batz-cuaderno` | `app.js` | Id del último cuaderno abierto. |
 | `batz-voz` | `explanation-player/events.js` | Voz elegida en el reproductor: `auto`, `browser:<voiceURI>` o `server:<id>`. |
 | `batz-recorrido` | `tour/tour.js` | `completado` u `omitido`. |
+| `batz-practice-tutorial` | `practice-tutorial/tutorial.js` | `completado` u `omitido`. Su copia temporal `batz-practice-tutorial-backup` guarda el registro del ejercicio 01 mientras dura el tutorial. |
 | `batz-tarjetas` | `learn/deck.js` | `{v:1, known:[], review:[]}` de las tarjetas de teoría. |
 | `batz.practice.v1` | `practice.js` | Progreso por ejercicio: jugadas, borrador, pistas, `revision`, `previous`. |
 

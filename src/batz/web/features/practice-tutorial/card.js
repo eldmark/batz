@@ -32,8 +32,8 @@ export function createRunner(api, {storage = null, doc = document, win = window}
     parts.back = btn('Atrás', 'pt-secondary', () => go(index - 1));
     parts.how = btn('Mostrar cómo', 'pt-secondary', showHow);
     parts.next = btn('Siguiente', 'pt-primary', () => next());
-    actions.append(parts.skip, parts.back, parts.how, parts.next);
-    card.append(parts.thread, parts.count, parts.title, parts.text, parts.note, parts.feedback, actions, parts.sr);
+    actions.append(parts.back, parts.how, parts.next);
+    card.append(parts.thread, parts.count, parts.title, parts.text, parts.note, parts.feedback, actions, parts.skip, parts.sr);
     root.parentElement.insertBefore(card, root);   // antes del ejercicio en el orden de tabulación; flota con CSS
   }
 
@@ -42,14 +42,17 @@ export function createRunner(api, {storage = null, doc = document, win = window}
     clearTargets();
     let first = null;
     for (const selector of STEPS[index].targets) { const node = $(selector); if (node) { node.classList.add('pt-target'); first ||= node; } }
-    if (scroll && first) {
+    if (scroll && first) {   // lo señalado debe quedar en la parte visible, por encima de la tarjeta
       const r = first.getBoundingClientRect(), limit = card.getBoundingClientRect().top;
-      if (r.top < 0 || r.bottom > limit - 8) first.scrollIntoView({block: 'center', behavior: reduced() ? 'auto' : 'smooth'});
+      if (r.top < 8 || r.bottom > limit - 8) {
+        const delta = r.height > limit - 16 ? r.top - 8 : r.top + r.height / 2 - limit / 2;
+        win.scrollBy({top: delta, behavior: reduced() ? 'auto' : 'smooth'});
+      }
     }
   }
   const showFeedback = (text, kind = '') => { parts.feedback.textContent = text || ''; parts.feedback.className = `pt-feedback ${kind}`; parts.feedback.hidden = !text; };
   const satisfied = () => { const ui = readUi(), step = STEPS[index];
-    return step.action ? evaluate(step.id, ui).done && !earlierProblem(index, ui) : step.last ? true : acknowledged; };
+    return step.action ? evaluate(step.id, ui).done && !earlierProblem(index, ui) : true; };
 
   function render({scroll = true, announce = true} = {}) {
     const step = STEPS[index], last = Boolean(step.last);
@@ -123,7 +126,7 @@ export function createRunner(api, {storage = null, doc = document, win = window}
       on(root, 'batz-practice-view', onView);
       on(win, 'hashchange', () => { if (!/^#\/?practicar/.test(win.location.hash)) finish('omitido', {silent: true}); });
       on(doc, 'keydown', e => { if (e.key === 'Escape' && !doc.querySelector('dialog[open]')) { e.preventDefault(); finish(STEPS[index].last ? 'completado' : 'omitido'); } });
-      render({scroll: false}); parts.title.focus({preventScroll: true});
+      render(); parts.title.focus({preventScroll: true});
       return true;
     } finally { starting = false; }
   }

@@ -24,7 +24,7 @@ export function attach(api) {
         onDismiss: () => { writeTutorialState(storage, 'omitido'); api.refreshHome(); }, onRules: openRules});
     },
     rulesButton() {
-      const b = document.createElement('button'); b.type = 'button'; b.id = 'pr-rules'; b.className = 'pr-button pr-quiet pr-rules-button';
+      const b = document.createElement('button'); b.type = 'button'; b.id = 'pr-rules'; b.className = 'pg-button pg-secondary pr-rules-button';
       b.textContent = 'Reglas'; b.setAttribute('aria-haspopup', 'dialog');
       b.addEventListener('click', () => openRules(b)); return b;
     },

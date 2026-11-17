@@ -23,5 +23,5 @@ export const STEPS = [
     text: 'Pulsa «Comprobar paso» (o Ctrl / ⌘ + Enter). El servidor verifica la línea: si es correcta se añade como línea 2 con una marca verificada.',
     how: 'Pulsé «Comprobar paso» por ti.'},
   {id: 'cierre', title: 'Ya tienes tu primera prueba', targets: ['#pr-success'], last: true,
-    text: 'La línea 2 está verificada y llegó al objetivo. Desde ahora: «Necesito una pista» te ayuda sin restar nada, «Deshacer» quita la última línea, «Reiniciar este ejercicio» empieza de cero y «Reglas» abre las reglas y la chuleta cuando quieras. El siguiente ejercicio ya te espera.'},
+    text: 'La línea 2 quedó verificada y llegó al objetivo. Cuando lo necesites: «Necesito una pista» ayuda sin restar nada, «Deshacer» quita la última línea, «Reiniciar» empieza de cero y «Reglas» abre las reglas y la chuleta. El ejercicio 02 te espera.'},
 ];
