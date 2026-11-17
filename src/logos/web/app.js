@@ -759,7 +759,7 @@ function loadProofSample() {
   toast(sample.note);
 }
 function loadDictionarySample() {
-  $('dict-query').value = 'duermen'; setPane($('mode-dictionary'), 'model'); searchDictionary(true);
+  $('dict-query').value = 'duermen'; dictShow('results'); searchDictionary(true);
   toast('Ejemplo: «duermen» se encuentra por su lema, dormir.');
 }
 
@@ -1316,38 +1316,111 @@ async function proveFormula() {
 const DICT_FEATURES = {N: [['M', 'Masculino'], ['F', 'Femenino'], ['C', 'Los dos']], NP: [['M', 'Masculino'], ['F', 'Femenino']],
   V: [['I', 'Sin objeto (duerme)'], ['T', 'Con objeto (admira a…)'], ['IT', 'Las dos (lee / lee un libro)']], ADJ: [['-', 'Se flexiona solo']]};
 const DICT_FORMS = ['él/ella, presente', 'ellos, presente', 'él/ella, subjuntivo', 'ellos, subjuntivo', 'él/ella, pasado', 'ellos, pasado'];
-let dictState = {category: '', offset: 0, request: 0};
+const DICT_SOURCE = {base: ['base', 'Léxico base: viene con LOGOS y no se edita.'],
+  usuario: ['tuya', 'Añadida por ti. Se guarda en este equipo, aparte del léxico base.'],
+  auto: ['automática', 'Deducida sola: diminutivo o participio de otra palabra.']};
+const DICT_ORIGIN_LABEL = {evaluate: 'Evaluar modelo', prove: 'Demostrar', notebook: 'Cuadernos', practice: 'Practicar'};
+// view: results | detail | add. En ≥1024 px los detalles y el formulario van al lado; en menos, reemplazan a los resultados.
+let dictState = {category: '', source: '', offset: 0, request: 0, entries: new Map(), selected: null, scrollY: 0, origin: null, consult: 0};
+const dictNarrow = window.matchMedia('(max-width: 1023px)');
+const dictKey = entry => `${entry.lemma}|${entry.category}`;
 
-function dictEntryRow(entry) {
-  const row = node('tr');
-  const word = node('td'); word.append(node('code', entry.lemma));
-  if (entry.source === 'usuario') word.append(node('span', 'tuya', 'chip'));
-  if (entry.source === 'auto') word.append(node('span', 'automática', 'chip'));
-  const kind = node('td', undefined); kind.append(node('span', entry.category_label, `kind ${({N: 'predicate', ADJ: 'constant', V: 'function', NP: 'name'})[entry.category]}`));
-  if (entry.feature_label) kind.append(node('span', entry.feature_label, 'hint'));
-  if (entry.gloss) word.append(node('span', entry.gloss, 'hint gloss'));
-  const remove = node('td');
-  if (entry.source === 'usuario') {
-    const button = node('button', 'Quitar', 'button secondary small'); button.type = 'button';
-    button.addEventListener('click', async () => {
-      await api('/api/lexicon/remove', {lemma: entry.lemma, category: entry.category});
-      $('dict-note').textContent = `«${entry.lemma}» ya no está en tu diccionario.`; searchDictionary(true);
-    });
-    remove.append(button);
-  }
-  row.append(word, kind, node('td', entry.forms.join(' · '), 'dict-forms'), node('td'), remove);
-  row.children[3].append(node('code', entry.symbol));
-  return row;
+function dictShow(view) {
+  $('mode-dictionary').dataset.view = view;
+  $('dict-detail').hidden = view === 'add'; $('dict-add-panel').hidden = view !== 'add';
+  $('dict-add-open').setAttribute('aria-expanded', String(view === 'add'));
 }
 
-async function searchDictionary(reset) {
+function dictRowFor(key) { return [...$('dict-results').querySelectorAll('.dict-row')].find(button => button.dataset.key === key); }
+
+/** Vuelve a la consulta en el teléfono: misma búsqueda, misma posición, foco en la fila que se había abierto. */
+function dictBackToResults() {
+  dictShow('results');
+  requestAnimationFrame(() => {
+    window.scrollTo({top: dictState.scrollY, behavior: 'auto'});
+    (dictRowFor(dictState.selected) || $('dict-query')).focus({preventScroll: true});
+  });
+}
+
+function dictRememberScroll() { if (dictNarrow.matches && $('mode-dictionary').dataset.view === 'results') dictState.scrollY = window.scrollY; }
+
+function dictEntryRow(entry) {
+  const item = node('li');
+  const row = node('button', undefined, 'dict-row'); row.type = 'button';
+  row.dataset.key = dictKey(entry);
+  row.setAttribute('aria-pressed', String(dictState.selected === row.dataset.key));
+  row.setAttribute('aria-controls', 'dict-detail');
+  const top = node('span', undefined, 'dict-row-top');
+  top.append(node('code', entry.lemma, 'dict-lemma'), node('span', DICT_SOURCE[entry.source]?.[0] || entry.source, `chip dict-source ${entry.source}`));
+  const meta = node('span', undefined, 'dict-row-meta');
+  meta.append(node('span', entry.category_label, `kind ${({N: 'predicate', ADJ: 'constant', V: 'function', NP: 'name'})[entry.category]}`));
+  if (entry.feature_label) meta.append(node('span', entry.feature_label, 'hint'));
+  const forms = entry.forms.length > 4 ? `${entry.forms.slice(0, 4).join(' · ')} · …` : entry.forms.join(' · ');
+  row.append(top, meta, node('span', forms, 'dict-forms'));
+  row.addEventListener('click', () => dictSelect(entry));
+  item.append(row);
+  return item;
+}
+
+function dictDetail(entry) {
+  const box = $('dict-detail'); box.replaceChildren();
+  const [sourceLabel, sourceText] = DICT_SOURCE[entry.source] || [entry.source, ''];
+  const title = node('h3', entry.lemma, 'dict-detail-title'); title.id = 'dict-detail-title'; title.tabIndex = -1;
+  const list = node('dl', undefined, 'dict-facts');
+  const fact = (term, ...value) => { const d = node('dd'); d.append(...value); list.append(node('dt', term), d); };
+  fact('Categoría', document.createTextNode(entry.category_label + (entry.feature_label ? `, ${entry.feature_label.toLowerCase()}` : '')));
+  fact('Símbolo en las fórmulas', node('code', entry.symbol));
+  fact('Formas que se reconocen', document.createTextNode(entry.forms.join(' · ')));
+  if (entry.gloss) fact('Significado', document.createTextNode(entry.gloss));
+  fact('Origen', node('span', sourceLabel, `chip dict-source ${entry.source}`), document.createTextNode(' ' + sourceText));
+  box.append(title, list);
+  if (entry.source === 'usuario') {
+    const remove = node('button', 'Quitar de mi diccionario', 'button secondary small'); remove.type = 'button';
+    confirmClick(remove, '¿Quitar «' + entry.lemma + '»?', async () => {
+      await api('/api/lexicon/remove', {lemma: entry.lemma, category: entry.category});
+      if (dictState.selected === dictKey(entry)) dictClearSelection();
+      $('dict-note').textContent = `«${entry.lemma}» ya no está en tu diccionario.`;
+      if (dictNarrow.matches) dictBackToResults();
+      searchDictionary(true, true);
+    });
+    const actions = node('div', undefined, 'actions'); actions.append(remove); box.append(actions);
+  }
+}
+
+function dictClearSelection() {
+  dictState.selected = null;
+  $('dict-detail').replaceChildren(node('p', 'Elige una palabra para ver su categoría, sus formas y el símbolo que usa en las fórmulas, o añade una nueva.', 'hint'));
+}
+
+function dictSelect(entry) {
+  dictState.entries.set(dictKey(entry), entry);
+  dictRememberScroll();
+  dictState.selected = dictKey(entry);
+  for (const button of $('dict-results').querySelectorAll('.dict-row')) button.setAttribute('aria-pressed', String(button.dataset.key === dictState.selected));
+  dictDetail(entry);
+  dictShow('detail');
+  if (dictNarrow.matches) { window.scrollTo({top: 0, behavior: 'auto'}); $('dict-detail-title').focus({preventScroll: true}); }
+  else $('dict-note').textContent = `Detalles de «${entry.lemma}» en el panel de la derecha.`;
+}
+
+async function searchDictionary(reset, keepNote = false) {
   const request = ++dictState.request;
   if (reset) dictState.offset = 0;
-  const result = await api('/api/lexicon/search', {query: $('dict-query').value, category: dictState.category, offset: dictState.offset});
+  const result = await api('/api/lexicon/search', {query: $('dict-query').value, category: dictState.category, source: dictState.source, offset: dictState.offset});
   if (request !== dictState.request || result.status !== 'ok') return;
-  const body = $('dict-results'); if (reset) body.replaceChildren();
-  result.entries.forEach(entry => body.append(dictEntryRow(entry)));
-  if (!result.total) { const row = node('tr'); const cell = node('td', 'No está en el diccionario. Añádela a la derecha.', 'hint'); cell.colSpan = 5; row.append(cell); body.append(row); }
+  const list = $('dict-results'); if (reset) list.replaceChildren();
+  result.entries.forEach(entry => { dictState.entries.set(dictKey(entry), entry); list.append(dictEntryRow(entry)); });
+  if (!result.total) {
+    const item = node('li', undefined, 'dict-empty');
+    const word = $('dict-query').value.trim();
+    item.append(node('p', 'No está en el diccionario con estos filtros.', 'hint'));
+    if (/^\p{L}+$/u.test(word) && !dictState.category && !dictState.source) {
+      const add = node('button', `Añadir «${word}»`, 'button secondary small'); add.type = 'button';
+      add.addEventListener('click', () => { $('dict-word').value = word; dictConsult(); });
+      item.append(add);
+    }
+    list.append(item);
+  }
   dictState.offset += result.entries.length;
   $('dict-more').hidden = dictState.offset >= result.total;
   const c = result.counts, counts = $('dict-counts');
@@ -1358,8 +1431,7 @@ async function searchDictionary(reset) {
         (c.auto ? `${c.auto} se deducen solas (diminutivos y participios). ` : '') +
         (c.user ? `${plural(c.user, 'añadida', 'añadidas')} por ti.` : 'Ninguna añadida por ti todavía.')));
   }
-  if (reset && $('dict-query').value.trim()) $('dict-note').textContent = `${plural(result.total, 'coincidencia', 'coincidencias')}.`;
-  else if (reset) $('dict-note').textContent = '';
+  if (reset && !keepNote) $('dict-note').textContent = $('dict-query').value.trim() || dictState.category || dictState.source ? `${plural(result.total, 'coincidencia', 'coincidencias')}.` : '';
 }
 
 function dictFields() {
@@ -1405,22 +1477,53 @@ async function dictPreview() {
   $('dict-preview').replaceChildren(node('span', result.entry.forms.join(' · ')), node('span', ' → símbolo ', 'hint'), node('code', result.entry.symbol));
 }
 
+/** Copia del borrador del formulario: sirve para deshacer si una palabra desconocida lo reemplaza. */
+function dictSnapshot() {
+  return {word: $('dict-word').value, proposal: $('dict-proposal').textContent, formOpen: !$('dict-form').hidden, lemma: $('dict-lemma').value,
+    category: $('dict-category').value, feature: $('dict-feature').value, synonym: $('dict-synonym').value, sense: $('dict-sense').value,
+    forms: [...$('dict-irregular').querySelectorAll('input[data-form]')].map(i => i.value), plural: $('dict-irregular').querySelector('input[data-plural]')?.value || ''};
+}
+function dictRestore(s) {
+  $('dict-word').value = s.word; $('dict-proposal').textContent = s.proposal; $('dict-lemma').value = s.lemma;
+  dictSetCategory(s.category, s.feature);
+  $('dict-synonym').value = s.synonym; $('dict-sense').value = s.sense;
+  $('dict-irregular').querySelectorAll('input[data-form]').forEach((input, i) => { input.value = s.forms[i] || ''; });
+  const plural = $('dict-irregular').querySelector('input[data-plural]'); if (plural) plural.value = s.plural;
+  $('dict-form').hidden = !s.formOpen;
+  if (s.formOpen) dictPreview();
+  dictOpenAdd();
+}
+const dictHasDraft = () => $('dict-word').value.trim() !== '' || !$('dict-form').hidden;
+
+function dictOpenAdd() {
+  dictRememberScroll();
+  dictShow('add');
+  if (dictNarrow.matches) window.scrollTo({top: 0, behavior: 'auto'});
+  ($('dict-form').hidden ? $('dict-word') : $('dict-lemma')).focus({preventScroll: true});
+}
+
 async function dictConsult() {
   const word = $('dict-word').value.trim();
+  const rev = ++dictState.consult;
   const note = $('dict-proposal'); $('dict-form').hidden = true;
-  setPane($('mode-dictionary'), 'question');
+  dictOpenAdd();
   if (!word) { note.textContent = 'Escribe una palabra.'; return; }
   const result = await api('/api/lexicon/suggest', {word});
+  if (rev !== dictState.consult) return;
   if (result.status !== 'ok') { note.textContent = result.errors?.[0]?.message || 'Palabra inválida.'; return; }
   if (result.found.length) {
     const e = result.found[0];
     note.textContent = `Ya está: «${e.lemma}», ${e.category_label}${e.feature_label ? ' ' + e.feature_label : ''}. Símbolo ${e.symbol}.`;
-    $('dict-query').value = word; searchDictionary(true); return;
+    $('dict-query').value = word; await searchDictionary(true);
+    dictSelect(e);
+    $('dict-note').textContent = `«${e.lemma}» ya está en el diccionario.`;
+    return;
   }
   const p = result.proposal || {lemma: word.toLowerCase(), category: 'N', feature: 'M'};
   note.textContent = result.proposal ? `No está. El modelo cree que es ${p.label} (${Math.round(p.probability * 100)} %). Revisa y corrige:` : 'No está. Indica qué es:';
   $('dict-lemma').value = p.lemma; dictSetCategory(p.category, p.feature);
   $('dict-form').hidden = false; dictPreview();
+  $('dict-lemma').focus({preventScroll: true});
 }
 
 async function dictSave() {
@@ -1430,30 +1533,67 @@ async function dictSave() {
     $('dict-form').hidden = true; $('dict-word').value = ''; $('dict-synonym').value = ''; $('dict-sense').value = '';
     $('dict-proposal').textContent = `«${result.entry.lemma}» guardada. Ya puedes usarla en una frase.`;
     toast(`«${result.entry.lemma}» quedó en tu diccionario.`, 'success');
-    $('dict-query').value = result.entry.lemma; searchDictionary(true);
+    $('dict-query').value = result.entry.lemma; dictState.category = ''; dictState.source = '';
+    dictSyncFilters();
+    await searchDictionary(true);
+    dictSelect(result.entry);
     return 'done';
   });
 }
 
-function openDictionaryWith(word) { go('dictionary'); $('dict-word').value = word; dictConsult(); }
-
-for (const [value, label] of [['', 'Todas'], ['N', 'Sustantivos'], ['ADJ', 'Adjetivos'], ['V', 'Verbos'], ['NP', 'Nombres']]) {
-  const chip = node('button', label, 'filter'); chip.type = 'button'; chip.setAttribute('aria-pressed', String(value === ''));
-  chip.addEventListener('click', () => {
-    dictState.category = value;
-    for (const other of $('dict-filters').querySelectorAll('.filter')) other.setAttribute('aria-pressed', String(other === chip));
-    placePill($('dict-filters'));
-    searchDictionary(true);
-  });
-  $('dict-filters').append(chip);
+function dictRenderOrigin() {
+  const origin = dictState.origin;
+  $('dict-origin').hidden = !origin;
+  if (!origin) return;
+  const label = DICT_ORIGIN_LABEL[origin.mode] || 'el origen';
+  $('dict-origin-text').textContent = `Viniste desde ${label} con «${origin.word}». Lo que escribas aquí se conserva y ${label} sigue como lo dejaste.`;
+  $('dict-origin-back').textContent = `Volver a ${label}`;
 }
-{
-  const pill = node('span', undefined, 'pill'); pill.setAttribute('aria-hidden', 'true');
-  $('dict-filters').prepend(pill);
+
+/** Llega desde una palabra desconocida (Evaluar, Cuadernos): la precarga y recuerda de dónde vino. */
+function openDictionaryWith(word) {
+  if (currentMode && currentMode !== 'dictionary' && currentMode !== 'home') dictState.origin = {mode: currentMode, word};
+  dictRenderOrigin();
+  const snapshot = dictHasDraft() && $('dict-word').value.trim().toLowerCase() !== word.toLowerCase() ? dictSnapshot() : null;
+  go('dictionary');
+  $('dict-word').value = word;
+  dictConsult();
+  if (snapshot) toast('Había una palabra a medias en el formulario; se reemplazó por la nueva.', 'warning', 9000, {label: 'Deshacer', run: () => dictRestore(snapshot)});
+}
+
+function dictSyncFilters() {
+  for (const [host, key] of [[$('dict-filters'), 'category'], [$('dict-sources'), 'source']])
+    for (const chip of host.querySelectorAll('.filter')) chip.setAttribute('aria-pressed', String(chip.dataset.value === dictState[key]));
+  placePill($('dict-filters')); placePill($('dict-sources'));
+}
+for (const [host, key, options] of [[$('dict-filters'), 'category', [['', 'Todas'], ['N', 'Sustantivos'], ['ADJ', 'Adjetivos'], ['V', 'Verbos'], ['NP', 'Nombres']]],
+  [$('dict-sources'), 'source', [['', 'Todas'], ['base', 'Léxico base'], ['usuario', 'Tuyas'], ['auto', 'Automáticas']]]]) {
+  const pill = node('span', undefined, 'pill'); pill.setAttribute('aria-hidden', 'true'); host.append(pill);
+  for (const [value, label] of options) {
+    const chip = node('button', label, 'filter'); chip.type = 'button'; chip.dataset.value = value; chip.setAttribute('aria-pressed', String(value === ''));
+    chip.addEventListener('click', () => { dictState[key] = value; dictSyncFilters(); searchDictionary(true); });
+    host.append(chip);
+  }
 }
 let dictTimer = null;
 $('dict-query').addEventListener('input', () => { clearTimeout(dictTimer); dictTimer = setTimeout(() => searchDictionary(true), 180); });
 $('dict-more').addEventListener('click', () => searchDictionary(false));
+$('dict-add-open').addEventListener('click', dictOpenAdd);
+$('dict-add-close').addEventListener('click', () => { if (dictNarrow.matches) dictBackToResults(); else { dictShow(dictState.selected ? 'detail' : 'results'); $('dict-add-open').focus(); } });
+$('dict-back').addEventListener('click', dictBackToResults);
+$('dict-discard').addEventListener('click', () => {
+  $('dict-word').value = ''; $('dict-proposal').textContent = ''; $('dict-form').hidden = true; $('dict-lemma').value = '';
+  $('dict-synonym').value = ''; $('dict-sense').value = ''; $('dict-word').focus();
+});
+$('dict-origin-back').addEventListener('click', () => { const mode = dictState.origin?.mode; dictState.origin = null; dictRenderOrigin(); if (mode) go(mode); });
+$('mode-dictionary').addEventListener('keydown', event => {
+  if (event.key === 'Escape' && dictNarrow.matches && $('mode-dictionary').dataset.view !== 'results') { event.preventDefault(); dictBackToResults(); return; }
+  if ((event.key === 'ArrowDown' || event.key === 'ArrowUp') && event.target.classList?.contains('dict-row')) {
+    const rows = [...$('dict-results').querySelectorAll('.dict-row')], at = rows.indexOf(event.target);
+    const next = rows[at + (event.key === 'ArrowDown' ? 1 : -1)];
+    if (next) { event.preventDefault(); next.focus(); }
+  }
+});
 $('dict-check').addEventListener('click', dictConsult);
 $('dict-word').addEventListener('keydown', event => { if (event.key === 'Enter') dictConsult(); });
 $('dict-category').addEventListener('change', () => { dictSetCategory($('dict-category').value); dictPreview(); });
@@ -1936,7 +2076,7 @@ function setMode(mode) {
   pillHosts().forEach(placePill);
   if (changed) pauseExplanations();
   if (mode === 'prove') checkProofSyntax();
-  if (mode === 'dictionary') searchDictionary(true);
+  if (mode === 'dictionary' && !$('dict-results').children.length) searchDictionary(true);
   if (mode === 'notebook') openNotebookMode();
   if (mode === 'practice') window.dispatchEvent(new Event('logos-practice'));
   if (changed) {
@@ -2031,7 +2171,7 @@ function setPane(workspace, pane) {
   }
   placePill(workspace.querySelector(':scope > .subtabs'));
 }
-for (const workspace of [$('mode-dictionary'), $('mode-notebook')]) {
+for (const workspace of [$('mode-notebook')]) {
   const tabs = [...workspace.querySelectorAll(':scope > .subtabs .subtab')];
   tabs.forEach(tab => tab.addEventListener('click', () => {
     setPane(workspace, tab.id.endsWith('evidence') ? 'evidence' : tab.id.endsWith('question') ? 'question' : 'model');
