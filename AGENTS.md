@@ -1,4 +1,4 @@
-# Trabajo de agentes en LOGOS
+# Trabajo de agentes en Bat’z (antes LOGOS)
 
 ## Rediseño de interfaz autorizado
 

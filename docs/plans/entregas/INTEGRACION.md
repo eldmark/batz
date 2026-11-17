@@ -1,4 +1,4 @@
-# Integración del rediseño (Batz)
+# Integración del rediseño (Bat’z)
 
 Rama integrada: `rediseno/claude-interfaz` (worktree `../proyecto1-claude`). No se fusionó a `main` ni se publicó.
 Base común: `ea78374`. Ramas fusionadas: `rediseno/codex-reproductor`, `rediseno/recorrido`, `rediseno/a11y`,
@@ -19,7 +19,7 @@ Base común: `ea78374`. Ramas fusionadas: `rediseno/codex-reproductor`, `redisen
 
 ## Verificación realizada sobre la rama integrada
 
-- `PYTHONPATH=src:tests python3 -m unittest discover -s tests`: 315 pruebas, correctas, 1 omitida.
+- `PYTHONPATH=src:tests python3 -m unittest discover -s tests`: 315 pruebas, correctas, 1 omitida (en la rama de entrega actual son 325, con 1 omitida, y 48 de Node).
 - `node --test` sobre cada archivo de `tests/frontend/app/` (bios, export, learn, navigation, people, tour).
 - Playwright (Chromium): las 6 rutas a 1440 y 390 px sin errores de consola ni desborde horizontal; flujo completo
   Evaluar → Resultado → Explicación guiada → contramodelo; los 18 ejemplos de Evaluar dan el valor esperado;
