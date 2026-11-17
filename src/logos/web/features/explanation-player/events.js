@@ -102,15 +102,26 @@ export function wordTimings(text, syllables, totalMs) {
 }
 
 let serverVoicesPromise = null;
-/** Pide al servidor local las voces de espeak-ng (una vez por página). Sin servidor o sin motor: {available: false}. */
+/** Vuelve a preguntar al servidor (p. ej. tras instalar espeak-ng) sin recargar la página. */
+export function resetServerVoices() { serverVoicesPromise = null; }
+/** Pide al servidor local las voces de espeak-ng. `reason` explica por qué no hay: 'sin-motor', 'servidor-antiguo' o 'sin-servidor'. */
 export function loadServerVoices(win) {
   serverVoicesPromise ||= (async () => {
     try {
       const response = await win.fetch('/api/voice/voices', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: '{}'});
-      if (!response.ok) return {available: false, voices: [], hint: null};
+      if (response.status === 404) return {available: false, voices: [], hint: null, reason: 'servidor-antiguo'};
+      if (!response.ok) return {available: false, voices: [], hint: null, reason: 'sin-servidor'};
       const data = await response.json();
-      return {available: Boolean(data.available), voices: data.voices || [], hint: data.hint || null};
-    } catch { return {available: false, voices: [], hint: null}; }
+      return {available: Boolean(data.available), voices: data.voices || [], hint: data.hint || null, reason: data.available ? null : 'sin-motor'};
+    } catch { return {available: false, voices: [], hint: null, reason: 'sin-servidor'}; }
   })();
   return serverVoicesPromise;
+}
+
+/** Texto de ayuda cuando no hay ninguna voz, según la causa real. */
+export function noVoiceHelp(reason, hint) {
+  const tail = ' Puedes seguir leyendo y recorrer todos los pasos sin audio.';
+  if (reason === 'servidor-antiguo') return 'El servidor de Bat’z que está en ejecución es una versión anterior y no ofrece voces: ciérralo y vuelve a iniciarlo con el código actual.' + tail;
+  if (reason === 'sin-servidor') return 'No se pudo consultar al servidor local de Bat’z para buscar voces.' + tail;
+  return `No hay una voz en español disponible. ${hint || 'Instala espeak-ng (en Arch/CachyOS: sudo pacman -S espeak-ng) y pulsa «Volver a buscar voces».'}` + tail;
 }

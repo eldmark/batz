@@ -1,4 +1,4 @@
-import {browserSpanishVoices, caseIndex, chooseVoice, domainPresentation, eventLabel, eventVerdict, loadServerVoices, readVoicePref, readingTime, saveVoicePref, valueLabel, wordTimings} from './events.js';
+import {browserSpanishVoices, caseIndex, chooseVoice, domainPresentation, eventLabel, eventVerdict, loadServerVoices, noVoiceHelp, readVoicePref, resetServerVoices, readingTime, saveVoicePref, valueLabel, wordTimings} from './events.js';
 import {createFullscreen} from './fullscreen.js';
 
 // La síntesis del navegador es compartida. Solo el dueño activo puede cancelarla.
@@ -78,7 +78,8 @@ export function createExplanationPlayer({host, onStepChange = () => {}, onStateC
   const voiceSelect = element('select'); voiceSelect.setAttribute('aria-describedby', `ep-voice-help-${serial}`);
   voiceLabel.append(voiceSelect); options.append(voiceLabel);
   const voiceTest = button('Probar voz', () => playSample()); voiceTest.classList.add('ep-voice-test');
-  options.append(voiceTest);
+  const voiceRescan = button('Volver a buscar voces', () => rescanVoices()); voiceRescan.classList.add('ep-voice-rescan'); voiceRescan.hidden = true;
+  options.append(voiceTest, voiceRescan);
   const voiceHelp = element('p', undefined, 'ep-note'); voiceHelp.id = `ep-voice-help-${serial}`;
   const all = element('details', undefined, 'ep-all');
   all.append(element('summary', 'Ver todos los pasos'));
@@ -89,7 +90,7 @@ export function createExplanationPlayer({host, onStepChange = () => {}, onStateC
   let dead = false, playing = false, voiceEnabled = false, threeDEnabled = true, rate = 1, returnFocus = null;
   let scene = null, sceneGeneration = 0, loadingScene = false, sceneFailed = false;
   let utterance = null, run = 0;
-  let serverVoices = [], serverHint = null, voicePref = readVoicePref(win.localStorage), serverAudio = null, serverAbort = null, sample = null;
+  let serverVoices = [], serverHint = null, serverReason = null, voicePref = readVoicePref(win.localStorage), serverAudio = null, serverAbort = null, sample = null;
   const audioTimers = new Set();
   const fullscreen = createFullscreen(root, fsButton, {onExit() {
     if (presentation === 'closed' && returnFocus?.isConnected) returnFocus.focus({preventScroll:true});
@@ -228,13 +229,16 @@ export function createExplanationPlayer({host, onStepChange = () => {}, onStateC
     const supported = Boolean(voice) && (voice.kind === 'server' || Boolean(win.SpeechSynthesisUtterance));
     voiceInput.disabled = !supported; voiceSelect.disabled = !supported; voiceTest.disabled = !supported;
     voiceHelp.textContent = supported ? `Voz: ${voice.name}${voice.kind === 'server' ? ' (generada en este equipo)' : ' (local del navegador)'}.`
-      : `No hay una voz en español disponible. ${serverHint || 'En Linux el navegador solo ofrece voces si hay speech-dispatcher con un sintetizador; instala espeak-ng y Bat’z lo usará directamente.'} Puedes seguir leyendo y recorrer todos los pasos sin audio.`;
+      : noVoiceHelp(serverReason, serverHint);
+    voiceRescan.hidden = supported;
     if (!supported && voiceEnabled) { voiceEnabled = false; if (playing) narrate(); notify(); }
     voiceInput.checked = voiceEnabled;
   }
 
   // Las voces del equipo se piden una vez por página; si llegan, se refresca la lista de todas las instancias.
-  loadServerVoices(win).then(result => { if (dead) return; serverVoices = result.voices; serverHint = result.hint; refreshVoice(); });
+  const applyServerVoices = result => { if (dead) return; serverVoices = result.voices; serverHint = result.hint; serverReason = result.reason; refreshVoice(); };
+  loadServerVoices(win).then(applyServerVoices);
+  function rescanVoices() { voiceHelp.textContent = 'Buscando voces…'; resetServerVoices(); loadServerVoices(win).then(applyServerVoices); }
 
   async function speakServer(text, voiceId, signal) {
     const response = await win.fetch('/api/voice/speak', {method: 'POST', headers: {'Content-Type': 'application/json'},

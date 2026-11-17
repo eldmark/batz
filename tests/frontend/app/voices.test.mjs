@@ -34,3 +34,10 @@ test('la preferencia se guarda y tolera un almacenamiento roto', () => {
   const broken = {getItem() { throw Error('no'); }, setItem() { throw Error('no'); }};
   assert.equal(readVoicePref(broken), 'auto'); saveVoicePref(broken, 'x');
 });
+import {noVoiceHelp} from '../../../src/logos/web/features/explanation-player/events.js';
+test('el mensaje sin voz distingue servidor antiguo, sin servidor y sin motor', () => {
+  assert.match(noVoiceHelp('servidor-antiguo'), /versión anterior/);
+  assert.match(noVoiceHelp('sin-servidor'), /No se pudo consultar/);
+  assert.match(noVoiceHelp('sin-motor', null), /espeak-ng/);
+  assert.match(noVoiceHelp('sin-motor', 'Instala X'), /Instala X/);
+});

@@ -214,3 +214,7 @@ Foto de Alonzo Church: aportada por el usuario; procedencia y licencia **sin ver
 ## Corrección: llave sin cerrar en `thread.css`
 
 Al reordenar el hilo de los pasos de Evaluar (commit «el hilo solo cruza los huecos»), una sustitución con expresión regular borró el cierre de un `@media (max-width: 720px)`. Todo lo que seguía en `thread.css` (marca `Bat’z`, modo presentación, guía de símbolos) quedó dentro de ese `@media` y solo se aplicaba en móvil: en escritorio el nombre se partía en tres líneas y el modo presentación no ocultaba la barra lateral ni fijaba su botón. Corregido, con `tests/frontend/app/css.test.mjs` (llaves balanceadas en todas las hojas). Además: las letras del veredicto se agrupan por palabra (una palabra nunca se parte; antes «verific/ada»), el modo presentación se cierra con Escape, y el servidor envía `Cache-Control: no-cache` en los archivos estáticos para que el navegador no conserve hojas viejas.
+
+## Diagnóstico de voces
+
+Con `espeak-ng` real (1.52.0) la ruta completa funciona en Chromium: `/api/voice/voices` lista 4 voces, «Probar voz» reproduce 2 s de audio y la narración pide el audio al servidor. Cuando a un usuario «no le detecta la voz», las causas son del entorno: servidor en ejecución anterior a la función (404 en `/api/voice/voices`), servidor lanzado donde `espeak-ng` no está en el `PATH`, o instalación posterior a la carga de la página. El panel de voz ahora dice cuál es la causa real (servidor antiguo, sin servidor, sin motor) y tiene «Volver a buscar voces» sin recargar la página.
