@@ -123,3 +123,9 @@ reproductor abierto y en pantalla completa. Fallos simulados (WebGL nulo, GLB ab
 movimiento reducido): el texto, los pasos y los controles siguen operativos; WebGL y GLB fallidos muestran el aviso y la
 vista 2D. Cero solicitudes a hosts externos. No probado: voz española real, teléfono físico, Evaluar en el modelo grande
 en móvil (fuera de alcance).
+
+## Banner de Inicio
+
+Rama `rediseno/banner`. Banner ancho en Inicio (`features/home/home.js`, `renderBanner`; estilos en `styles/home.css`, registrado en `server.py` y enlazado con una línea en `index.html`) con Kurt Gödel (completitud 1929, incompletitud 1931), Alan Turing (máquina de Turing y problema de la parada, 1936; indecidibilidad de la validez en primer orden junto con Church) y el objetivo de practicar, con enlace `<a href="#/practicar">`. Cada bloque conecta con la página: Evaluar = semántica, Demostrar = sintaxis, completitud como puente; «inconclusa» no es «falso».
+
+Retratos locales en `web/img/` (`godel.jpg`, `turing.jpg`, ambos de dominio público en Commons), servidos desde la lista explícita de `do_GET`. Autor, licencia y origen en `web/img/CREDITOS.md` y como pie de foto enlazado. Duotono solo con CSS (`mix-blend-mode`), un hilo SVG une los retratos; con `prefers-reduced-motion` el hilo no se anima. Si una imagen falta o falla, queda una tarjeta con iniciales. Para cambiar un retrato, sustituir el archivo y su fila en CREDITOS.md.
