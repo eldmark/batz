@@ -660,3 +660,7 @@ body[data-mode=notebook] .footer-notebook { display: inline; }
 .syntax-check .tree-slot, .spanish-reading .tree-slot { grid-column: 1 / -1; }
 .syntax-check li > .button.small, .tree-slot > .button { justify-self: start; }
 @media (max-width: 900px) { .tree-scroll { max-height: 420px; } }
+
+/* El veredicto nunca se sale de su columna: la palabra más larga («Contramodelo») cabe en el ancho del resultado. */
+.result { container-type: inline-size; }
+.verdict-word { font-size: min(1em, 13cqw); }
