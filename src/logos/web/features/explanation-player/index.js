@@ -1,4 +1,4 @@
-import {caseIndex, domainPresentation, eventLabel, eventVerdict, localSpanishVoice, readingTime, valueLabel} from './events.js';
+import {browserSpanishVoices, caseIndex, chooseVoice, domainPresentation, eventLabel, eventVerdict, loadServerVoices, readVoicePref, readingTime, saveVoicePref, valueLabel, wordTimings} from './events.js';
 import {createFullscreen} from './fullscreen.js';
 
 // La síntesis del navegador es compartida. Solo el dueño activo puede cancelarla.
@@ -74,7 +74,12 @@ export function createExplanationPlayer({host, onStepChange = () => {}, onStateC
     const option = element('option', `${String(value).replace('.', ',')}×`); option.value = String(value); rateInput.append(option);
   }
   rateInput.value = '1'; rateLabel.append(rateInput); options.append(rateLabel);
-  const voiceHelp = element('p', undefined, 'ep-note');
+  const voiceLabel = element('label', 'Voz ', 'ep-voice');
+  const voiceSelect = element('select'); voiceSelect.setAttribute('aria-describedby', `ep-voice-help-${serial}`);
+  voiceLabel.append(voiceSelect); options.append(voiceLabel);
+  const voiceTest = button('Probar voz', () => playSample()); voiceTest.classList.add('ep-voice-test');
+  options.append(voiceTest);
+  const voiceHelp = element('p', undefined, 'ep-note'); voiceHelp.id = `ep-voice-help-${serial}`;
   const all = element('details', undefined, 'ep-all');
   all.append(element('summary', 'Ver todos los pasos'));
   const list = element('ol', undefined, 'ep-list'); all.append(list);
@@ -84,6 +89,7 @@ export function createExplanationPlayer({host, onStepChange = () => {}, onStateC
   let dead = false, playing = false, voiceEnabled = false, threeDEnabled = true, rate = 1, returnFocus = null;
   let scene = null, sceneGeneration = 0, loadingScene = false, sceneFailed = false;
   let utterance = null, run = 0;
+  let serverVoices = [], serverHint = null, voicePref = readVoicePref(win.localStorage), serverAudio = null, serverAbort = null, sample = null;
   const audioTimers = new Set();
   const fullscreen = createFullscreen(root, fsButton, {onExit() {
     if (presentation === 'closed' && returnFocus?.isConnected) returnFocus.focus({preventScroll:true});
@@ -197,14 +203,78 @@ export function createExplanationPlayer({host, onStepChange = () => {}, onStateC
     finally { if (token === sceneGeneration) loadingScene = false; }
   }
 
+  const chosen = () => chooseVoice({browser: browserSpanishVoices(synthesis), server: serverVoices, pref: voicePref});
+
+  function fillVoiceSelect() {
+    const browser = win.SpeechSynthesisUtterance ? browserSpanishVoices(synthesis) : [];
+    voiceSelect.replaceChildren();
+    const auto = element('option', 'Automática'); auto.value = 'auto'; voiceSelect.append(auto);
+    const group = (label, items) => {
+      if (!items.length) return;
+      const box = element('optgroup'); box.label = label;
+      for (const [value, text] of items) { const option = element('option', text); option.value = value; box.append(option); }
+      voiceSelect.append(box);
+    };
+    group('Voces del navegador', browser.map(voice => [`browser:${voice.voiceURI}`, `${voice.name} (${voice.lang})`]));
+    group('Voces de este equipo (espeak-ng)', serverVoices.map(voice => [`server:${voice.id}`, voice.label]));
+    const known = [...voiceSelect.querySelectorAll('option')].some(option => option.value === voicePref);
+    voiceSelect.value = known ? voicePref : 'auto';
+  }
+
   function refreshVoice() {
     if (dead) return;
-    const voice = localSpanishVoice(synthesis);
-    const supported = Boolean(voice && win.SpeechSynthesisUtterance);
-    voiceInput.disabled = !supported;
-    voiceHelp.textContent = supported ? `Voz local: ${voice.name}.` : 'No hay una voz local en español disponible. Puedes seguir leyendo y recorrer todos los pasos sin audio.';
+    const voice = chosen();
+    fillVoiceSelect();
+    const supported = Boolean(voice) && (voice.kind === 'server' || Boolean(win.SpeechSynthesisUtterance));
+    voiceInput.disabled = !supported; voiceSelect.disabled = !supported; voiceTest.disabled = !supported;
+    voiceHelp.textContent = supported ? `Voz: ${voice.name}${voice.kind === 'server' ? ' (generada en este equipo)' : ' (local del navegador)'}.`
+      : `No hay una voz en español disponible. ${serverHint || 'En Linux el navegador solo ofrece voces si hay speech-dispatcher con un sintetizador; instala espeak-ng y Bat’z lo usará directamente.'} Puedes seguir leyendo y recorrer todos los pasos sin audio.`;
     if (!supported && voiceEnabled) { voiceEnabled = false; if (playing) narrate(); notify(); }
     voiceInput.checked = voiceEnabled;
+  }
+
+  // Las voces del equipo se piden una vez por página; si llegan, se refresca la lista de todas las instancias.
+  loadServerVoices(win).then(result => { if (dead) return; serverVoices = result.voices; serverHint = result.hint; refreshVoice(); });
+
+  async function speakServer(text, voiceId, signal) {
+    const response = await win.fetch('/api/voice/speak', {method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({text, voice: voiceId, rate}), signal});
+    if (!response.ok) throw new Error('voz no disponible');
+    return response.blob();
+  }
+
+  /** «Probar voz»: una frase corta con la voz elegida, para saber si suena. */
+  async function playSample() {
+    const voice = chosen(); if (!voice || dead) return;
+    pause(); stopSample();
+    const text = 'Hola, soy tu guía en Bat’z.';
+    voiceHelp.textContent = `Probando ${voice.name}…`;
+    if (voice.kind === 'browser') {
+      const speech = new win.SpeechSynthesisUtterance(text); speech.lang = voice.voice.lang; speech.voice = voice.voice; speech.rate = .92 * rate;
+      speech.onend = () => { voiceHelp.textContent = `Voz: ${voice.name} (local del navegador).`; };
+      speech.onerror = () => { voiceHelp.textContent = 'El navegador no pudo reproducir esa voz. Prueba otra.'; };
+      sample = {speech}; try { synthesis.cancel(); synthesis.speak(speech); } catch { speech.onerror(); }
+      return;
+    }
+    const abort = new win.AbortController(); sample = {abort};
+    try {
+      const blob = await speakServer(text, voice.id, abort.signal);
+      if (abort.signal.aborted || dead) return;
+      const url = win.URL.createObjectURL(blob), audio = new win.Audio(url);
+      sample = {audio, url};
+      audio.onended = () => { stopSample(); voiceHelp.textContent = `Voz: ${voice.name} (generada en este equipo).`; };
+      await audio.play();
+    } catch (error) {
+      if (abort.signal.aborted) return;
+      stopSample(); voiceHelp.textContent = 'No se pudo reproducir la voz del equipo. Revisa que espeak-ng esté instalado.';
+    }
+  }
+  function stopSample() {
+    if (!sample) return;
+    sample.abort?.abort(); sample.speech && (sample.speech.onend = sample.speech.onerror = null);
+    if (sample.audio) { sample.audio.onended = null; sample.audio.pause(); }
+    if (sample.url) win.URL.revokeObjectURL(sample.url);
+    sample = null;
   }
 
   function later(action, delay) {
@@ -215,6 +285,9 @@ export function createExplanationPlayer({host, onStepChange = () => {}, onStateC
     ++run;
     audioTimers.forEach(id => win.clearTimeout(id)); audioTimers.clear();
     if (utterance) { utterance.onstart = utterance.onboundary = utterance.onend = utterance.onerror = null; utterance = null; }
+    stopSample();
+    if (serverAbort) { serverAbort.abort(); serverAbort = null; }
+    if (serverAudio) { serverAudio.audio.onplaying = serverAudio.audio.onended = serverAudio.audio.onerror = null; serverAudio.audio.pause(); win.URL.revokeObjectURL(serverAudio.url); serverAudio = null; }
     if (activePlayer === api) { synthesis?.cancel(); activePlayer = null; }
     scene?.talking(false);
   }
@@ -245,10 +318,37 @@ export function createExplanationPlayer({host, onStepChange = () => {}, onStateC
       if (!valid()) return;
       stopAudio(); advance();
     };
-    const voice = voiceEnabled ? localSpanishVoice(synthesis) : null;
-    if (!voice || !win.SpeechSynthesisUtterance || !event.text_es) {
+    const choice = voiceEnabled ? chosen() : null;
+    if (!choice || !event.text_es || (choice.kind === 'browser' && !win.SpeechSynthesisUtterance)) {
       later(finish, readingTime(event.text_es, rate)); return;
     }
+    const failVoice = () => {
+      if (!valid()) return;
+      voiceEnabled = false; voiceInput.checked = false;
+      voiceHelp.textContent = 'La narración no está disponible. El recorrido continúa sin audio.';
+      notify(); narrate();
+    };
+    if (choice.kind === 'server') {
+      // Audio generado en el equipo: se pide, se reproduce y la boca se reparte en su duración.
+      const abort = new win.AbortController(); serverAbort = abort;
+      speakServer(event.text_es, choice.id, abort.signal).then(blob => {
+        if (!valid() || abort.signal.aborted) return;
+        const url = win.URL.createObjectURL(blob), audio = new win.Audio(url);
+        serverAudio = {audio, url};
+        audio.onplaying = () => {
+          if (!valid()) return;
+          scene?.talking(true);
+          const ms = (Number.isFinite(audio.duration) ? audio.duration : readingTime(event.text_es, rate) / 1000) * 1000;
+          for (const item of wordTimings(event.text_es, word => scene?.syllableCount(word) ?? ((word.normalize('NFD').match(/[aeiouy]+/gi) || []).length || 1), ms)) {
+            later(() => { if (valid()) scene?.say(item.word, 1, item.pause); }, item.at);
+          }
+        };
+        audio.onended = finish; audio.onerror = failVoice;
+        return audio.play();
+      }).catch(() => { if (!abort.signal.aborted) failVoice(); });
+      return;
+    }
+    const voice = choice.voice;
     const speech = new win.SpeechSynthesisUtterance(event.text_es); utterance = speech;
     speech.lang = voice.lang; speech.voice = voice; speech.rate = .92 * rate;
     let spoken = 0, gotWord = false;
@@ -351,6 +451,7 @@ export function createExplanationPlayer({host, onStepChange = () => {}, onStateC
     clear(); fullscreen.destroy(); controller.abort(); root.remove(); dead = true;
   }
 
+  listen(voiceSelect, 'change', () => { voicePref = voiceSelect.value; saveVoicePref(win.localStorage, voicePref); refreshVoice(); if (playing) narrate(); notify(); });
   listen(voiceInput, 'change', () => { voiceEnabled = voiceInput.checked && !voiceInput.disabled; notify(); if (playing) narrate(); });
   listen(threeInput, 'change', () => {
     threeDEnabled = threeInput.checked; sceneFailed = false;

@@ -42,3 +42,7 @@ La interfaz muestra sus iniciales; no se usó ninguna foto sin licencia verifica
 - La identidad de la persona retratada se comprobó a ojo solo contra el título del archivo y la categoría en Commons.
 
 Para sustituir un retrato: reemplazar el archivo con el mismo nombre (menos de 150 kB), actualizar esta tabla y `people.js`. Si el archivo falta, el banner muestra una tarjeta con las iniciales (texto alternativo en `features/home/home.js`, `BANNER.people`).
+
+## Excepción: Alonzo Church
+
+`people/church.jpg` es una fotografía que aportó el usuario del proyecto (archivo `alonzo-church-3701531443.png`, recortada a la izquierda y en escala de grises). **No se verificó su autor ni su licencia**, a diferencia del resto: en Wikimedia Commons no hay retrato libre de Church. Antes de publicar el proyecto fuera del curso, conviene sustituirla por una imagen con licencia verificada o confirmar el permiso de uso. En la interfaz el pie de foto dice «procedencia y licencia sin verificar».

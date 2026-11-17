@@ -70,3 +70,6 @@
   .ep-player.ep-fullscreen .ep-body { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .ep-player.ep-fullscreen .ep-visual { height: 64vh; }
 }
+.ep-player .ep-voice { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; }
+.ep-player .ep-voice select { max-width: min(280px, 60vw); }
+.ep-player .ep-voice-test { min-height: 44px; }

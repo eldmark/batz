@@ -22,8 +22,8 @@ export function portrait(slug, {large = true} = {}) {
     const img = make('img'); img.src = p.image; img.alt = b.alt; img.width = 480; img.height = 640; img.decoding = 'async';
     img.addEventListener('error', () => { placeholder(); });
     frame.append(img);
-    const a = link(p.credit, p.creditUrl); a.target = '_blank'; a.rel = 'noopener noreferrer';
-    caption.append(a);
+    if (p.creditUrl) { const a = link(p.credit, p.creditUrl); a.target = '_blank'; a.rel = 'noopener noreferrer'; caption.append(a); }
+    else caption.append(p.credit);
   } else placeholder();
   fig.append(frame, caption);
   return fig;

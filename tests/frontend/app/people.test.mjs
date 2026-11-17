@@ -37,7 +37,7 @@ test('las que tienen imagen traen crédito, enlace y licencia no vacíos', () =>
       assert.equal(typeof PEOPLE[s][k], 'string', `${s}.${k}`);
       assert.ok(PEOPLE[s][k].trim().length > 0, `${s}.${k} vacío`);
     }
-    assert.match(PEOPLE[s].creditUrl, /^https:\/\/commons\.wikimedia\.org\//, s);
+    if (PEOPLE[s].license !== 'Sin verificar') assert.match(PEOPLE[s].creditUrl, /^https:\/\/commons\.wikimedia\.org\//, s);
   }
 });
 test('cada persona tiene nombre y años coherentes (o null)', () => {

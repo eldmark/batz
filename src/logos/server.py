@@ -30,6 +30,7 @@ from .proof import SearchConfig, prove, verify
 from .proof.kalmar import kalmar_prove
 from .proof_story import build_proof_narration
 from .voice_input import VoiceInputError, availability, transcribe
+from . import voice_output
 
 WEB = Path(__file__).with_name("web")
 MAX_BODY = 1_000_000
@@ -207,6 +208,8 @@ def handle_api(route, data):
         return {"schema_version": SCHEMA_VERSION, "status": "ok", **notebook.api(route.rsplit("/", 1)[1], data)}
     if route == "/api/voice/status":
         return {"schema_version": SCHEMA_VERSION, "status": "ok", **availability()}
+    if route == "/api/voice/voices":
+        return {"schema_version": SCHEMA_VERSION, "status": "ok", **voice_output.availability()}
     if route == "/api/proof":
         premises, conclusion, constants = (data.get("premises"), data.get("conclusion"),
                                            data.get("constants", []))
@@ -358,6 +361,7 @@ class Handler(BaseHTTPRequestHandler):
                  "/img/godel.jpg": ("img/godel.jpg", "image/jpeg"),
                  "/img/turing.jpg": ("img/turing.jpg", "image/jpeg"),
                  "/img/people/aristoteles.jpg": ("img/people/aristoteles.jpg", "image/jpeg"),
+                 "/img/people/church.jpg": ("img/people/church.jpg", "image/jpeg"),
                  "/img/people/leibniz.jpg": ("img/people/leibniz.jpg", "image/jpeg"),
                  "/img/people/boole.jpg": ("img/people/boole.jpg", "image/jpeg"),
                  "/img/people/frege.jpg": ("img/people/frege.jpg", "image/jpeg"),
@@ -412,7 +416,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         route = urlsplit(self.path).path
-        if route not in ("/api/free", "/api/validate", "/api/evaluate", "/api/countermodel", "/api/spanish", "/api/proof", "/api/parse", "/api/load", "/api/lexicon/search", "/api/lexicon/suggest", "/api/lexicon/preview", "/api/lexicon/add", "/api/lexicon/remove", "/api/voice/status", "/api/voice/transcribe") and not route.startswith(("/api/notebook/", "/api/practice/")):
+        if route not in ("/api/free", "/api/validate", "/api/evaluate", "/api/countermodel", "/api/spanish", "/api/proof", "/api/parse", "/api/load", "/api/lexicon/search", "/api/lexicon/suggest", "/api/lexicon/preview", "/api/lexicon/add", "/api/lexicon/remove", "/api/voice/status", "/api/voice/voices", "/api/voice/speak", "/api/voice/transcribe") and not route.startswith(("/api/notebook/", "/api/practice/")):
             self.send_error(404)
             return
         try:
@@ -420,6 +424,18 @@ class Handler(BaseHTTPRequestHandler):
             limit = 5_000_000 if route == "/api/voice/transcribe" else MAX_BODY
             if not 0 < size <= limit:
                 self._json(413, {"status": "invalid_input", "errors": [{"message": "solicitud demasiado grande o vacía"}]})
+                return
+            if route == "/api/voice/speak":
+                data = json.loads(self.rfile.read(size))
+                if not isinstance(data, dict):
+                    raise TypeError("solicitud inválida")
+                audio = voice_output.synthesize(data.get("text"), data.get("voice"), data.get("rate", 1.0))
+                self.send_response(200)
+                self.send_header("Content-Type", "audio/wav")
+                self.send_header("Cache-Control", "no-store")
+                self.send_header("Content-Length", str(len(audio)))
+                self.end_headers()
+                self.wfile.write(audio)
                 return
             if route == "/api/voice/transcribe":
                 if not self.headers.get("Content-Type", "").startswith("audio/webm"):
@@ -431,6 +447,10 @@ class Handler(BaseHTTPRequestHandler):
                 data = json.loads(self.rfile.read(size))
                 response = handle_api(route, data)
             self._json(200 if response["status"] in ("ok", "found", "unknown", "single", "ambiguous", "proved", "refuted") else 400, response)
+        except voice_output.VoiceOutputError as exc:
+            self._json(503 if exc.code == "voice_unavailable" else 400,
+                       {"schema_version": SCHEMA_VERSION, "status": "invalid_input",
+                        "errors": [{"code": exc.code, "message": str(exc)}]})
         except VoiceInputError as exc:
             self._json(503 if exc.code == "voice_unavailable" else 400,
                        {"schema_version": SCHEMA_VERSION, "status": "invalid_input",

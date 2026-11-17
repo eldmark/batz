@@ -55,3 +55,62 @@ export function localSpanishVoice(synthesis) {
 export function readingTime(text, rate) {
   return Math.max(1800, (text || '').trim().split(/\s+/).length * 370) / rate;
 }
+
+// ── Voces: del navegador (locales) y del equipo (espeak-ng vía el servidor local) ──
+const VOICE_KEY = 'logos-voz';
+
+/** Voces españolas que el navegador ofrece como locales; las latinoamericanas primero. */
+export function browserSpanishVoices(synthesis) {
+  const voices = synthesis?.getVoices?.().filter(voice => voice.localService === true && /^es(?:-|$)/i.test(voice.lang)) || [];
+  const latam = voice => (/^es-(mx|us|419|gt|co|ar|cl|pe)/i.test(voice.lang) ? 0 : 1);
+  return [...voices].sort((a, b) => latam(a) - latam(b));
+}
+
+/** Preferencia guardada: 'auto', 'browser:<voiceURI>' o 'server:<id>'. */
+export function readVoicePref(storage) {
+  try { return storage?.getItem(VOICE_KEY) || 'auto'; } catch { return 'auto'; }
+}
+export function saveVoicePref(storage, pref) {
+  try { storage?.setItem(VOICE_KEY, pref); } catch { /* sin almacenamiento: vale solo para esta sesión */ }
+}
+
+/** Elige la voz a usar. Con 'auto' o una preferencia que ya no existe: primero el navegador, luego el equipo. */
+export function chooseVoice({browser = [], server = [], pref = 'auto'}) {
+  if (pref.startsWith('browser:')) {
+    const voice = browser.find(item => item.voiceURI === pref.slice(8));
+    if (voice) return {kind: 'browser', voice, name: voice.name};
+  }
+  if (pref.startsWith('server:')) {
+    const voice = server.find(item => item.id === pref.slice(7));
+    if (voice) return {kind: 'server', id: voice.id, name: voice.label};
+  }
+  if (browser[0]) return {kind: 'browser', voice: browser[0], name: browser[0].name};
+  if (server[0]) return {kind: 'server', id: server[0].id, name: server[0].label};
+  return null;
+}
+
+/** Cuándo mover la boca en cada palabra para que el habla de duración conocida (audio generado) coincida. */
+export function wordTimings(text, syllables, totalMs) {
+  const words = (text || '').match(/\S+/g) || [];
+  const weights = words.map(raw => {
+    const word = raw.replace(/[,.;:!?¡¿()]/g, '');
+    return {word, weight: Math.max(1, syllables(word)) * 185 + (/[,.;:!?)]$/.test(raw) ? 300 : 35), pause: /[,.;:!?)]$/.test(raw)};
+  });
+  const sum = weights.reduce((total, item) => total + item.weight, 0) || 1;
+  let at = 0;
+  return weights.map(item => { const entry = {word: item.word, at: Math.round(at * totalMs / sum), pause: item.pause}; at += item.weight; return entry; });
+}
+
+let serverVoicesPromise = null;
+/** Pide al servidor local las voces de espeak-ng (una vez por página). Sin servidor o sin motor: {available: false}. */
+export function loadServerVoices(win) {
+  serverVoicesPromise ||= (async () => {
+    try {
+      const response = await win.fetch('/api/voice/voices', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: '{}'});
+      if (!response.ok) return {available: false, voices: [], hint: null};
+      const data = await response.json();
+      return {available: Boolean(data.available), voices: data.voices || [], hint: data.hint || null};
+    } catch { return {available: false, voices: [], hint: null}; }
+  })();
+  return serverVoicesPromise;
+}
