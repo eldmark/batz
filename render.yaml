@@ -1,0 +1,9 @@
+# Despliegue gratuito en Render: New → Blueprint → elegir este repositorio → Apply.
+# Render construye el Dockerfile (incluye espeak-ng para la voz) y fija PORT automáticamente.
+services:
+  - type: web
+    name: batz
+    runtime: docker
+    plan: free
+    healthCheckPath: /
+    autoDeploy: true

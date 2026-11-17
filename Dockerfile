@@ -2,7 +2,7 @@
 # (voz de la explicación guiada: genera el audio dentro del contenedor, sin enviar texto a ningún servicio).
 FROM python:3.12-slim
 
-ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PORT=8765
 RUN apt-get update \
  && apt-get install -y --no-install-recommends espeak-ng \
  && rm -rf /var/lib/apt/lists/* \
@@ -16,6 +16,7 @@ USER logos
 
 EXPOSE 8765
 HEALTHCHECK --interval=10s --timeout=3s --retries=3 \
-  CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8765/')"
+  CMD python -c "import os, urllib.request; urllib.request.urlopen('http://127.0.0.1:%s/' % os.environ.get('PORT', '8765'))"
 # Dentro del contenedor hay que escuchar en 0.0.0.0; compose solo lo publica en localhost.
-CMD ["python", "evaluador.py", "--host", "0.0.0.0", "--port", "8765", "--no-browser"]
+# El puerto sale de la variable PORT (8765 por defecto; los alojamientos la reemplazan).
+CMD ["python", "evaluador.py", "--host", "0.0.0.0", "--no-browser"]

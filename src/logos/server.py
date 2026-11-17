@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 import webbrowser
@@ -465,7 +466,8 @@ class Handler(BaseHTTPRequestHandler):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description="Interfaz local de LOGOS MM3032")
-    parser.add_argument("--port", type=int, default=8765)
+    # Los alojamientos (Render, Hugging Face, etc.) indican el puerto con la variable PORT.
+    parser.add_argument("--port", type=int, default=int(os.environ.get("PORT") or 8765))
     parser.add_argument("--no-browser", action="store_true", help="no abrir el navegador")
     parser.add_argument("--host", default="127.0.0.1",
                         help="interfaz de escucha; solo Docker necesita 0.0.0.0")
