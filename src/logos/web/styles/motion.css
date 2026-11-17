@@ -7,9 +7,6 @@
   /* Asistente de Evaluar: cada paso entra desde el lado hacia el que se avanza */
   .wz-panel:not([hidden]) { animation: step-in .38s var(--out) backwards; }
   @keyframes step-in { from { opacity: 0; transform: translateX(14px); } }
-  .wizard-steps::after { content: ""; position: absolute; left: 6%; top: 50%; height: 3px; width: 0; transform: translateY(-50%); background: var(--thread, var(--brand-500)); border-radius: 2px; transition: width .5s var(--out); z-index: 0; }
-  #mode-evaluate[data-step="2"] .wizard-steps::after { width: 44%; }
-  #mode-evaluate[data-step="3"] .wizard-steps::after { width: 88%; }
   .wz-step { transition: transform .18s var(--out), background-color .2s, border-color .2s; }
   .wz-step:not([aria-disabled=true]):hover { transform: translateY(-2px); }
   .wz-step:not([aria-disabled=true]):active { transform: translateY(0) scale(.98); }

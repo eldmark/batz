@@ -30,8 +30,11 @@ body[data-sidebar=collapsed] .brand-name, body[data-sidebar=collapsed] .brand-su
 
 /* ── Asistente de Evaluar: los pasos van enhebrados ── */
 .wizard-steps { position: relative; }
-.wizard-steps::before { content: ""; position: absolute; left: 6%; right: 6%; top: 50%; height: 3px; transform: translateY(-50%); background: repeating-linear-gradient(90deg, var(--border-strong) 0 8px, transparent 8px 13px); }
-.wizard-steps li { position: relative; z-index: 1; }
+.wizard-steps { column-gap: 28px; }
+.wizard-steps li { position: relative; }
+/* El hilo solo cruza los huecos entre pastillas (nunca pasa por detrás de una etiqueta) */
+.wizard-steps li + li::before { content: ""; position: absolute; right: 100%; top: 50%; width: 28px; height: 3px; margin-top: -1.5px; background: repeating-linear-gradient(90deg, var(--border-strong) 0 6px, transparent 6px 10px); }
+.wizard-steps li:has(> .wz-step[data-done=true]) + li::before { background: var(--thread); }
 .wz-step { box-shadow: 0 0 0 4px var(--canvas); }
 .wz-step[data-done=true]:not([aria-current=step]) { border-color: var(--brand-400); }
 .wz-step[aria-current=step]::after { content: ""; position: absolute; right: -9px; top: 50%; width: 10px; height: 10px; margin-top: -5px; border-radius: 50%; background: var(--signal-400); box-shadow: 0 0 0 3px var(--canvas); }
@@ -49,8 +52,7 @@ body[data-sidebar=collapsed] .brand-name, body[data-sidebar=collapsed] .brand-su
   .brand-mark .mk-t { stroke-dasharray: 220; stroke-dashoffset: 220; animation: thread-in 1.1s .15s var(--out) forwards; }
 }
 @keyframes thread-in { to { stroke-dashoffset: 0; } }
-@media (max-width: 720px) { .wizard-steps::before { display: none; } .wz-step[aria-current=step]::after { display: none; } }
-
+@media (max-width: 720px) { 
 /* ── Modo presentación: letra grande y solo lo esencial ── */
 body.presenting { font-size: 18px; }
 body.presenting .sidebar, body.presenting .shell > footer { display: none; }
